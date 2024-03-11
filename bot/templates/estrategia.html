@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Estrategia {{nombre}}{% endblock %}
+{% block nav_title %}Estrategia {{nombre}}{% endblock %}
+
+{% load static %}
+
+{% block action_bar %}
+
+<a class="btn btn-primary  btn-sm" href="{% url 'estrategia_edit' estrategia_id %}">Editar estrategia</a>
+{% if activo > 0 %}
+    <a class="btn btn-danger  btn-sm" href="{% url 'estrategia_toogle_activo' estrategia_id %}">Desactivar</a>
+{% else %}
+    <a class="btn btn-success  btn-sm" href="{% url 'estrategia_toogle_activo' estrategia_id %}">Activar</a>
+{% endif %}
+{% if can_delete %}
+    <button class="btn btn-danger  btn-sm" onclick="eliminar()">Eliminar</a>
+{% endif %}
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if activo == 0 %}
+    <div class="row">
+        <h3 class="text-danger text-center">Estrategia inactiva</h3>
+    </div>
+    {% endif %}
+    <div class="row pb-3">
+        <div class="col-2">Nombre de la estrategia</div>                                    
+        <div class="col fw-bold">{{nombre}}</div>                                    
+    </div>
+    <div class="row pb-3">
+        <div class="col-2">Descripcion</div>                                    
+        <pre class="col fw-bold" style="font-family: inherit;">{{descripcion}}</pre>   
+    </div>
+    <div class="row pb-3">
+        <div class="col-2">Bot Class</div>                                    
+        <div class="col-2 fw-bold">{{clase}}()</div>                                  
+        
+        <div class="col-2">Intervalo</div>                                    
+        <div class="col-2 fw-bold">{{intervalo}}</div>   
+        
+        <div class="col-2">Maximo DrawDown</div>                                    
+        <div class="col-2 fw-bold">{{max_drawdown}}%</div>   
+    </div>
+    <div class="row pb-3 text-secondary">
+        <div class="col-2">Bots</div>        
+        {% if qtyBots > 0 %}                            
+            <div class="col-2 fw-bold">{{qtyBots}}</div>    
+        {% else %}
+            <div class="col-2">No</div>
+        {% endif %}                                
+        <div class="col-2 ">Creado </div>  
+        <div class="col fw-bold ">{{creado}}</div>                                   
+    </div>
+    <div class="row pt-2 text-center">
+        <h4>Parametros</h4>
+    </div>
+    <div class="row">
+
+        <table id="parametros" class="table-dg">
+            <thead>
+                <tr>
+                     <th>Descripcion</th>
+                    <th class="w-25 text-center">Valor</th>
+                </tr>
+            </thead>
+            
+            <tbody>
+                {% for k,prm in parametros.items %}
+                    <tr>
+                        <td>{{prm.d}} 
+                            {% if not prm.pub %} <i class="bi bi-shield-lock text-danger"></i> {% endif %}
+                        </td>
+                        <td class="text-center">{{prm.str}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            
+        </table>
+
+    </div>
+</div>
+<input type="hidden" id="estrategia_id" value="{estrategia_id}" >
+
+{% endblock %}
+
+{% block script %}
+<script>
+function eliminar()
+{
+    if (confirm('Confirma eliminar la estrategia {{nombre}}?'))
+    {
+        url = "{% url 'estrategia_delete' estrategia_id %}"
+        data = null
+        get_ajax(url,data).done( function (rsp) {
+            if (rsp.error)
+                html_alert('Errores detectados',rsp.error,'text-danger')
+            if (rsp.ok)
+            {
+                location.href = "{% url 'estrategias' %}";
+            }
+        });    
+
+        
+    }
+    
+}
+</script>
+
+{% endblock %}

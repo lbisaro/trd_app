@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% block title %}Bot #{{bot_id}}{% endblock %}
+{% block nav_title %}Bot #{{bot_id}}{% endblock %}
+
+{% load static %}
+{% load tz %}
+
+{% block action_bar %}
+
+<a class="btn btn-primary  btn-sm" href="{% url 'bot_edit' bot_id %}">Editar Bot</a>
+{% if activo > 0 %}
+    <a class="btn btn-danger  btn-sm" href="{% url 'bot_toogle_activo' bot_id %}">Desactivar</a>
+{% elif can_activar %}
+    <a class="btn btn-success  btn-sm" href="{% url 'bot_toogle_activo' bot_id %}">Activar</a>
+{% endif %}
+{% if can_delete %}
+    <button class="btn btn-danger  btn-sm" onclick="eliminar()">Eliminar</a>
+{% endif %}
+
+{% endblock %}
+
+{% block content %}
+<div class="modal fade" id="descripcion_modal" tabindex="-1" aria-labelledby="descripcion_modalModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h1 class="modal-title fs-5" id="descripcion_modalModalLabel">Estrategia {{estrategia}}</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            {{descripcion}}
+        </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="exch_order_modal" tabindex="-1" aria-labelledby="exch_order_modalModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exch_order_modalModalLabel">#</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modal_order_info">
+            
+        </div>
+        </div>
+    </div>
+</div>
+<div class="container" >
+    <div class="row pb-4">
+        <div class="col-2">Estrategia:  
+        <span class="col fw-bold">{{estrategia}}</span> 
+        <i class="bi bi-info-circle text-warning" data-bs-toggle="modal" data-bs-target="#descripcion_modal"></i>
+        
+        {% if estrategia_activo == 0%} <span class="text-danger">Inactiva</span>{% endif %}
+    </div>
+    {% for advertisement in environment_advertisement %}
+        <div class="row">
+            <h6 class="text-warning text-center">{{advertisement}}</h6>
+        </div>
+    {% endfor %}
+    
+    {% if activo == 0 %}
+    <div class="row pb-2">
+        <h3 class="text-danger text-center">Bot inactivo</h3>
+    </div>
+    {% endif %}
+    <div class="row pt-2" style="font-size: 0.8em;">
+        <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
+            <div class="w-25 py-1">Intervalo: <b>{{intervalo}}</b></div>
+            {% for k,prm in parametros.items %}
+                {% if prm.pub %}
+                    <div class="w-25 py-1">{{prm.d}}: <b>{{prm.str}}</b></div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row pb-2" style="font-size: 0.8em;">
+        <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
+            <div class="w-25 py-1">Capital USD: <b>{{quote_qty|stringformat:".2f"}}</b></div>
+            <div class="w-25 py-1">Stop Loss General: <b>{{stop_loss|stringformat:".2f"}} %</b></div>
+            <div class="w-25 py-1">Maximo DrowDawn: <b>{{max_drawdown|stringformat:".2f" }} %</b></div>
+        </div>
+    </div>
+    {% if status %}
+    <div class="row" style="font-size: 0.8em;">
+        <h6 class="text-info">Estado de la posicion actual</h5>
+        <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
+            {% for k,item in status.items %}
+                <div class="w-25 py-1">{{item.l}}: <b {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</b></div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <ul class="nav nav-tabs" id="myTab" role="tablist" style="font-size: 0.9em;">
+            <li class="nav-item" role="resumen">
+              <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">Resumen</button>
+            </li>
+            <li class="nav-item" role="trades">
+                <button class="nav-link" id="trades-tab" data-bs-toggle="tab" data-bs-target="#trades-tab-pane" type="button" role="tab" aria-controls="trades-tab-pane" aria-selected="false">Operaciones</button>
+            </li>
+            <li class="nav-item" role="log">
+                <button class="nav-link" id="log-tab" data-bs-toggle="tab" data-bs-target="#log-tab-pane" type="button" role="tab" aria-controls="log-tab-pane" aria-selected="false">Log</button>
+            </li>
+          </ul>
+          <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="resumen-tab-pane" role="tabpanel" aria-labelledby="resumen-tab" tabindex="0" >
+                <div class="row pt-4">
+                    <div class="col-6" id="general" style="font-size: 0.8em;" >
+                        <h6 class="text-info">General</h5>
+                        {% for item in resultados.general %}
+                            <div class="row pb-1">
+                                <div class="col-6">{{item.t}}</div><div class="col-6 {{item.c}}" >{{item.v}}</div>
+                            </div> 
+                        {% endfor %}
+                    </div>
+                    <div class="col-3" id="operaciones" style="font-size: 0.8em;" >
+                        <h6 class="text-info">Operaciones</h5>
+                        {% for item in resultados.operaciones %}
+                            <div class="row pb-1">
+                                <div class="col-6">{{item.t}}</div><div class="col-6 {{item.c}}" >{{item.v}}</div>
+                            </div> 
+                        {% endfor %}
+                    </div>
+                    <div class="col-3" id="indicadores" style="font-size: 0.8em;" >
+                        <h6 class="text-info">Indicadores</h5>
+                        {% for item in resultados.indicadores %}
+                        <div class="row pb-1">
+                            <div class="col-6">{{item.t}}</div><div class="col-6 {{item.c}}">{{item.v}}</div>
+                        </div> 
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="row pt-4">  
+                    <h6 class="text-info">Ordenes en curso</h5>
+                    <div class="col">        
+                        <table class="table-dg table-trade-info">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Par</th>
+                                    <th>Operacion</th>
+                                    <th class="text-end">Cantidad</th>
+                                    <th class="text-end">Precio</th>
+                                    <th class="text-end">USD</th>
+                                    <th class="text-end">Comision USD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for o in orders %}
+                                <tr class="{% if o.side == 0 %}green{% else %}red{% endif %}" {% if o.price > 0 %} style="cursor:pointer;" onclick="show_exchange_order_info({{o.id}})" {% endif %}>
+                                    
+                                    <td>{{o.datetime|date:"d-m-Y H:i"}}</td>
+                                    <td>{{o.symbol}}</td>
+                                    <td>{% if o.side == 0 %}COMPRA{% else %}VENTA{% endif %} {{o.str_type}} {{o.str_flag}}
+                                        {% if o.limit_price > 0 %} (Limit Price {{o.limit_price}}) {% endif %}
+                                        {% if o.trail_perc > 0 %} (Trail {{o.trail_perc}}%) {% endif %}
+                                    </td>
+                                    <td class="text-end">{{o.qty}}</td>
+                                    <td class="text-end">{% if o.completed > 0 %} {{o.price}} {% else %} - {% endif %}</td>
+                                    <td class="text-end">{% if o.completed > 0 %} {{o.quote_qty|stringformat:".2f"}} {% else %} - {% endif %}</td>
+                                    <td class="text-end">{% if o.completed > 0 %} {{o.comision|stringformat:".2f"}} {% else %} - {% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="trades-tab-pane" role="tabpanel" aria-labelledby="trades-tab" tabindex="0">
+                <table class="table-dg table-trade-info">
+                    <thead>
+                        <tr>
+                            <th>Compra</th>
+                            <th>Venta</th>
+                            <th>Duracion (Dias)</th>
+                            <th>SL/TP</th>
+                            <th class="text-end">Cantidad</th>
+                            <th class="text-end">Compra</th>
+                            <th class="text-end">Venta</th>
+                            <th class="text-end">Resultado USD</th>
+                            <th class="text-end">Resultado %</th>
+                            <th class="text-end">Ordenes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for t in trades %}
+                        <tr class="{% if t.result_perc > 0 %}green{% else %}red{% endif %}">
+                            <td>{{t.start|date:"d-m-Y h:i"}}</td>
+                            <td>{{t.end|date:"d-m-Y h:i"}}</td>
+                            <td>{{t.duracion}}</td>
+                            <td>{{t.flag_type}}</td>
+                            <td class="text-end">{{t.buy_acum_base}}</td>
+                            <td class="text-end">{{t.buy_avg_price}}</td>
+                            <td class="text-end">{{t.sell_avg_price}}</td>
+                            <td class="text-end">{{t.result_quote|stringformat:".2f"}}</td>
+                            <td class="text-end">{{t.result_perc|stringformat:".2f"}} %</td>
+                            <td class="text-end">{{t.orders}}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade show" id="log-tab-pane" role="tabpanel" aria-labelledby="log-tab" tabindex="0" >
+                <table class="table-dg table-trade-info">
+                    <thead>
+                        <tr>
+                            <th width="10%">Fecha</th>
+                            <th width="10%">Tipo</th>
+                            <th>Texto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for l in log %}
+                        <tr class="{{l.class}}">
+                            <td>{{l.datetime|date:"d-m-Y h:i"}}</td>
+                            <td>{{l.type}}</td>
+                            <td>{{l.texto}}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+          </div>
+    </div>
+</div>
+
+<input type="hidden" id="bot_id" value="{bot_id}" >
+
+{% endblock %}
+
+{% block script %}
+<script>
+
+$(document).ready( function () {
+    //get_resultados()
+})
+function get_resultados() {
+    url = '{% url "get_resultados" bot_id %}';
+    console.log(url);
+        
+    get_ajax(url).done( function (rsp) {
+        if (rsp.error)
+        {
+            html_alert('Errores detectados',rsp.error,'text-danger')
+        }
+        else if (rsp.ok)
+        {
+            data = rsp.bt.data
+            timeUnit = 'minute';
+            if (rsp.parametros.interval_id.substring(1, 2) == 'd')
+                timeUnit = 'day';
+            else if (rsp.parametros.interval_id.substring(1, 2) == 'h')
+                timeUnit = 'hour';
+            
+            chartDraw(data, rsp.parametros.symbol, timeUnit )
+            infoDraw(rsp.bt);
+            $('#run').show();
+                        
+        }
+    });    
+}
+
+function eliminar()
+{
+    if (confirm('Confirma eliminar el bot {{nombre}}?'))
+    {
+        url = "{% url 'bot_delete' bot_id %}"
+        data = null
+        get_ajax(url,data).done( function (rsp) {
+            if (rsp.error)
+                html_alert('Errores detectados',rsp.error,'text-danger')
+            if (rsp.ok)
+            {
+                location.href = "{% url 'bots' %}";
+            }
+        });    
+
+        
+    }
+}
+
+function show_exchange_order_info(id)
+{
+
+    var modal = new bootstrap.Modal(document.getElementById('exch_order_modal'), {});
+    $('#modal_order_info').html('Obteniendo informacion desdel exchange ...');
+    modal.show();
+    url = "{% url 'bot_order_echange_info' 0 %}".replace('0',id);
+    data = null
+    get_ajax(url,data).done( function (rsp) {
+        if (rsp.error)
+            html_alert('Errores detectados',rsp.error,'text-danger')
+        if (rsp.ok)
+        {
+            $('#exch_order_modalModalLabel').html('Order ID #'+rsp.id+' '+rsp.symbol);
+            $('#modal_order_info').html('');
+            var html = '<div class="container">';
+
+            side = (rsp.side == 'BUY' ? '<span class="text-success">BUY</span>':'<span class="text-danger">SELL</span>')
+            
+            html += get_div_data('orderId',rsp.orderId)
+            html += get_div_data('Type',rsp.type)
+            html += get_div_data('Side',side)
+            html += get_div_data('Status',rsp.status)
+            html += get_div_data('Price',rsp.price)
+            html += get_div_data('Qty',rsp.qty)
+            html += get_div_data('Quote',rsp.quote)
+            html += get_div_data('Time',rsp.time)
+            html += '</div>';
+            $('#modal_order_info').html(html);
+            console.log(rsp);
+        }
+    });    
+}
+
+function get_div_data(label,data)
+{
+    return ' \
+        <div class="row"> \
+            <div class="col">'+label+'</div> \
+            <div class="col">'+data+'</div> \
+        </div>';
+}
+
+</script>
+
+{% endblock %}

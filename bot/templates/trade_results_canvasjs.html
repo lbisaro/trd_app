@@ -1,0 +1,364 @@
+<!-- Styles -->
+<style>
+    #chardiv-tab-pane {
+        /*height: 450px;*/ 
+        width: 100%;
+    }
+</style>
+
+<!-- Resources -->
+<script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script> 
+<script type="text/javascript" src="https://cdn.canvasjs.com/canvasjs.stock.min.js"></script>
+
+
+<!-- Chart code -->
+<script>
+    
+
+    function chartDraw(data, events, symbol, timeUnit) {
+        var ohlc = [], 
+            vol = [], 
+            SL = [], 
+            TP = [], 
+            BY = [], 
+            sB = [], 
+            sS = [], 
+            by = [], 
+            sls = [], 
+            slsl = [], 
+            sltp = [], 
+            hold= [], 
+            wallet= [], 
+            nav= [];    
+        var stockChart = new CanvasJS.StockChart("chardiv-tab-pane",{
+        backgroundColor: '#212529',
+        theme: "dark2",
+        animationEnabled: true,
+        charts: [{
+            //OHLC & Events
+            height: 300,
+            axisX: {
+                labelFontSize: 10,
+                crosshair: {
+                    enabled: true,
+                }
+            },
+            toolTip: {
+                enabled: false,
+            },
+            axisY: {
+                labelFontSize: 10,
+                prefix: "",
+                gridColor: "#aaaaaa88",
+                gridDashType: "dot",
+                crosshair: {
+                    enabled: true,
+                },
+            },
+            legend: {
+                verticalAlign: "top",
+                fontSize: 11,
+                fontWeight: 'lighter',
+                cursor: 'pointer',
+                itemclick: function (e) {
+                    //console.log("legend click: " + e.dataPointIndex);
+                    //console.log(e);
+                    if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                        e.dataSeries.visible = false;
+                    } else {
+                        e.dataSeries.visible = true;
+                    }
+
+                    e.chart.render();
+                }
+            },
+            data: [
+            {
+                type: "candlestick",
+                showInLegend: true,
+                name: symbol,
+                color: '#999999',
+                risingColor: '#999999',
+                fallingColor: '#222222', 
+                dataPoints : ohlc,
+                
+            },
+            { type: "scatter", color: 'green', markerType: 'circle', markerSize: 2, showInLegend: true, name: 'BY', dataPoints : BY, },
+            { type: "scatter", color: 'green', markerType: 'circle', markerSize: 2, showInLegend: true, name: 'TP', dataPoints : TP, },
+            { type: "scatter", color: 'red', markerType: 'circle', markerSize: 2, showInLegend: true, name: 'SL', dataPoints : SL, },
+            { type: "scatter", color: '#fcd535', showInLegend: true, name: 'Buy Sig', markerType: "triangle", dataPoints : sB, },
+            { type: "scatter", color: '#fcd535', showInLegend: true, name: 'Sell Sig', markerType: "cross", dataPoints : sS, },
+            { type: "scatter", color: '#0ecb81', showInLegend: true, name: 'Buy', markerType: "triangle", dataPoints : by, },
+            { type: "scatter", color: '#f6465d', showInLegend: true, name: 'Take-Profit', markerType: "triangle", dataPoints : sltp, },
+            { type: "scatter", color: '#f6465d', showInLegend: true, name: 'Stop-Loss', markerType: "cross", dataPoints : slsl, },
+            { type: "scatter", color: '#f6465d', showInLegend: true, name: 'Sell', markerType: "square", dataPoints : sls, },
+        ]
+        },
+        {
+            //Hold and Wallet
+            height: 170,
+            axisX: {
+                labelFontSize: 0,
+                lineThickness: 0,
+                tickLength: 0,
+                labelFormatter: function(e) {
+                return "";
+                },
+                crosshair: {
+                    enabled: true,
+
+                }
+            },
+            toolTip: {
+                enabled: false,
+            },
+            axisY: {
+                labelFontSize: 10,
+                prefix: "",
+                gridColor: "#aaaaaa88",
+                gridDashType: "dot",
+                crosshair:{
+                    enabled: true,
+                }
+            },
+            legend: {
+                verticalAlign: "top",
+                fontSize: 11,
+                fontWeight: 'lighter',
+            },
+            data: [{
+                type: "line",
+                showInLegend: true,
+                name: 'Buy&Sell',
+                color: '#77c6f9',
+                dataPoints : wallet,
+                
+            },
+            {
+                type: "line",
+                showInLegend: true,
+                name: 'Hold',
+                color: '#aaaaaa',
+                dataPoints : hold,
+                
+            }]
+            },
+        {
+            //Volume
+            height: 80,
+            axisX: {
+                labelFontSize: 0,
+                lineThickness: 0,
+                tickLength: 0,
+                labelFormatter: function(e) {
+                return "";
+                },
+                crosshair: {
+                    enabled: true,
+
+                }
+            },
+            toolTip: {
+                enabled: false,
+            },
+            axisY: {
+                labelFontSize: 10,
+                prefix: "",
+                gridColor: "#aaaaaa88",
+                gridDashType: "dot",
+                crosshair:{
+                    enabled: true,
+                }
+            },
+            legend: {
+                verticalAlign: "top",
+                fontSize: 11,
+                fontWeight: 'lighter',
+            },
+            data: [{
+                showInLegend: true,
+                name: 'Volume',
+                color: '#316688',
+                dataPoints : vol,
+                
+            },
+            ]
+            }
+        ],
+        rangeSelector: {
+            enabled: false,
+        },
+        navigator: {
+            verticalAlign: "top",
+            height: 50,
+            axisX: {
+                labelFontSize: 0,
+            },
+            data: [{
+                color: '#316688',
+                dataPoints: nav
+            }]
+        }
+    });
+
+
+    for(var i = 0; i < events.length; i++){
+        datetime = new Date(events[i].dt)
+        if (events[i].sB)
+            sB.push({x: datetime, y: Number(events[i].sB)});
+        if (events[i].sS)
+            sS.push({x: datetime, y: Number(events[i].sS)});
+        if (events[i].by)
+            by.push({x: datetime, y: Number(events[i].by)});
+        if (events[i].sls)
+            sls.push({x: datetime, y: Number(events[i].sls)});
+        if (events[i].slsl)
+            slsl.push({x: datetime, y: Number(events[i].slsl)});
+        if (events[i].sltp)
+            sltp.push({x: datetime, y: Number(events[i].sltp)});
+
+        if (events[i].SL)
+            SL.push({x: datetime, y: Number(events[i].SL)});
+        if (events[i].TP)
+            TP.push({x: datetime, y: Number(events[i].TP)});
+        if (events[i].BY)
+            BY.push({x: datetime, y: Number(events[i].BY)});
+    }
+
+    for(var i = 0; i < data.length; i++){
+        datetime = new Date(data[i].dt)
+        
+        ohlc.push({x: datetime, y: [Number(data[i].o), Number(data[i].h), Number(data[i].l), Number(data[i].c)]});
+        vol.push({x: datetime, y: Number(data[i].v)});
+        nav.push({x: datetime, y: Number(data[i].c)});
+        hold.push({x: datetime, y: Number(data[i].uH)});
+        wallet.push({x: datetime, y: Number(data[i].uW)});
+
+        if (data[i].SL)
+            SL.push({x: datetime, y: Number(data[i].SL)});
+        if (data[i].TP)
+            TP.push({x: datetime, y: Number(data[i].TP)});
+        if (data[i].BY)
+            BY.push({x: datetime, y: Number(data[i].BY)});
+
+        if (data[i].sB)
+            sB.push({x: datetime, y: Number(data[i].sB)});
+        if (data[i].sS)
+            sS.push({x: datetime, y: Number(data[i].sS)});
+        if (data[i].by)
+            by.push({x: datetime, y: Number(data[i].by)});
+        if (data[i].sls)
+            sls.push({x: datetime, y: Number(data[i].sls)});
+        if (data[i].slsl)
+            slsl.push({x: datetime, y: Number(data[i].slsl)});
+        if (data[i].sltp)
+            sltp.push({x: datetime, y: Number(data[i].sltp)});
+    
+        if (i+1 == data.length)
+            setTimeout( function () {
+                stockChart.render();
+                $('.canvasjs-chart-credit').hide();
+            },100);
+    }
+
+
+    }
+
+    
+
+    
+
+    function infoDraw(bt)
+    {
+        var div = $('#resumen-tab-pane');
+        div.find('#general').html('<h6 class="text-info">General</h6>');
+        div.find('#operaciones').html('<h6 class="text-info">Operaciones</h6>');
+        div.find('#indicadores').html('<h6 class="text-info">Metricas</h6>');
+        for (const items of bt.brief) {
+            cls = '';
+            if (items[3])
+                cls = items[3]
+            var html = '<div class="row pt-2">';
+            html += '<div class="col-6">'+items[1]+'</div>';
+            html += '<div class="col-6 '+cls+'">'+items[2]+'</div></div>'
+            html += '</div>';
+            div.find('#'+items[0]).append(html);
+        } 
+
+        qd_price = bt.qd_price;
+        qd_qty = bt.qd_qty;
+
+        var tbody = $('#trades-tab-pane table tbody');
+        tbody.html('')
+        for (const trade of bt.trades) {
+            var cls = (trade[7]>0?'green':'red');
+            var tr = '<tr class="'+cls+'">';
+            var flag = (trade[5]>0?bt.order_flag[trade[5]]:'')
+            var type = ''
+            if (bt.events.length>0)
+                type = (trade[9]>0?bt.order_type[trade[9]]:'')
+
+            tr += '<td>'+trade[0]+'</td>';
+            tr += '<td>'+trade[3]+'</td>';
+            tr += '<td>'+to_dec(trade[6],2)+'</td>';
+            tr += '<td>'+flag+' '+type+'</td>';
+            tr += '<td class="text-end">'+to_dec(trade[2],qd_qty)+'</td>';
+            tr += '<td class="text-end">'+to_dec(trade[1],qd_price)+'</td>';
+            tr += '<td class="text-end">'+to_dec(trade[4],qd_price)+'</td>';
+            tr += '<td class="text-end">'+to_dec(trade[7],2)+'</td>';
+            tr += '<td class="text-end">'+to_dec(trade[8],2)+'</td>';
+            tr += '<td class="text-end">'+trade[10]+'</td>';
+            tr += '</tr>';
+            tbody.append(tr);
+        } 
+        bootstrapFormat();
+        $('#resumen-tab').click();
+    }
+
+</script>
+
+<div class="row">
+    <h5>Resultado <span id="add_resultado_title" class="text-info"></span></h5>
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="resumen">
+          <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">Resumen</button>
+        </li>
+        <li class="nav-item" role="trades">
+            <button class="nav-link" id="trades-tab" data-bs-toggle="tab" data-bs-target="#trades-tab-pane" type="button" role="tab" aria-controls="trades-tab-pane" aria-selected="false">Operaciones</button>
+          </li>
+      </ul>
+      <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="resumen-tab-pane" role="tabpanel" aria-labelledby="resumen-tab" tabindex="0" >
+            <div class="row pt-4">
+                <div class="col-4" id="general" style="font-size: 0.8em;" ></div>
+                <div class="col-3" id="operaciones" style="font-size: 0.8em;" ></div>
+                <div class="col-3" id="indicadores" style="font-size: 0.8em;" ></div>
+            </div>
+            <h6 class="text-info">Grafico</h5>
+            <div id="chardiv-tab-pane" ></div>
+        </div>
+        
+        <div class="tab-pane fade" id="trades-tab-pane" role="tabpanel" aria-labelledby="trades-tab" tabindex="3">
+            <table class="table-dg table-trade-info">
+                <thead>
+                    <tr>
+                        <th>Compra</th>
+                        <th>Venta</th>
+                        <th>Duracion (Dias)</th>
+                        <th>SL/TP</th>
+                        <th class="text-end">Cantidad</th>
+                        <th class="text-end">Compra</th>
+                        <th class="text-end">Venta</th>
+                        <th class="text-end">Resultado USD</th>
+                        <th class="text-end">Resultado %</th>
+                        <th class="text-end">Ordenes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                </tbody>
+            </table>
+        </div>
+      </div>
+      
+</div>

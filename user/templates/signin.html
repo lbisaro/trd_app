@@ -1,0 +1,112 @@
+<!doctype html>
+{% load static %}
+<html lang="es" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Leonardo Bisaro">
+    <link rel="icon" href="{% static 'images/favicon.ico' %}">
+
+    <link href="{% static 'styles/bootstrap-custom.css' %}" rel="stylesheet" crossorigin="anonymous">
+    <link href="{% static 'styles/app.css' %}" rel="stylesheet" >
+    <link href="{% static 'styles/no_print.css' %}" media="print" rel="stylesheet" type="text/css">
+
+    <title>TraderBot :{{environment}}: Login </title>
+</head>
+
+<body>
+
+    <form class="form-signin" action="" name="mainForm" id="mainForm" onsubmit="return false;">
+        {% csrf_token %}
+        <section>
+            <div class="container py-5 ">
+                <div class="row d-flex justify-content-center align-items-center ">
+                    <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+                        <div class="card " style="border-radius: 1rem;">
+                            <div class="card-body p-5 text-center">
+
+                                <div class="mb-md-2 mt-md-4 pb-1">
+                                    <img class="mb-4" src="{% static 'images/login.png' %}" alt="" height="100">
+                                    <h2 class="fw-bold mb-4">Iniciar sesion</h2>
+
+                                    <div class="form-outline mb-4">
+                                        <label class="form-label" for="login_username">Nombre de usuario</label>
+                                        <input type="text" id="login_username" placeholder="Nombre de usuario"
+                                            class="form-control form-control-lg text-center" autofocus/>
+                                    </div>
+
+                                    <div class="form-outline mb-4">
+                                        <label class="form-label" for="login_password">Contraseña</label>
+                                        <input type="password" id="login_password" placeholder="Contraseña"
+                                            class="form-control form-control-lg text-center" />
+                                    </div>
+
+                                    <div id="login_msg" class="form-outline mb-4">
+                                    </div>
+
+                                    <div class="form-outline mb-4 mt-4 d-grid gap-2">
+                                        <button class="btn btn-primary btn-lg btn-block "
+                                            onclick="login()">Acceder</button>
+                                    </div>
+
+                                </div>
+                                <div class="row small mb-1 pb-lg-2">
+                                    <div class="col">
+                                        <a class="text-secondary" href="#!">Olvido su password?</a>
+                                    </div>
+                                    <div class="col">
+                                        <a href="/signup" class="text-secondary">Registrarse</a>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </form>
+    <script>
+
+        function login() {
+            login_msg('Aguarde...', 'text-secondary');
+            $.ajax({
+                type: 'POST',
+                url: '{% url "signin" %}',
+                data: {
+                    login_username: $('#login_username').val(),
+                    login_password: $('#login_password').val(),
+                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+                    action: 'post'
+                },
+                success: function (json) {
+                    if (json.login_error)
+                    {
+                        login_msg(json.login_error, 'text-danger')
+                    }
+                    else if (json.login_ok)
+                    {
+                        login_msg(json.login_ok, 'text-success');
+                        location.href = '{% url "home" %}'
+                    }
+                },
+                error: function (xhr, errmsg, err) {
+                    console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                }
+            });
+
+        }
+
+        function login_msg(text, cls) {
+            var html = '<span class="' + cls + '">' + text + '</span>';
+            $("#login_msg").html(html);
+        }
+
+    </script>
+</body>
+<script src="{% static 'scripts/bootstrap.bundle.min.js' %}" crossorigin="anonymous"></script>
+<script src="{% static 'scripts/jquery-3.7.0.min.js' %}"></script>
+<script src="{% static 'scripts/app.js' %}"></script>
+</html>

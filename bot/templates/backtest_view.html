@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% block title %}BackTest #{{backtest.id}}{% endblock %}
+{% block nav_title %}BackTest #{{backtest.id}}{% endblock %}
+
+{% load static %}
+
+{% block action_bar %}
+<span class="btn btn-primary btn-sm" onclick="clonar('{{backtest.id}}')">Clonar</span>
+<span class="btn btn-danger btn-sm" onclick="eliminar('{{backtest.id}}')">Eliminar</span>
+{% endblock %}
+
+{% block css %}
+<style>
+    /* CSS */
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row pb-2">
+        <div class="col-2">Bot
+            <div class="data">{{backtest.name}}</div>
+        </div>
+        <div class="col-2">Estado
+            <div class="data">{{backtest.str_estado}}</div>
+        </div>
+        <div class="col-2">Intervalo
+            <div class="data">{{backtest.str_interval}}</div>
+        </div>
+        <div class="col-3">Usuario
+            <div class="data">{{backtest.usuario.username}}</div>
+        </div>
+        {% if backtest.completo == 100 %}
+        <div class="col-3 rounded border border-1 text-center" >
+           
+                SCORING <b>{{scoring}}</b>
+                <br>
+                {{scoring_str}}
+                
+
+        </div>
+        {% endif %}
+    </div>
+    <div class="row rounded border border-1 " style="font-size: 0.8em;">
+        <div class="pt-2 text-info">Parametros</div>
+        <div class="d-flex flex-row flex-wrap pb-1 mb-1">
+            {% for k,prm in parametros.items %}
+                {% if prm.c != 'symbol' %}
+                    <div class="w-25 py-1">{{prm.d}}: <b>{{prm.str}}</b></div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% if backtest.completo < 100 %}
+    <div class="container text-center pt-2">
+        <h5 class="text-info">Proceso del BackTest</h5>
+    </div>
+    <div class="container font-monospace rounded border border-1" style="font-size: 1em;">
+        {% if backtest.completo < 100 %}
+        <div class="row">
+            <div class="progress" role="progressbar"  aria-valuemin="0" aria-valuemax="100" style="height: 1px">
+                <div id="progress_bar" class="progress-bar" width="{{backtest.completo}}%"></div>
+            </div>
+
+        </div>
+        {% endif %}
+        <div class="row pt-2" id="en_curso" style="display: none;">
+            <div class="row">
+                <div class="col-2">
+                    <h6 class="text-info">Procesando:</h6>
+                </div>
+                <div class="col text-success" id="en_curso_str">
+                    
+                </div>
+            </div>
+        </div>
+
+        <div class="row" id="periodos">
+            {% include 'backtest_view_periodos.html' %}
+        </div>
+    </div>
+{% else %}
+    <div class="container text-center pt-2">
+        <h5 class="text-info">Resultado del BackTest</h5>
+    </div>
+    <div class="container font-monospace rounded border border-1" style="font-size: 1em;">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="general">
+              <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general-tab-pane" type="button" role="tab" aria-controls="general-tab-pane" aria-selected="false" tabindex="-1">{{titulo_general}}</button>
+            </li>
+            <li class="nav-item" role="completo">
+              <button class="nav-link " id="completo-tab" data-bs-toggle="tab" data-bs-target="#completo-tab-pane" type="button" role="tab" aria-controls="completo-tab-pane" aria-selected="true">{{titulo_completo}}</button>
+            </li>
+            <li class="nav-item" role="alcista">
+              <button class="nav-link " id="alcista-tab" data-bs-toggle="tab" data-bs-target="#alcista-tab-pane" type="button" role="tab" aria-controls="alcista-tab-pane" aria-selected="true">{{titulo_alcista}}</button>
+            </li>
+            <li class="nav-item" role="lateral">
+              <button class="nav-link" id="lateral-tab" data-bs-toggle="tab" data-bs-target="#lateral-tab-pane" type="button" role="tab" aria-controls="lateral-tab-pane" aria-selected="false" tabindex="-1">{{titulo_lateral}}</button>
+            </li>
+            <li class="nav-item" role="bajista">
+                <button class="nav-link" id="bajista-tab" data-bs-toggle="tab" data-bs-target="#bajista-tab-pane" type="button" role="tab" aria-controls="bajista-tab-pane" aria-selected="false" tabindex="-1">{{titulo_bajista}}</button>
+              </li>
+          </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="general-tab-pane" role="tabpanel" aria-labelledby="general-tab" tabindex="0" >
+                {{html_General}}
+            </div>
+            <div class="tab-pane   " id="completo-tab-pane" role="tabpanel" aria-labelledby="completo-tab" tabindex="1" >
+                {{html_Completo}}
+            </div>
+            <div class="tab-pane   " id="alcista-tab-pane" role="tabpanel" aria-labelledby="alcista-tab" tabindex="2" >
+                {{html_Alcista}}
+            </div>
+            <div class="tab-pane   " id="lateral-tab-pane" role="tabpanel" aria-labelledby="lateral-tab" tabindex="3" >
+                {{html_Lateral}}
+            </div>
+            <div class="tab-pane   " id="bajista-tab-pane" role="tabpanel" aria-labelledby="bajista-tab" tabindex="4" >
+                {{html_Bajista}}
+            </div>
+        </div>
+    </div>
+{% endif %}
+    
+{% endblock %}
+
+{% block script %}
+<script>
+    var next_key = '{{next.key}}';
+    var next_str = '{{next.str}}';
+
+    $(document).ready(function () {
+        if (next_str)
+        {
+            execute_next();
+        }
+        var completo = '{{backtest.completo}}%'
+        $('#progress_bar').width(completo)
+    })
+
+    function eliminar()
+    {
+        if (confirm('Desea eliminar el BackTest {{backtest.name}}?'))
+            window.location = '{% url "backtest_delete" backtest.id %}';
+    }
+
+    function clonar()
+    {
+        window.location = '{% url "backtest_clone" backtest.clase backtest.id %}';
+    }
+    
+
+    function execute_next()
+    {
+        $('#en_curso').show();
+        $('#en_curso_str').html(next_str);
+        url = '{% url "backtest_execute" backtest.id %}';
+        data = {
+                key: parseInt(next_key),
+                }
+        get_ajax(url,data).done( function (rsp) {
+            if (rsp.error)
+            {
+                html_alert('Errores detectados',rsp.error,'text-danger')
+            }
+            else if (rsp.ok)
+            {
+                $('#estado').html(rsp.str_estado);
+                if (rsp.completo<100)
+                {
+                    $('#estado').addClass('text-warning');
+                }
+                else
+                {
+                    $('#estado').removeClass('text-warning');
+                    $('#estado').addClass('text-success');
+                    $('#progress_bar').addClass('bg-success');
+                    window.location = '{% url "backtest_view" backtest.id %}';
+                }
+                $('#periodos').html(rsp.html_periodos);
+                $('#progress_bar').width(rsp.completo+'%');
+                
+                if (rsp.next_key)
+                {
+                    next_key = rsp.next_key;
+                    next_str = rsp.next_str;
+                    setTimeout(function () {
+                        execute_next();       
+                    },300);
+                }
+
+
+            }
+        });    
+    }
+</script>
+{% endblock %}

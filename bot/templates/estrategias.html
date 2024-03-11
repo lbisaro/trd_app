@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Estrategias{% endblock %}
+{% block nav_title %}Estrategias{% endblock %}
+
+{% load static %}
+
+{% block action_bar %}
+<a class="btn btn-primary btn-sm" href="{% url 'estrategia_create' %}">Crear estrategia</a>
+{% endblock %}
+
+{% block css %}
+<style>
+    table#estrategias tr {
+        cursor: pointer;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <table id="estrategias" class="table-dg">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Intervalo</th>
+                <th>Parametros</th>
+                <th>Clase a ejecutar</th>
+                <th>Bots</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            {% for e in estrategias %}
+            <tr onclick="ver('{{e.id}}')" >
+                <td>{{e.nombre}}</td>
+                <td>{{e.get_intervalo}}</td>
+                <td>{{e.str_parametros}}</td>
+                <td>{{e.clase}}()</td>
+                <td>{% if e.qtyBots > 0  %} {{e.qtyBots}} {% endif %} </td>
+                <td>
+                    {% if e.activo %} 
+                    <span class="text-success">Activa</span>
+                    {% else %}
+                    <span class="text-danger">Inactiva</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        
+    </table>
+</div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+function ver(id)
+{
+    window.location = '{% url "estrategia" 0 %}'.replace('0',id);
+}
+</script>
+{% endblock %}

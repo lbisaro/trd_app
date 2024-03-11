@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}{{title}}{% endblock %}
+{% block nav_title %}{{nav_title}}{% endblock %}
+
+{% load static %}
+{% block content %}
+<script>
+    a = 8;
+</script>
+<div class="container">
+    {% if activo == 0 %}
+    <div class="row">
+        <h3 class="text-danger text-center">Bot inactivo</h3>
+    </div>
+    {% endif %}
+    <div class="row">
+        <div class="form-group col">
+            <label class="form-label" for="estrategia_id">Estrategia</label>   
+            <select id="estrategia_id" class="form-control" onchange="loadParametros()">
+            {% if not bot_id %}                                 
+                <option value="0">Seleccionar</option>
+            {% endif %}
+            {% for e in estrategias %}
+                <option value="{{e.id}}" {% if estrategia_id == e.estrategia_id %} SELECTED {% endif %}>{{e.nombre}}</option>
+            {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="row pt-2">
+        <div id="parametros" class="col">
+        <!-- Carga dinamica -->            
+        </div>
+
+    </div>
+
+    <div class="row pt-4">
+        <div class="form-group col-4">
+            <label class="form-label" for="quote_qty">Capital USD</label>
+            <div class="input-group ">
+                <span class="input-group-text" >USD</span>                                    
+                <input type="text" id="quote_qty" class="form-control" value="{{quote_qty}}">
+            </div>
+        </div>
+        <div class="form-group col-4">
+            <label class="form-label" for="stop_loss">Stop Loss General</label>
+            <div class="input-group ">
+                <span class="input-group-text" >%</span>                                    
+                <input type="text" id="stop_loss" class="form-control" value="{{stop_loss}}">
+            </div>
+        </div>
+        <div class="form-group col-4">
+            <label class="form-label" for="quote_qty">Maximo DrawDown</label>
+            <div class="input-group ">
+                <span class="input-group-text" >%</span>                                    
+                <input type="text" id="max_drawdown" class="form-control" value="{{max_drawdown}}">
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row pt-3 ">
+        <div class="col-12 d-grid gap-2">
+            <div class="btn btn-success " onclick="grabar()">Grabar</div>
+        </div>
+    </div>
+</div>
+<input type="hidden" id="bot_id" value="{{bot_id}}" >
+
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        loadParametros();
+    })
+    function loadParametros()
+    {
+        $('#parametros').html('');
+        
+        if ($('#estrategia_id').val() > 0)
+        {
+            url = '{% url "get_parametros_estrategia" 0 %}'.replace('0',$('#estrategia_id').val())
+            data = null;
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.ok > 0)
+                {
+                    html = '<div class="form-group pt-3 pb-1">Informacion sobre estrategia</div>';
+                    html += '<div class="d-flex flex-row flex-wrap rounded border border-1 pb-2">';
+                    html += '<pre class="p-2" style="font-family: inherit;">'+rsp.descripcion+'</pre>';
+                    html += '<div class="w-50 p-2">Intervalo: <b>'+rsp.intervalo+'</b></div>';
+                    
+                    for (const prms of rsp.parametros) {
+                        for (const clave in prms) {
+                            if (prms.hasOwnProperty(clave)) {
+                                const prm = prms[clave];
+                                if ( prm['pub'] )
+                                    if ( (prm['t'] != 'perc' ) || (prm['t'] == 'perc' && prm['v'] > 0) )
+                                        html += '<div class="w-50 p-2">'+prm['d']+': <b>'+prm['str']+'</b></div>'
+                            }
+                        }
+                    }
+                    html += '</div>';
+                    $('#parametros').append(html);
+                }
+            }); 
+        }
+    } 
+
+    function grabar() {
+        if ($('#bot_id').val() > 0 )
+        {
+            url = '{% url "bot_edit" bot_id %}';
+        }
+        else
+            url = '{% url "bot_create" %}';
+
+        data = {
+                estrategia_id: $('#estrategia_id').val(),
+                interval_id: $('#interval_id').val(),
+                quote_qty:    $('#quote_qty').val()*1,
+                max_drawdown: $('#max_drawdown').val()*1,
+                stop_loss:    $('#stop_loss').val()*1,
+            }
+
+        err = '';
+        if (data.estrategia_id < 1)
+           err += 'Se debe seleccionar una estrategia<br>';
+        if (data.quote_qty <= 0)
+           err += 'Se debe especificar el capital mayor a 0<br>';
+        if (data.max_drawdown<=0 || data.max_drawdown>100)
+           err += 'El Maximo DrawDown debe ser un numero entre 0 y 100<br>';
+        if (data.stop_loss<=0 || data.stop_loss>100)
+           err += 'El Stop Loss General debe ser un numero entre 0 y 100<br>';
+                
+        if (err)
+            html_alert('Errores detectados',err,'text-danger');
+        else
+        {
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.error)
+                    html_alert('Errores detectados',rsp.error,'text-danger')
+                if (rsp.ok)
+                {
+                    location.href = rsp.ok;
+                }
+            });    
+
+        }
+        
+    }
+
+</script>
+
+{% endblock %}

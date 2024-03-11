@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Pares{% endblock %}
+{% block nav_title %}Pares{% endblock %}
+
+{% load static %}
+
+{% block action_bar %}
+<a class="btn btn-primary btn-sm" href="{% url 'symbol_add' %}">Agregar nuevo Par</a>
+{% endblock %}
+
+{% block css %}
+<style>
+    table#symbols tr {
+        cursor: pointer;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <table id="symbols" class="table-dg">
+        <thead>
+            <tr>
+                <th>Par</th>
+                <th>Velas almacenadas</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            {% for s in symbols %}
+            <tr onclick="ver('{{s.id}}')" >
+                <td>{{s.symbol}}</td>
+                <td>{{s.first_kline}} - {{s.last_kline}}</td>
+                <td>
+                    {% if s.activo > 0 %}
+                    <span class="text-success">Activo</span>
+                    {% else %}
+                    <span class="text-danger">Inctivo</span>
+                    {% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        
+    </table>
+</div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+function ver(id)
+{
+    window.location = '{% url "symbol" 0 %}'.replace('0',id);
+}
+</script>
+{% endblock %}

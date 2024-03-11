@@ -1,0 +1,23 @@
+<h6 class="text-info text-center">{{titulo}}</h6>
+<table class="table backtest_results">
+    <thead>
+        <tr>
+            {% for col in df.columns %}
+              <th {% if not forloop.first %} class="text-center" {% endif %}>
+                {{col}}
+              </th>
+            {% endfor %}
+        </tr>    
+    </thead>
+    <tbody>
+      {% for index, row in df.iterrows %}
+        <tr class="{{index}}">
+          {% for cell in row %}
+            <td  {% if not forloop.first %} class="text-center" {% endif %}>
+              {{cell}}
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+</table>

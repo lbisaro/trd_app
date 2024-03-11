@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Bots{% endblock %}
+{% block nav_title %}Bots{% endblock %}
+
+{% load static %}
+
+{% block action_bar %}
+<a class="btn btn-primary btn-sm" href="{% url 'bot_create' %}">Crear bot</a>
+{% endblock %}
+
+{% block css %}
+<style>
+    table#bots tr {
+        cursor: pointer;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <table id="bots" class="table-dg">
+        <thead>
+            <tr>
+                <th>Estrategia</th>
+                <th>Intervalo</th>
+                <th>Capital USD</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            {% for b in bots %}
+            <tr onclick="ver('{{b.bot_id}}')" >
+                <td>{{b.estrategia}} {% if b.estrategia_activo == 0 %}<span class="text-danger">Inactiva</span>{% endif %}</td>
+                <td>{{b.intervalo}}</td>
+                <td>{{b.quote_qty}}</td>
+                <td>
+                    {% if b.activo %} 
+                    <span class="text-success">Activo</span>
+                    {% else %}
+                    <span class="text-danger">Inactivo</span>
+                    {% endif %}
+                </td>
+                
+            </tr>
+            {% endfor %}
+        </tbody>
+        
+    </table>
+</div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+function ver(id)
+{
+    window.location = '{% url "bot" 0 %}'.replace('0',id);
+}
+</script>
+{% endblock %}

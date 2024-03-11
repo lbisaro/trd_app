@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}Agregar Symbol{% endblock %}
+{% block nav_title %}Agregar Symbol{% endblock %}
+
+{% load static %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-6 form-group">
+            <label class="form-label" for="symbol" >Symbol</label>  
+            <div class="input-group ">
+                <input type="text" id="symbol" class="form-control" onkeypress="reset_info()">
+                <button class="btn btn-primary" onclick="get_symbol_info()">Validar</button>
+            </div>                                  
+        </div>
+
+    </div>
+    <div class="row pt-3">
+        <div class="col-6 form-group col">
+            <label class="form-label" for="base_asset" >Base Asset</label>                                    
+            <input type="text" id="base_asset" readonly class="form-control" >
+        </div>
+        <div class="col-6 form-group col">
+            <label class="form-label" for="quote_asset" >Quote Asset</label>                                    
+            <input type="text" id="quote_asset" readonly class="form-control" >
+        </div>
+    </div>
+    <div class="row pt-3">
+        <div class="col-12 text-center">
+            <h4>Decimales</h4>
+        </div>
+    </div>
+    <div class="row pt-3">
+            
+            <div class="col-4 form-group col">
+            <label class="form-label" for="qty_decs_qty" >Cantidad de unidades</label>                                    
+            <input type="text" id="qty_decs_qty" readonly class="form-control" >
+        </div>
+        <div class="col-4 form-group col">
+            <label class="form-label" for="qty_decs_price" >Precio</label>                                    
+            <input type="text" id="qty_decs_price" readonly class="form-control" >
+        </div>
+        <div class="col-4 form-group col">
+            <label class="form-label" for="qty_decs_quote" >Quote</label>                                    
+            <input type="text" id="qty_decs_quote" readonly class="form-control" >
+        </div>
+
+    </div>
+    <div class="form-group row pt-3 ">
+        <div class="col-12 d-grid gap-2">
+            <div class="btn btn-success " id="btn_grabar" onclick="grabar()">Grabar</div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+ 
+
+<script>
+
+    function reset_info()
+    {
+        $('#base_asset').val('');
+        $('#quote_asset').val('');
+        $('#qty_decs_qty').val('');
+        $('#qty_decs_price').val('');
+        $('#qty_decs_quote').val('');
+        $('#symbol').removeClass('is-valid')
+        $('#symbol').removeClass('is-invalid')
+        $('#btn_grabar').hide();
+    }
+    var info;
+    function get_symbol_info()
+    {
+        reset_info();
+        if ($('#symbol').val().length > 0)
+        {
+            url = '/bot/symbol/get_info/'+$('#symbol').val()+'/';
+            data = null;
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.ok)
+                {
+                    $('#symbol').addClass('is-valid')
+                    $('#symbol').val(rsp.base_asset+rsp.quote_asset)
+                    $('#base_asset').val(rsp.base_asset);
+                    $('#quote_asset').val(rsp.quote_asset);
+                    $('#qty_decs_qty').val(rsp.qty_decs_qty);
+                    $('#qty_decs_price').val(rsp.qty_decs_price);
+                    $('#qty_decs_quote').val(rsp.qty_decs_quote);
+                    $('#btn_grabar').show();
+                }
+                else
+                {
+                    reset_info();
+                    html_alert('Errores detectados', rsp.error, 'text-danger')
+                    $('#symbol').addClass('is-invalid')
+                }
+            }); 
+        }
+    } 
+
+    
+    function grabar() {
+        url = url = '{% url "symbol_add"%}';
+        
+        data = {
+                symbol: $('#symbol').val(),
+                base_asset: $('#base_asset').val(),
+                quote_asset: $('#quote_asset').val(),
+                qty_decs_qty: $('#qty_decs_qty').val(),
+                qty_decs_price: $('#qty_decs_price').val(),
+                qty_decs_quote: $('#qty_decs_quote').val(),
+        }
+        
+    
+        get_ajax(url,data).done( function (rsp) {
+            if (rsp.error)
+                html_alert('Errores detectados',rsp.error,'text-danger')
+            if (rsp.ok)
+            {
+                location.href = rsp.ok;
+            }
+        });    
+    }
+
+    $(document).ready(function () {
+        $('#btn_grabar').hide();
+        $('#symbol').focus();
+    })
+
+</script>
+
+{% endblock %}

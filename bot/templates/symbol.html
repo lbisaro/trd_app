@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Par {{symbol.symbol}}{% endblock %}
+{% block nav_title %}Par {{symbol.symbol}}{% endblock %}
+
+{% load static %}
+
+{% block action_bar %}
+{% if can_delete %}
+    <button class="btn btn-danger  btn-sm" onclick="eliminar()">Eliminar</a>
+{% endif %}
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-3 ">    
+            Nombre del Par
+        </div>
+        <div class="col-9 fw-bold">
+            {{symbol.symbol}}                                  
+        </div>
+    </div>
+    {% if symbol.activo == 0 %}
+    <div class="row">
+        <div class="col-12">
+            <h3 class="text-danger text-center">Par Inactivo</h3>
+            <div id="klines_status"></div>
+        </div>
+    </div>
+    {% endif %}
+    <div class="row pt-3">
+        <div class="col-3 ">    
+            Activo base
+        </div>
+        <div class="col-3 fw-bold">
+            {{symbol.base_asset}}                                  
+        </div>
+        <div class="col-3 ">    
+            Activo de cotización
+        </div>
+        <div class="col-3 fw-bold">
+            {{symbol.quote_asset}}                                  
+        </div>
+    </div>
+        
+    <div class="row pt-3">
+        <div class="col-3 ">    
+            Decimales
+        </div>
+        <div class="col-3">
+            Unidades: <span class="fw-bold">{{symbol.qty_decs_qty}}</span> 
+            Precio: <span class="fw-bold">{{symbol.qty_decs_price}}</span> 
+            Cotizacion: <span class="fw-bold">{{symbol.qty_decs_quote}}</span>  
+
+        </div>
+        {% if symbol.activo > 0 %}
+            {% for kline in klines  %}
+            <div class="col-3 ">    
+                Velas Almacenadas
+            </div>
+            <div class="col-3">
+                <span class="fw-bold">{{kline.first_kline}}</span> a <span class="fw-bold">{{kline.last_kline}}</span>
+
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        var activo = parseInt('{{symbol.activo}}');
+        if (activo == 0)
+            update_klines()
+    });
+
+
+    function update_klines()
+    {
+        url = "{% url 'update_klines' symbol.symbol %}";
+        data = null;
+        get_ajax(url,data).done( function (rsp) {
+            if (rsp.ok)
+            {
+                $('#klines_status').html('<div>Actualizando velas</div>');
+                var qty = 0;
+                for (const clave in rsp.res) {
+                        const symbol = rsp.res[clave];
+                        $('#klines_status').append('<div class="text-success">Se insertaron '+symbol['qty']+' registros para el symbol '+clave+' - ultima vela: '+symbol['datetime']+'</div>');
+                        qty = symbol['qty']
+                    
+                    }
+                if (qty > 0)
+                {
+                    setTimeout( function () { update_klines(); },1000);
+                }
+                else
+                {
+                    $('#klines_status').html('Actualizacion OK!');
+                    location.href = "{% url 'symbol' symbol.id %}";
+                }
+            }
+        });
+    }
+
+</script>
+
+{% endblock %}

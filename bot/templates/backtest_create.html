@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% block title %}Crear BackTest Completo{% endblock %}
+{% block nav_title %}Crear BackTest Completo{% endblock %}
+
+{% load static %}
+
+{% block css %}
+{% endblock %}
+
+{% block content %}
+
+<div class="container  pb-4" id="config">
+    <div class="row">
+        <div class="col-2">
+            Bot Class                                    
+        </div>
+        <div class="col-4 data">
+            {{bot_class_name}}
+        </div>
+        <div class="col-2">
+            intervalo
+        </div>
+        <div class="col-4">   
+            <select id="interval_id" class="form-control">
+                <option value="0" >Seleccionar</option>
+            {% for i in intervals %}
+                <option value="{{i.interval_id}}" > {{i.name}}</option>
+            {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="fw-bold  pt-3">Parametros del BackTesting</div>
+    <div id="parametros" class="row" >
+
+    </div>
+    
+</div>
+<div class="container"></div>
+    <div class="form-group row ">
+        <div class="col-12 d-grid gap-2">
+            <div class="btn btn-success " id="btn_ejecutar" onclick="ejecutar()">Ejecutar</div>
+            <div class="btn btn-secondary " id="btn_wait" style="display: none;" onclick="showConfig()">
+                <div>Procesando Backtesting</div>
+                <div id="ajax_spinner" class="spinner-border text-light" role="status" >
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div class="btn btn-primary " id="btn_return" style="display: none;" onclick="showConfig()">Volver a la configuracion</div>
+        </div>
+    </div>
+</div>
+<input type="hidden" id="botClass" value="{{botClass}}">
+
+{% endblock %}
+
+{% block script %}
+
+
+
+
+<script>
+
+    $(document).ready(function () {
+        //{% for k,prm in parametros.items %}
+            addParametro('{{prm.c}}', '{{prm.d}}', '{{prm.v}}', '{{prm.t}}');
+        //{% endfor %} 
+        interval_id = "{% if interval_id %}{{interval_id}}{% else %}2d01{% endif %}";
+        console.log(interval_id);
+        $('#interval_id').val(interval_id).change()
+    })
+
+    function addParametro(parametro,descripcion,value,type)
+    {
+        html = '<div class="col-6">';
+        html += '<div class="pt-1 form-group prm">'
+        if (type != 'symbol')
+            html += '<label class="form-label" for="'+parametro+'_v">'+descripcion+'</label>';
+        else
+            html += '<label class="form-label" >'+descripcion+'</label>';
+        
+        if (type == 'perc')
+        {
+            html += '<div class="input-group">'+
+                    '<span class="input-group-text" >%</span>'+
+                    '<input class="form-control value" id="'+parametro+'_v" value="'+parseFloat(value).toFixed(2)+'">'+
+                    '</div>';
+        }
+        else if (type == 'symbol')
+        {
+            html += '<span class="form-control" >Definidos en periodos de BackTest</span>';
+            html += '<input class="value" value="BACKTEST" type="hidden" id="'+parametro+'_v" >';
+        }
+        else if (type == 't_int')
+        {
+            html += '<td><div class="input-group ">'+
+                    '<select class="form-control value" id="'+parametro+'_v">'+
+                    '<option value="c" '+(value=='c'?'SELECTED':'')+' >Compuesto</option>'+
+                    '<option value="s" '+(value=='s'?'SELECTED':'')+' >Simple</option>'+
+                    '</select>'+
+                    '</div></td>';
+        }
+        else if (type == 'bin')
+        {
+            html += '<td><div class="input-group ">'+
+                    '<select class="form-control value" id="'+parametro+'_v">'+
+                    '<option value="1" '+(value=='1'?'SELECTED':'')+' >Si</option>'+
+                    '<option value="0" '+(value=='0'?'SELECTED':'')+' >No</option>'+
+                    '</select>'+
+                    '</div></td>';
+        }
+        else
+        {
+            html += '<input class="form-control value " id="'+parametro+'_v"  value="'+value+'">';
+        }
+        html += '<input type="hidden" id="'+parametro+'_c" class="parametro"  value="'+parametro+'">';
+        html += '<input type="hidden" id="'+parametro+'_t" class="type"  value="'+type+'">';
+
+        html += '</div></div>';
+        var qty = $('#parametros').append(html);
+    }
+
+    function ejecutar(rewrite=false) {
+        
+        url = '{% url "backtest_create" %}';
+        
+        data = {
+                bot_class_name: '{{bot_class_name}}',
+                from_date: $('#from_date').val(),
+                to_date: $('#to_date').val(),
+                interval_id: $('#interval_id').val(),
+                quote_qty: $('#quote_qty').val(),
+                rewrite: (rewrite?'YES':'NO'),
+            }
+        err = ''
+        if (data.interval_id == '0')
+            err += 'Se deben especificar el intervalo<br>';
+        
+        data.parametros = getParametros();
+        if (!data.parametros)
+           err += 'Se deben completar todos los parametros para el BackTesting<br>';
+        
+        if (err)
+        {
+            html_alert('Errores detectados',err,'text-danger');
+        }
+        else
+        {
+            makeWait()
+            $('#btn_ejecutar').attr('disabled',true);
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.error)
+                {
+                    html_alert('Errores detectados',rsp.error,'text-danger')
+                    showConfig()
+                }
+                else if (rsp.ok)
+                {
+                    window.location = '{% url "backtest_view" 0 %}'.replace('0',rsp.id);
+                }
+                else if (rsp.confirm_rewrite)
+                {
+                    if (confirm('Ya existe un BackTest con los parametros especificados.'+"\n"+'Desea sobreescribirlo?'))
+                        ejecutar(rewrite=true)
+                    else
+                        showConfig()
+                }
+            });    
+        }
+    }
+
+    function getParametros()
+    {
+        var parametros = '['; 
+        var err=0;
+        var ok=0
+        $('#parametros .prm').each( function () {
+            parametro = $(this).find('.parametro').val();
+            value = $(this).find('.value').val();
+            type = $(this).find('.type').val();
+            if (parametro.length>0 && value.length>0)
+            {
+                if (type == 'perc')
+                    parametros += "{'"+parametro.trim()+"':'"+to_dec(value.trim(),2)+"'}, ";
+                else
+                    parametros += "{'"+parametro.trim()+"':'"+value.trim()+"'}, ";
+                ok++;
+                $(this).removeClass('text-danger');
+            }
+            else if (parametro || value)
+            {
+                $(this).addClass('text-danger');
+                err++;
+            }
+        });
+        parametros += ']';
+        if (err>0 || ok==0)
+            return false;
+        return parametros;
+
+    }
+
+    function makeWait()
+    {
+        $('#btn_wait').show();
+        $('#btn_ejecutar').hide();
+        $('#btn_return').hide();
+
+    }
+    function showConfig()
+    {
+        $('#btn_wait').hide();
+        $('#btn_ejecutar').show();
+        $('#btn_return').hide();
+
+        $('#config').show();
+        $('#run').hide();
+    }
+    function showRun()
+    {
+        $('#btn_wait').hide();
+        $('#btn_ejecutar').hide();
+        $('#btn_return').show();
+
+        $('#config').hide();
+        $('#run').show();
+    }
+    
+
+
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% block title %}{{title}}{% endblock %}
+{% block nav_title %}{{title}}{% endblock %}
+
+{% load static %}
+{% block content %}
+<div class="container">
+    {% if activo == 0 %}
+    <div class="row">
+        <h3 class="text-danger text-center">Estrategia inactiva</h3>
+    </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-12 form-group">
+            <label class="form-label" for="nombre">Nombre de la estrategia</label>                                    
+            <input type="text" id="nombre" class="form-control" value="{{nombre}}">
+    
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-4 pt-3">
+            {% if qtyBots > 0 %}
+                <label class="form-label" for="clase">Bot Class</label>
+                <input type="text" id="clase" readonly class="form-control" value="{{clase}}"> 
+            {% else %}
+                <label class="form-label" for="clase">Bot Class</label>   
+                <select id="clase" class="form-control" onchange="loadParametros()">
+                {% if not estrategia_id %}                                 
+                    <option value="0">Seleccionar</option>
+                {% endif %}
+                {% for c in clases %}
+                    <option value="{{c}}" {% if clase == c %} SELECTED {% endif %}>{{c}}</option>
+                {% endfor %}
+                </select>
+            {% endif %}
+        </div>
+        <div class="form-group col-4 pt-3">
+            <label class="form-label" for="interval_id">Intervalo</label>
+            <select id="interval_id" class="form-control">
+                {% if not estrategia_id %}                                 
+                    <option value="0">Seleccionar</option>
+                {% endif %}
+                {% for i in intervals %}
+                    <option value="{{i.interval_id}}" {% if interval_id == i.interval_id %} SELECTED {% endif %}>{{i.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group col-4 pt-3">
+            <label class="form-label" for="max_drawdown">Maximo DrawDown</label>
+            <div class="input-group ">
+                <span class="input-group-text" >%</span>                                    
+                <input type="text" id="max_drawdown" class="form-control" value="{{max_drawdown}}">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 form-group">
+            <label class="form-label" for="descripcion">Descripcion</label> 
+            <textarea id="descripcion" class="form-control">{{descripcion}}</textarea>                                  
+        </div>
+    </div>
+    <div class="row p-3">
+        <div class="col">
+            <h4 class="text-center">Parametros</h4>
+            <table id="parametros" class="table-dg">
+                <thead>
+                    <tr>
+                        <th>Descripcion</th>
+                        <th class="w-25">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="form-group row pt-3 ">
+        <div class="col-12 d-grid gap-2">
+            <div class="btn btn-success " onclick="grabar()">Grabar</div>
+        </div>
+    </div>
+</div>
+<input type="hidden" id="estrategia_id" value="{{estrategia_id}}" >
+
+
+{% endblock %}
+
+{% block script %}
+ 
+
+<script>
+
+    function loadParametros()
+    {
+        $('#parametros tbody').html('');
+        if ($('#clase').val() != '0')
+        {
+            url = '/bot/estrategia/load_parametros/'+$('#clase').val()+'/';
+            data = null;
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.ok > 0)
+                {
+                    $('#descripcion').val(rsp.descripcion)
+                    for (const clave in rsp.parametros) {
+                        if (rsp.parametros.hasOwnProperty(clave)) {
+                            const prm = rsp.parametros[clave];
+                            addParametro(prm['c'], prm['d'], prm['v'], prm['t'], prm['pub']);
+                        }
+                    }
+                }
+            }); 
+        }
+    } 
+
+    function addParametro(parametro,descripcion,value,type,public)
+    {
+        var qty = $('#parametros tbody tr').length
+        if (public == 'False')
+            descripcion += ' <i class="bi bi-shield-lock text-danger"></i>';
+
+        html = '<tr>';
+        html += '<td>'+descripcion+'<input type="hidden" class="parametro" id="'+parametro+'_v" value="'+parametro+'"></td>';
+        if (type == 'perc')
+        {
+            html += '<td><div class="input-group ">'+
+                    '<span class="input-group-text" >%</span>'+
+                    '<input class="form-control value" value="'+parseFloat(value).toFixed(2)+'">'+
+                    '</div></td>';
+        }
+        else if (type == 'symbol')
+        {
+            html += '<td><select class="form-control value" id="'+parametro+'_v" >';
+            if ($('#estrategia_id').val() < 1)
+                html += '<option value="">Seleccionar</option>';
+            //{% for symbol in symbols %}
+            //{% if symbol.activo > 0  %}
+                html += '<option value="{{symbol.symbol}}" >{{symbol.symbol}}</option>';
+            //{% endif %}
+            //{% endfor %}
+            html += '</select></td>';
+            if ($('#estrategia_id').val() > 0)
+            {
+                setTimeout(function() {
+                    $('#'+parametro+'_v option[value='+value+']').attr('selected','selected');
+                },200)
+            }
+            
+        }
+        else if (type == 't_int')
+        {
+            html += '<td><div class="input-group ">'+
+                    '<select class="form-control value" id="'+parametro+'_v">'+
+                    '<option value="" >Seleccionar</option>'+
+                    '<option value="c" '+(value=='c'?'SELECTED':'')+' >Compuesto</option>'+
+                    '<option value="s" '+(value=='s'?'SELECTED':'')+' >Simple</option>'+
+                    '</select>'+
+                    '</div></td>';
+        }
+        else
+        {
+            html += '<td><input class="form-control value " value="'+value+'" id="'+parametro+'_v"></td>';
+        }
+        html += '</tr>';
+        var qty = $('#parametros tbody').append(html);
+    }
+
+    function grabar() {
+        if ($('#estrategia_id').val() > 0 )
+        {
+            url = '{% url "estrategia_edit" estrategia_id %}';
+        }
+        else
+            url = '{% url "estrategia_create" %}';
+        
+        data = {
+                nombre: $('#nombre').val().trim(),
+                clase: $('#clase').val(),
+                descripcion: $('#descripcion').val().trim(),
+                interval_id: $('#interval_id').val(),
+                max_drawdown: $('#max_drawdown').val().trim(),
+            }
+
+        err = '';
+        if (!data.nombre)
+           err += 'Se debe especificar el Nombre de la estrategia<br>';
+        if (!data.clase)
+           err += 'Se debe especificar la clase a Utilizar<br>';
+        if (data.interval_id=='0')
+           err += 'Se debe especificar un Intervalo<br>';
+        if (!data.descripcion)
+           err += 'Se debe especificar una Descripcion<br>';
+        if (data.max_drawdown<0 || data.max_drawdown>100)
+           err += 'El Maximo DrawDown debe ser un numero entre 0 y 100<br>';
+        
+        data.parametros = getParametros();
+        if (!data.parametros)
+           err += 'Se debe especificar al menos un parametro, y todos sus datos deben completarse<br>';
+        
+        if (err)
+            html_alert('Errores detectados',err,'text-danger');
+        else
+        {
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.error)
+                    html_alert('Errores detectados',rsp.error,'text-danger')
+                if (rsp.ok)
+                {
+                    location.href = rsp.ok;
+                }
+            });    
+        }
+    }
+
+    $(document).ready(function () {
+        //{% for k,prm in parametros.items %}
+        addParametro('{{prm.c}}', '{{prm.d}}', '{{prm.v}}', '{{prm.t}}', '{{prm.pub}}');
+        //{% endfor %} 
+        setTimeout(function () { 
+            $('#nombre').focus(); 
+
+        },500);
+
+        
+    })
+
+    function getParametros()
+    {
+        var parametros = '['; 
+        var err=0;
+        var ok=0
+        $('#parametros tbody tr').each( function () {
+            parametro = $(this).find('.parametro').val();
+            value = $(this).find('.value').val();
+            if (parametro.length>0 && value.length>0)
+            {
+                parametros += "{'"+parametro.trim()+"':'"+value.trim()+"'}, ";
+                ok++;
+                $(this).removeClass('table-danger');
+            }
+            else if (parametro || value)
+            {
+                $(this).addClass('table-danger');
+                err++;
+            }
+        });
+        parametros += ']';
+        if (err>0 || ok==0)
+            return false;
+        return parametros;
+
+    }
+</script>
+
+{% endblock %}

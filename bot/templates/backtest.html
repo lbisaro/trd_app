@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}BackTest{% endblock %}
+{% block nav_title %}BackTest{% endblock %}
+
+{% load static %}
+
+{% block action_bar %}
+
+{% endblock %}
+
+{% block css %}
+<style>
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <div class="container">
+        <h5 class="text-center text-info">Seleccionar una Bot Class para ejecutar</h5>
+        <table id="clases" class="table-dg">
+            <thead>
+                <tr>
+                    <th>Bot</th>
+                    <th>Descripcion</th>
+                    <th>Ejecutar</th>
+                </tr>
+            </thead>
+            
+            <tbody>
+                {% for e in clases %}
+                <tr >
+                    <td>{{e.class}}</td>
+                    <td>{{e.descripcion}}</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="Basic example">
+                            <span class="btn btn-info btn-sm" onclick="prueba_simple('{{e.class}}')" >Simple</span>
+                            <span class="btn btn-info btn-sm" onclick="prueba_completa('{{e.class}}')" >Completo</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            
+        </table>        
+        
+    </div>
+    <div class="container">
+        <h5 class="text-center text-info">BackTests</h5>
+        <table id="resultados" class="table-dg">
+            <thead>
+                <tr>
+                    <th id="th_bot">Bot</th>
+                    <th id="th_intervalo">Intervalo</th>
+                    <th>Estado</th>
+                    <th>Creado</th>
+                    <th>Usuario</th>
+                    <th>Parametros</th>
+                    <th class="text-center">Scoring</th>
+                    <th>Tendencias</th>
+
+                </tr>
+            </thead>
+            
+            <tbody>
+                {% for bt in backtests %}
+                <tr onclick="ver('{{bt.id}}')" class="bot_{{bt.clase}} int_{{bt.str_interval}}">
+                    <td>{{bt.name}}</td>
+                    <td>{{bt.str_interval}}</td>
+                    <td>{{bt.str_estado}}</td>
+                    <td>{{bt.creado|date:"d-m-Y h:i"}}</td>
+                    <td>{{bt.usuario.username}}</td>
+                    <td>{{bt.str_parametros}}</td>
+                    <td class="text-center">{{bt.scoring}}</td>
+                    <td>{{bt.scoring_str}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            
+        </table>
+    </div>
+
+</div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+
+$(document).ready(function () {
+    $('#resultados tbody tr').css('cursor','pointer');
+
+    var intervalos = [];
+    var bots = [];
+    intervalos["0"] = "Todos";
+    bots["0"] = "Bot";
+
+    {% for bt in backtests %}
+    
+        intervalos["{{bt.str_interval}}"] = "{{bt.str_interval}}";
+        bots["{{bt.clase}}"] = "{{bt.clase}}"
+    
+    {% endfor %}
+    
+    slct_bot = 'Bot';
+    if (bots.length > 0)
+    {
+        slct_bot = '<select id="slct_bot" class="form-control" onchange="filter_bots();">';
+        for (i in bots)
+            slct_bot += '<option value = "'+i+'">'+bots[i]+'</option>'; 
+        slct_bot += '<select>'; 
+        $('#th_bot').html(slct_bot);
+
+        slct_int = '<select id="slct_int" class="form-control" onchange="filter_bots();">';
+        for (i in intervalos)
+            slct_int += '<option value = "'+i+'">'+intervalos[i]+'</option>'; 
+        slct_int += '<select>'; 
+        $('#th_intervalo').html(slct_int);        
+    }
+})
+function prueba_simple(id)
+{
+    window.location = '{% url "backtesting_config" 0 %}'.replace('0',id);
+}
+
+function prueba_completa(id)
+{
+    window.location = '{% url "backtest_config" 0 %}'.replace('0',id);
+}
+
+function ver(id)
+{
+    window.location = '{% url "backtest_view" 0 %}'.replace('0',id);
+}
+
+function filter_bots()
+{
+    var filter_bot = $('#slct_bot').val();
+    var filter_int = $('#slct_int').val();
+    console.log('Filter ',filter_bot,filter_int)
+    if (filter_bot == '0' && filter_int == '0')
+    {
+        $('#resultados tbody tr').show()
+    }
+    else
+    {
+        $('#resultados tbody tr').each( function () {
+            if (filter_bot != '0' && filter_int != '0' && ($(this).hasClass('bot_'+filter_bot) && $(this).hasClass('int_'+filter_int)))
+                $(this).show();
+            else if (filter_bot != '0' && filter_int == '0' && $(this).hasClass('bot_'+filter_bot) )
+                $(this).show();
+            else if (filter_bot == '0' && filter_int != '0' && $(this).hasClass('int_'+filter_int) )
+                $(this).show();
+            else
+                $(this).hide();
+
+        })
+    }
+}
+</script>
+
+
+{% endblock %}

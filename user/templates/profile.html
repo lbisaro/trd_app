@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}{{title}}{% endblock %}
+{% block nav_title %}{{title}}{% endblock %}
+
+{% load static %}
+{% block content %}
+
+<div class="container">
+    <div class="row pb-3">
+        <div class="col-2">Apellido y Nombre</div>                                    
+        <div class="col fw-bold" >{{ayn}}</div>   
+    </div>
+    <div class="row pb-3">
+        <div class="col-2">Nombre de usuario</div>                                    
+        <div class="col fw-bold" >{{username}}</div>   
+    </div>
+    <div class="row pb-3">
+        <div class="col-2">Mail</div>                                    
+        <div class="col fw-bold" >{{mail}}</div>   
+    </div>
+    <div class="row pb-3" id="select_config">
+    {% if not config.bnc %}
+        <div class="col">
+            <button onclick="activate('bnc');" class="btn btn-primary">Conectar con exchange Binance</button>
+        </div>                                    
+    {% else %}
+        <div class="col">
+            <button onclick="remove('bnc');" class="btn btn-danger">Desconectar exchange Binance <b>{{config.bnc.bnc_env|upper}}</b></button>
+        </div>                                    
+    {% endif%}
+    </div>
+    <div id="config_bnc" class="row pb-3 config_form" style="display: none;">
+        <h4 class="text-info">Configurar conexion con Binance</h4>
+        <div class="row pb-3">
+            <div class="col" class="form-label" for="bnc_apk">API_KEY</div>
+            <input type="text" class="form-control" id="bnc_apk" placeholder="API_KEY Provista por Binance">                                    
+        </div>
+        <div class="row pb-3">
+            <div class="col" class="form-label" for="bnc_aps">API_SECRET</div>
+            <input type="text" class="form-control" id="bnc_aps" placeholder="API_SECRET Provista por Binance">                                    
+        </div>
+        <div class="row pb-3">
+            <div class="col" class="form-label" for="bnc_env">Entorno</div>
+            <select id="bnc_env" class="form-control">
+                <option value="0">Seleccionar</option>
+                <option value="test">Test</option>
+                <option value="prod">Produccion</option>
+            </select>
+        </div>
+    </div>    
+    <div id="config_btn" class="form-group row pt-3 config_form" style="display: none;">
+        <div class="col-12 d-grid gap-2">
+            <div class="btn btn-success " onclick="grabar()">Grabar</div>
+        </div>
+    </div>
+ 
+</div>
+<input type="hidden" id="user_id" value="{{user_id}}" >
+
+
+{% endblock %}
+
+{% block script %}
+ 
+
+<script>
+    active_config = '';
+    function activate(item)
+    {
+        active_config = item;
+        $('#select_config').hide();
+        $('.config_form').hide();
+        $('#config_'+item).show();
+        $('#config_btn').show();
+
+    }
+
+    function remove(item)
+    {
+        if (confirm('Esta seguro de quitar la configuracion?'))
+        {
+            data = {
+                remove: item,
+            } 
+            url = '{% url "profile" %}'
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.error)
+                    html_alert('Errores detectados',rsp.error,'text-danger')
+                if (rsp.ok)
+                {
+                    location.href = '{% url "profile" %}';
+                }
+            });        
+        }
+    }
+
+    function grabar() {
+        err = '';
+        if (active_config == 'bnc')
+        {
+            console.log($('#bnc_env').val())
+            data = {
+                config: active_config,
+                bnc_env: $('#bnc_env').val().trim(),
+                bnc_apk: $('#bnc_apk').val().trim(),
+                bnc_aps: $('#bnc_aps').val(),
+            }
+            if (data.bnc_env == '0')
+                err += 'Se debe especificar el entorno<br>';
+            if (!data.bnc_apk)
+                err += 'Se debe especificar la API_KEY<br>';
+            if (!data.bnc_aps )
+                err += 'Se debe especificar la API_SECRET<br>';
+        }
+        
+
+        
+        if (err)
+            html_alert('Errores detectados',err,'text-danger');
+        else
+        {
+            url = '{% url "profile" %}'
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.error)
+                    html_alert('Errores detectados',rsp.error,'text-danger')
+                if (rsp.ok)
+                {
+                    location.href = '{% url "profile" %}';
+                }
+            });    
+        }
+    }
+
+    $(document).ready(function () {
+               
+    })
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}BackTesting{% endblock %}
+{% block nav_title %}BackTesting{% endblock %}
+
+{% load static %}
+
+{% block action_bar %}
+
+{% endblock %}
+
+{% block css %}
+<style>
+    table#clases tr {
+        cursor: pointer;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <div class="container">
+        <h4 class="text-center">Seleccionar una Bot Class</h4>
+        <table id="clases" class="table-dg">
+            <thead>
+                <tr>
+                    <th>Bot Class</th>
+                    <th>Descripcion</th>
+                </tr>
+            </thead>
+            
+            <tbody>
+                {% for e in clases %}
+                <tr onclick="seleccionar('{{e.class}}')" >
+                    <td>{{e.class}}</td>
+                    <td>{{e.descripcion}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            
+        </table>
+    </div>
+</div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+function seleccionar(id)
+{
+    window.location = '{% url "backtesting_config" 0 %}'.replace('0',id);
+}
+</script>
+{% endblock %}

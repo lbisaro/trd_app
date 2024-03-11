@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Registrarse{% endblock %}
+{% block nav_title %}Registrarse{% endblock %}
+{% load static %}
+
+{% block content %}
+
+<section>
+    <div class="container py-5 ">
+        <div class="row d-flex justify-content-center align-items-center ">
+            <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+                <div class="card " style="border-radius: 1rem;">
+                    <div class="card-body p-5 text-center">
+
+                        <div class="mb-md-2 mt-md-4 pb-1">
+                            <h5 class="fw-bold mb-4">Registre sus datos</h5>
+                    
+                            <div class="form-outline mb-3">
+                                <input type="text" id="first_name" placeholder="Nombre"
+                                    class="form-control form-control-lg text-center" autofocus/>
+                            </div>
+
+                            <div class="form-outline mb-3">
+                                <input type="text" id="last_name" placeholder="Apellido"
+                                    class="form-control form-control-lg text-center" />
+                            </div>
+
+                            <div class="form-outline mb-3">
+                                <input type="email" id="email" placeholder="Correo electronico"
+                                    class="form-control form-control-lg text-center" />
+                            </div>
+
+                            <div class="form-outline mb-3">
+                                <input type="text" id="username" placeholder="Nombre de usuario"
+                                    class="form-control form-control-lg text-center" />
+                            </div>
+
+                            <div class="form-outline mb-3">
+                                <input type="password" id="password1" placeholder="Contraseña"
+                                    class="form-control form-control-lg text-center" />
+                            </div>
+
+                            <div class="form-outline mb-3">
+                                <input type="password" id="password2" placeholder="Contraseña (Confirmacion)"
+                                    class="form-control form-control-lg text-center" />
+                            </div>
+
+                            <div id="signup_msg" class="form-outline mb-4">
+                            </div>
+
+                            <div class="form-outline mb-4 mt-4 d-grid gap-2">
+                                <button class="btn btn-primary btn-lg btn-block "
+                                    onclick="signup()">Registrarse</button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block script %}
+<script>
+var ajxRsp;
+function signup() {
+    url = '{% url "signup" %}'
+    data = {
+            first_name: $('#first_name').val(),
+            last_name: $('#last_name').val(),
+            email: $('#email').val(),
+            username: $('#username').val(),
+            password1: $('#password1').val(),
+            password2: $('#password2').val(),
+    }
+
+
+    get_ajax(url,data).done( function (rsp) {
+        if (rsp.error)
+            html_alert('Errores detectados',rsp.error,'text-danger')
+        if (rsp.ok)
+        {
+            html_alert('',rsp.ok,'text-success')
+            location.href = '{% url "signin" %}'
+        }
+            
+
+        
+        
+    });    
+
+}
+</script>
+{% endblock %}
