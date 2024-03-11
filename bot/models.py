@@ -90,7 +90,7 @@ class Estrategia(models.Model):
         for prm in pe:
             for v in prm:
                 parametros[v]['v'] = prm[v]
-                parametros[v]['str'] = prm[v]
+                parametros[v]['str'] = str(prm[v])
 
                 if parametros[v]['t'] == 'perc':
                     val = float(parametros[v]['v'])
@@ -116,7 +116,7 @@ class Estrategia(models.Model):
         for p in prm:
             if str != '':
                 str += ', '
-            str += str(prm[p]['v'])
+            str += prm[p]['str']
         return f"{str}"
 
     def get_estrategias_to_run(intervals):
