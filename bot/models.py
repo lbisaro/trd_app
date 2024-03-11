@@ -116,7 +116,7 @@ class Estrategia(models.Model):
         for p in prm:
             if str != '':
                 str += ', '
-            str += prm[p]['str']
+            str += prm[p]['sn']+': '+prm[p]['str']
         return f"{str}"
 
     def get_estrategias_to_run(intervals):
