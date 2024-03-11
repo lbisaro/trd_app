@@ -1,0 +1,9 @@
+__pycache__
+venv
+local__*
+user/migrations/*.py
+bot/migrations/*.py
+*.log
+*.DataFrame
+backtest/results/*.json
+*.sqlite3

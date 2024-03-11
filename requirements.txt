@@ -1,0 +1,21 @@
+Django
+ptvsd
+django-extensions
+pandas
+numpy
+pickleshare
+python-binance
+ta
+pandas-ta
+django-pandas
+
+#Libs for Backtesting
+tqdm==4.66.1
+scikit-optimize==0.9.0
+
+#En Windows instalar Visual Studio 2022 Comunity, solo los componentes MSVC v143、windows 10 SDK 
+smartmoneyconcepts
+
+mysql-connector-python
+mysqlclient
+plotly

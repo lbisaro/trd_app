@@ -1,0 +1,91 @@
+Instalar:
+	Docker
+	GitHug Desktop
+	VSCode
+
+Instalar opcionales:
+	python3.8
+	venv
+	pip -r requirements.txt
+
+Luego de clonar:
+	COPIAR:
+	local_config.py
+	Base SQLite3 
+	Bots base desde ./scripts
+	Carpeta Bots desde ./Scripts
+
+Crear Base de datos y migraciones:
+	cd www/
+	python ./manage.py sqlcreate
+	python ./manage.py makemigrations
+	python ./manage.py makemigrations user
+	python ./manage.py makemigrations bot
+	python ./manage.py migrate
+
+Crear SuperUser:
+	cd www/
+	python ./manage.py createsuperuser
+	
+
+
+#Entorno virtual
+#Usar python 3.8
+sudo apt install python3-venv
+python -m venv venv
+source venv/bin/activate.....
+
+
+
+
+
+pip install django
+django-admin startproject ie .
+configurar la base de datos en settings
+
+sudo apt-get install python3-dev
+
+Remove MySQL
+sudo apt-get remove --purge mysql*
+https://hevodata.com/learn/mysql-to-mariadb/
+
+python .\manage.py createsuperuser
+
+
+
+c:\users\lbisa\appdata\local\programs\python\python38\python.exe -m pip install --upgrade pip setuptools wheel
+
+
+
+EN PRODUCCION
+ref: https://render.com/docs/deploy-django
+    settings.py
+        import os
+        SECRET_KEY = 'your secret key'
+        DEBUG = local.DEBUG
+        ALLOWED_HOSTS = ['localhost']
+
+GITHUB
+git init
+git add .
+git commit -m "Start"
+
+Comandos Docker:
+
+	Construir, Reconstruir y Ejecutar
+	docker-compose up --build
+
+	Ejecutar y ver log
+	docker-compose up
+
+	Ejecutar y devolver el control a la terminal
+	docker-compose up -d 
+
+	Otros comandos
+
+	Command				Action						Removes Containers		Removes Networks	Removes Volumes		Removes Images
+	docker-compose down	Stops and removes			Yes						Yes					Optional			Optional
+	docker-compose stop	Stops only					No						No					No					No
+	docker-compose rm	Removes stopped containers	Yes						No					No					No
+
+//---------------------------------------------------------------------------------------------------------------
