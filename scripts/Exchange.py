@@ -130,59 +130,59 @@ class Exchange():
             end_datetime = ( datetime.strptime(next_datetime, '%Y-%m-%d %H:%M:%S') + timedelta(minutes=MINUTES_TO_GET) ).strftime('%Y-%m-%d %H:%M:%S')
             
             if last_minute < valid_last_minute:
-                try:
-                    klines = self.client.get_historical_klines(symbol=s.symbol, 
-                                                                interval='1m', 
-                                                                start_str=next_datetime+ ' UTC-3',
-                                                                end_str=end_datetime+ ' UTC-3')
+                #try:
+                klines = self.client.get_historical_klines(symbol=s.symbol, 
+                                                            interval='1m', 
+                                                            start_str=next_datetime+ ' UTC-3',
+                                                            end_str=end_datetime+ ' UTC-3')
 
-                    df = pd.DataFrame(klines)
-                    df = df.iloc[:, :6]
-                    df.columns = ["datetime", "open", "high", "low", "close", "volume"]
-                    df['open'] = df['open'].astype('float')
-                    df['high'] = df['high'].astype('float')
-                    df['low'] = df['low'].astype('float')
-                    df['close'] = df['close'].astype('float')
-                    df['volume'] = df['volume'].astype('float')
-                    df['datetime'] = pd.to_datetime(df['datetime'], unit='ms') - pd.Timedelta('3 hr')
-                    df['symbol_id'] = s.id
-                    qty_records =  int(df['datetime'].count()) 
+                df = pd.DataFrame(klines)
+                df = df.iloc[:, :6]
+                df.columns = ["datetime", "open", "high", "low", "close", "volume"]
+                df['open'] = df['open'].astype('float')
+                df['high'] = df['high'].astype('float')
+                df['low'] = df['low'].astype('float')
+                df['close'] = df['close'].astype('float')
+                df['volume'] = df['volume'].astype('float')
+                df['datetime'] = pd.to_datetime(df['datetime'], unit='ms') - pd.Timedelta('3 hr')
+                df['symbol_id'] = s.id
+                qty_records =  int(df['datetime'].count()) 
 
-                    timezone = pytz.timezone('UTC')
-                    
-                    #Si no obtuvo el total de las velas esperadas es porque llego al final del lote
-                    #Por lo tanto, se elimina el ultimo registro para no almacenar velas que estan en formacion
-                    if qty_records < MINUTES_TO_GET: 
-                        df = df[:-1]   
-                         
-                    updated = False
-                    qty_records =  int(df['datetime'].count())
-                    if qty_records > 0:
+                timezone = pytz.timezone('UTC')
+                
+                #Si no obtuvo el total de las velas esperadas es porque llego al final del lote
+                #Por lo tanto, se elimina el ultimo registro para no almacenar velas que estan en formacion
+                if qty_records < MINUTES_TO_GET: 
+                    df = df[:-1]   
+                        
+                updated = False
+                qty_records =  int(df['datetime'].count())
+                if qty_records > 0:
 
-                        df_records = df.to_dict('records')
-                        data = [Kline(
-                            datetime = timezone.localize(row['datetime']),
-                            open  = row['open'],
-                            high  = row['high'],
-                            low  = row['low'],
-                            close  = row['close'],
-                            volume  = row['volume'],
-                            symbol_id  = row['symbol_id'],
-                        ) for row in df_records]
-                        Kline.objects.bulk_create(data)
-                        if qty_records < MINUTES_TO_GET:
-                            updated = True 
-                        else:
-                            updated = False
-                        res[s.symbol] = {'qty':qty_records, 'updated': updated, 'datetime': df['datetime'].iloc[-1].strftime('%Y-%m-%d %H:%M')} 
+                    df_records = df.to_dict('records')
+                    data = [Kline(
+                        datetime = timezone.localize(row['datetime']),
+                        open  = row['open'],
+                        high  = row['high'],
+                        low  = row['low'],
+                        close  = row['close'],
+                        volume  = row['volume'],
+                        symbol_id  = row['symbol_id'],
+                    ) for row in df_records]
+                    Kline.objects.bulk_create(data)
+                    if qty_records < MINUTES_TO_GET:
+                        updated = True 
                     else:
-                        updated = True
-                        res[s.symbol] = {'qty':0, 'updated': True, 'datetime': df['datetime'].iloc[-1].strftime('%Y-%m-%d %H:%M')} 
-                    if updated:
-                        s.activate()
-                except Exception as e:
-                    print('Exchange::update_klines()',str(e))
-                    pass 
+                        updated = False
+                    res[s.symbol] = {'qty':qty_records, 'updated': updated, 'datetime': df['datetime'].iloc[-1].strftime('%Y-%m-%d %H:%M')} 
+                else:
+                    updated = True
+                    res[s.symbol] = {'qty':0, 'updated': True, 'datetime': df['datetime'].iloc[-1].strftime('%Y-%m-%d %H:%M')} 
+                if updated:
+                    s.activate()
+                #except Exception as e:
+                #    print('Exchange::update_klines()',str(e))
+                #    pass 
             else:
                 res[s.symbol] = {'qty':0, 'updated': True, 'datetime': valid_last_minute}
                 s.activate()
