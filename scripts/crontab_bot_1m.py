@@ -26,7 +26,7 @@ def run():
     estrategias = Estrategia.get_estrategias_to_run(apply_intervals)
     active_symbols = []
     for estr in estrategias:
-        log.info(f'Estrategia: {estr}')
+        #log.info(f'Estrategia: {estr}')
         #print(f'Estrategia: {estr}')
         gen_bot = GenericBotClass().get_instance(estr.clase)
         gen_bot.set(estr.parse_parametros())
@@ -64,7 +64,7 @@ def run():
         botClass.username = bot.usuario.username
 
         if bot.usuario.id != usuario_id:
-            log.info(f'Usuario: {bot.usuario.username}')
+            #log.info(f'Usuario: {bot.usuario.username}')
 
             usuario_id = bot.usuario.id
             profile = UserProfile.objects.get(user_id=bot.usuario.id)
@@ -76,7 +76,7 @@ def run():
 
             exch = Exchange(type='user_apikey',exchange='bnc',prms=prms)                
 
-        log.info(f'Bot: {bot}')
+        #log.info(f'Bot: {bot}')
             
         
         ### - Disparar las señales a los bots activos
