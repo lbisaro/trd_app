@@ -88,7 +88,7 @@ def run():
             signal_row = signal_rows[bot.estrategia_id]
             signal = signal_row['signal']
         #if signal != 'NEUTRO':
-        log.info(f'{bot} - Signal: {signal}')
+        log.info(f'{bot} - aa Signal: {signal}')
 
 
         #Cargando Billetera del Bot
