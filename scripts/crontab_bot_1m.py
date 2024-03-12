@@ -10,7 +10,7 @@ from scripts.app_log import app_log as Log
 def run():
     log = Log()
     json_rsp = {}
-    #startDt = datetime.now()
+    startDt = datetime.now()
     #log.info(f'START {startDt}')
     #print(f'START {startDt}')
 
