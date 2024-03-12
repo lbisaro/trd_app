@@ -177,11 +177,11 @@ def run():
 
     
     ### Actualizar velas de los Symbols
-    #try:
-    update_klines = exchInfo.update_klines()
-    json_rsp['klines'] = update_klines
+    try:
+        update_klines = exchInfo.update_klines()
+        json_rsp['klines'] = update_klines
                 
-    #except Exception as err:
-    #    err = str(err)
-    #    msg_text = f'No fue posible encontrar velas\n{err}'
-    #    json_rsp['error'].append(msg_text)
+    except Exception as err:
+        err = str(err)
+        msg_text = f'No fue posible encontrar velas\n{err}'
+        json_rsp['error'].append(msg_text)
