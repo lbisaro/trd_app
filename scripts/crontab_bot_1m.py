@@ -126,8 +126,8 @@ def run():
             botClass.exchange_wallet = exchange_wallet
             execRes = botClass.live_execute()
 
-            if len(execRes) > 0:
-                log.info(f'Execute: {execRes}')
+            #if len(execRes) > 0:
+            #    log.info(f'Execute: {execRes}')
 
             bot.make_operaciones()
 
