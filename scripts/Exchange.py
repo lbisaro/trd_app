@@ -114,7 +114,7 @@ class Exchange():
             symbols = Symbol.objects.filter(symbol=symbol)
         
         for s in symbols:
-
+            print(f'Exchange::update_klines() - {s} -')
             valid_last_minute = (datetime.now() - timedelta(minutes=1)).strftime('%Y-%m-%d %H:%M')
             last_kline = Kline.objects.filter(symbol_id=s.id).order_by('-datetime').first()
             if last_kline:
