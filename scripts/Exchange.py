@@ -181,7 +181,7 @@ class Exchange():
                     if updated:
                         s.activate()
                 except Exception as e:
-                    print(str(e))
+                    print('Exchange::update_klines()',str(e))
                     pass 
             else:
                 res[s.symbol] = {'qty':0, 'updated': True, 'datetime': valid_last_minute}
