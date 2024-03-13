@@ -50,7 +50,7 @@ for index, row in intervals.iterrows():
     minutes_back = row['minutes'] * 210  #Se agregan 210 velas previas para preparar los indicadores
     days_back = minutes_back/24/60
 
-    folder = f'./www/backtest/klines/{interval_id}/'
+    folder = f'./backtest/klines/{interval_id}/'
     if not os.path.exists(folder):
         os.makedirs(folder)
 

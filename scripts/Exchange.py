@@ -58,8 +58,10 @@ class Exchange():
             symbol_info['qty_decs_qty'] = qty_decs_qty
             symbol_info['quote_asset'] = symbol_info['quoteAsset']
             symbol_info['base_asset'] = symbol_info['baseAsset']
-            if symbol_info['quote_asset'] == 'USDT' or symbol_info['quote_asset'] == 'BUSD' or symbol_info['quote_asset'] == 'USDC':
+            if symbol_info['quote_asset'] == 'USDT' or symbol_info['quote_asset'] == 'FDUSD' or symbol_info['quote_asset'] == 'USDC':
                 symbol_info['qty_decs_quote'] = 2
+            else:
+                symbol_info['qty_decs_quote'] = 8
 
         else:
             symbol_info = {}

@@ -671,6 +671,14 @@ class Bot(models.Model):
             actual_status[k] = new_status[k]
         self.status = str(actual_status)
         self.save()
+        self.add_pnl(actual_status['wallet_tot']['r'],actual_status['price']['r'])
+    
+    def add_pnl(self,pnl,price):
+        botpnl = BotPnl()
+        botpnl.bot = self
+        botpnl.pnl = pnl
+        botpnl.price = price
+        botpnl.save()
 
 class Order(models.Model):
     bot = models.ForeignKey(Bot, on_delete = models.CASCADE)
@@ -776,6 +784,4 @@ class BotPnl(models.Model):
     class Meta:
         verbose_name = "Bot PNL"
         verbose_name_plural='Bot PNL'
-    
-
-    
+        

@@ -132,8 +132,9 @@ def ohlc_chart(klines,**kwargs):
           'color': 'green',
           },
      ]
-     signals = [
-         {'col':'MA_cross',
+     events = [
+         {'df':Dataframe con una columna ['datetime'] y otra con el nombre indicado en el parametro 'col'
+          'col':'MA_cross',
           'name': 'MA Cross',
           'color': 'yellow',
           'symbol': 'circle-open' #https://plotly.com/python/reference/scatter/#scatter-marker-symbol
@@ -143,7 +144,7 @@ def ohlc_chart(klines,**kwargs):
    
     show_pnl   = kwargs.get('show_pnl', True )
     indicators = kwargs.get('indicators', None )
-    signals    = kwargs.get('signals', None )
+    events    = kwargs.get('events', None )
     
     chart_rows = 2
     domain_0 = 0.0
@@ -184,27 +185,33 @@ def ohlc_chart(klines,**kwargs):
         col=1,
     )
 
-    for ind in indicators:
+    if indicators:
+        for ind in indicators:
 
-        fig.add_trace(
-            go.Scatter(
-                x=klines["datetime"], y=klines[ind['col']], name=ind['name'], mode="lines", 
-                line={'width': 0.5},  
-                marker=dict(color=ind['color']),
-            ),
-            row=1,
-            col=1,
-        )
+            fig.add_trace(
+                go.Scatter(
+                    x=klines["datetime"], y=klines[ind['col']], name=ind['name'], mode="lines", 
+                    line={'width': 0.5},  
+                    marker=dict(color=ind['color']),
+                ),
+                row=1,
+                col=1,
+            )
 
-    for sig in signals:
-        fig.add_trace(
-            go.Scatter(x=klines["datetime"], y=klines[sig['col']], name=sig['name'], mode='markers', 
-                    marker=dict(symbol=sig['symbol'],
-                                size=5,
-                                color=sig['color']),),
-            row=1,
-            col=1,
-        )
+    if events:
+        for event in events:
+            fig.add_trace(
+                go.Scatter(x=event['df']["datetime"], y=event['df'][event['col']], name=event['name'], mode='markers', 
+                        marker=dict(symbol=event['symbol'],
+                                    size=8,
+                                    color=event['color'],
+                                    line=dict(width=0.75, color="black"),
+                                    ),
+                        ),
+                row=1,
+                col=1,
+            )
+            
     if show_pnl:
         fig.add_trace(
             go.Scatter(
