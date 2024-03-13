@@ -766,5 +766,16 @@ class BotLog(models.Model):
             return 'red'
         return ''
         
-        
+class BotPnl(models.Model):
+
+    bot = models.ForeignKey(Bot, on_delete = models.CASCADE)
+    datetime = models.DateTimeField(default=timezone.now)
+    pnl = models.FloatField(null=False, blank=False, default=0.0)
+    price = models.FloatField(null=False, blank=False, default=0.0)
+    
+    class Meta:
+        verbose_name = "Bot PNL"
+        verbose_name_plural='Bot PNL'
+    
+
     
