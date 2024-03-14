@@ -70,40 +70,43 @@ def bot(request, bot_id):
         #Ordenes 
         db_orders = bot.get_orders()
         df_orders = pd.DataFrame.from_records(db_orders.values())
-        #Ordenes Ejecutadas
-        df_orders['buy']     = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_SIGNAL)]['price']
-        df_orders['sell']    = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_SIGNAL)]['price']
-        df_orders['buy_tp']  = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_TAKEPROFIT)]['price']
-        df_orders['sell_tp'] = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_TAKEPROFIT)]['price']
-        df_orders['buy_sl']  = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
-        df_orders['sell_sl'] = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
-        
-        #Ordenes Abiertas
         open_orders = []
-        for i in df_orders[df_orders['completed']<1].index:
-            row = df_orders.iloc[i]
-            key = 'OPEN_'+str(row['id'])
-            color = 'red' if row['side'] == ord_u.SIDE_SELL else 'green'
-            klines[key] = np.where(klines['datetime']>=row['datetime'],row['limit_price'],None)
-            open_orders.append({'col': key,'color': color,})
-            
-        df_orders.drop(columns=['id', 'bot_id', 'completed', 'qty', 'price', 'orderid',
-        'pos_order_id', 'symbol_id', 'side', 'flag', 'type', 'limit_price',
-        'activation_price', 'active', 'trail_perc', 'tag'],inplace=True)
-
         events = []
-        if df_orders['buy'].count() > 0:
-            events.append({'df':df_orders,'col':'buy'    ,'name': 'BUY' ,    'color': 'green','symbol': 'circle' })
-        if df_orders['sell'].count() > 0:
-            events.append({'df':df_orders,'col':'sell'   ,'name': 'SELL',    'color': 'red',  'symbol': 'circle' })
-        if df_orders['buy_tp'].count() > 0:
-            events.append({'df':df_orders,'col':'buy_tp' ,'name': 'BUY-TP' , 'color': 'green','symbol': 'triangle-up' })
-        if df_orders['sell_tp'].count() > 0:
-            events.append({'df':df_orders,'col':'sell_tp','name': 'SELL-TP', 'color': 'red',  'symbol': 'triangle-up' })
-        if df_orders['buy_sl'].count() > 0:
-            events.append({'df':df_orders,'col':'buy_sl' ,'name': 'BUY-SL' , 'color': 'green','symbol': 'triangle-down' })
-        if df_orders['sell_sl'].count() > 0:
-            events.append({'df':df_orders,'col':'sell_sl','name': 'SELL-SL', 'color': 'red',  'symbol': 'triangle-down' })
+        if db_orders.count() > 0:
+            #Ordenes Ejecutadas
+            df_orders['buy']     = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_SIGNAL)]['price']
+            df_orders['sell']    = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_SIGNAL)]['price']
+            df_orders['buy_tp']  = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_TAKEPROFIT)]['price']
+            df_orders['sell_tp'] = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_TAKEPROFIT)]['price']
+            df_orders['buy_sl']  = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
+            df_orders['sell_sl'] = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
+            
+            #Ordenes Abiertas
+            
+            for i in df_orders[df_orders['completed']<1].index:
+                row = df_orders.iloc[i]
+                key = 'OPEN_'+str(row['id'])
+                color = 'red' if row['side'] == ord_u.SIDE_SELL else 'green'
+                klines[key] = np.where(klines['datetime']>=row['datetime'],row['limit_price'],None)
+                open_orders.append({'col': key,'color': color,})
+                
+            df_orders.drop(columns=['id', 'bot_id', 'completed', 'qty', 'price', 'orderid',
+            'pos_order_id', 'symbol_id', 'side', 'flag', 'type', 'limit_price',
+            'activation_price', 'active', 'trail_perc', 'tag'],inplace=True)
+
+        
+            if df_orders['buy'].count() > 0:
+                events.append({'df':df_orders,'col':'buy'    ,'name': 'BUY' ,    'color': 'green','symbol': 'circle' })
+            if df_orders['sell'].count() > 0:
+                events.append({'df':df_orders,'col':'sell'   ,'name': 'SELL',    'color': 'red',  'symbol': 'circle' })
+            if df_orders['buy_tp'].count() > 0:
+                events.append({'df':df_orders,'col':'buy_tp' ,'name': 'BUY-TP' , 'color': 'green','symbol': 'triangle-up' })
+            if df_orders['sell_tp'].count() > 0:
+                events.append({'df':df_orders,'col':'sell_tp','name': 'SELL-TP', 'color': 'red',  'symbol': 'triangle-up' })
+            if df_orders['buy_sl'].count() > 0:
+                events.append({'df':df_orders,'col':'buy_sl' ,'name': 'BUY-SL' , 'color': 'green','symbol': 'triangle-down' })
+            if df_orders['sell_sl'].count() > 0:
+                events.append({'df':df_orders,'col':'sell_sl','name': 'SELL-SL', 'color': 'red',  'symbol': 'triangle-down' })
         
         fig = ohlc_chart(klines, open_orders=open_orders, events=events)
         chart = fig.to_html(config = {'scrollZoom': True, }) 
