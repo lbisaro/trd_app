@@ -57,7 +57,7 @@ def bot(request, bot_id):
     symbol_info = Exchange('info','bnc',prms=None).get_symbol_info(symbol=botClass.symbol)
     quote_asset = symbol_info['quote_asset']
     klines = bot.get_pnl()
-    if not klines.empty():
+    if not klines.empty:
         klines.drop(columns=['id', 'bot_id'],inplace=True)
         ultimo_registro = klines.iloc[-1,:]
         nuevo_registro = pd.DataFrame({
