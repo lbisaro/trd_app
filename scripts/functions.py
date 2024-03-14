@@ -133,6 +133,14 @@ def ohlc_chart(klines,**kwargs):
           'color': 'green',
           },
      ]
+     open_orders = [
+         {'col': 'ORD_1',
+          'color': 'red',
+          },
+         {'col': 'ORD_n',
+          'color': 'green',
+          },
+     ]
      events = [
          {'df':Dataframe con una columna ['datetime'] y otra con el nombre indicado en el parametro 'col'
           'col':'MA_cross',
@@ -145,10 +153,12 @@ def ohlc_chart(klines,**kwargs):
    
     show_pnl   = kwargs.get('show_pnl', True )
     indicators = kwargs.get('indicators', None )
+    open_orders = kwargs.get('open_orders', None )
     events    = kwargs.get('events', None )
     
     chart_rows = 1
-    domain_0 = 0.0
+    domain_0 = 0.15
+
     if show_pnl:
         chart_rows += 1
         domain_0 += 0.15
@@ -164,7 +174,7 @@ def ohlc_chart(klines,**kwargs):
             go.Scatter(
                 x=klines["datetime"], y=klines["price"], name="Price", mode="lines", 
                 line={'width': 0.5},  
-                marker=dict(color='gray'),
+                marker=dict(color='#f8b935'),
             ),
             row=1,
             col=1,
@@ -213,6 +223,18 @@ def ohlc_chart(klines,**kwargs):
                 row=1,
                 col=1,
             )
+            
+    if open_orders:
+        for oo in open_orders:
+
+            fig.add_trace(
+                go.Scatter(
+                    x=klines["datetime"], y=klines[oo['col']], name=oo['col'], showlegend=False,
+                    line=dict(width= 1.5,color=oo['color'],dash="dot" ), 
+                    ),
+                row=1,
+                col=1,
+            )
 
     if events:
         for event in events:
@@ -232,8 +254,8 @@ def ohlc_chart(klines,**kwargs):
         fig.add_trace(
             go.Scatter(
                 x=klines["datetime"], y=klines['pnl'], name="PNL", mode="lines", 
-                line={'width': 0.75},  
-                marker=dict(color="rgba(126,198,222,1)"),
+                line={'width': 1.25},  
+                marker=dict(color="#00c6d5"),
             ),
             row=chart_rows,
             col=1,
@@ -250,22 +272,7 @@ def ohlc_chart(klines,**kwargs):
         #xaxis_title="",
         #yaxis_title="",
 
-
-
         xaxis=dict(domain=[0, 1]),
-        yaxis1=dict(
-            domain=[domain_0, 1],
-            showticklabels=True,
-        ),
-        yaxis2=dict(
-            domain=[domain_0, domain_0+0.2],
-            showticklabels=False,
-        ),
-        yaxis3=dict(
-            domain=[0, domain_0],
-            showticklabels=True,
-        ),
-
         xaxis_rangeslider_visible=False,
  
         modebar_bgcolor="rgba(0,0,0,0)",
@@ -275,10 +282,40 @@ def ohlc_chart(klines,**kwargs):
             y=1.02,
             xanchor="left",
             x=0,
-        )
+        ),
     )
 
-    fig.update_xaxes(showline=False,linewidth=0.5,linecolor='#40444e', gridcolor='#40444e')
-    fig.update_yaxes(showline=False, linewidth=0, zeroline= False, linecolor='rgba(0,0,0,0)', gridcolor='rgba(0,0,0,0)') #fixedrange= True, 
+    #Ajustar el tamaño de cada sub_plot
+    fig.update_layout(
+        yaxis1=dict(
+            domain=[domain_0, 1],
+            showticklabels=True,
+        ),
+    )
+    if 'volume' in klines: 
+        fig.update_layout(
+            yaxis2=dict(
+                domain=[domain_0, domain_0+0.2],
+                showticklabels=False,
+            ),
+            yaxis3=dict(
+                title="PNL",
+                domain=[0, domain_0],
+                showticklabels=True,
+            ),
+            
+        ) 
+    else:
+        fig.update_layout(
+            yaxis2=dict(
+                title="PNL",
+                domain=[0, domain_0],
+                showticklabels=True,
+            ),
+            
+        ) 
+    
+    fig.update_xaxes(showline=True, linewidth=0.5,linecolor='#40444e', gridcolor='#40444e')
+    fig.update_yaxes(showline=False, linewidth=0.5,zeroline= False, linecolor='#40444e', gridcolor='rgba(0,0,0,0)') 
 
     return fig
