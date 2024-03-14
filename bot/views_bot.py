@@ -5,10 +5,12 @@ import scripts.functions as fn
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.template import RequestContext
+import numpy as np
 
 from bot.models import *
 from bot.model_kline import *
 from user.models import UserProfile
+from scripts.functions import ohlc_chart 
 import local__config as local
 
 @login_required
@@ -49,6 +51,38 @@ def bot(request, bot_id):
     if profile_config['bnc']['bnc_env'] == 'test':
         environment_advertisement.append('El Bot se ejecuta en entorno de TEST')
 
+    #Creando grafica de la operacion del bot
+    botClass = bot.get_instance()
+    klines = bot.get_pnl()
+    
+
+    db_orders = bot.get_orders()
+    df_orders = pd.DataFrame.from_records(db_orders.values())
+    df_orders = df_orders[df_orders['completed']>0]
+    df_orders['buy'] = df_orders[df_orders['side'] == 0]['price']
+    df_orders['sell'] = df_orders[df_orders['side'] == 1]['price']
+    df_orders.drop(columns=['id', 'bot_id', 'completed', 'qty', 'price', 'orderid',
+       'pos_order_id', 'symbol_id', 'side', 'flag', 'type', 'limit_price',
+       'activation_price', 'active', 'trail_perc', 'tag'],inplace=True)
+    print(df_orders)
+    events = [
+         {'df':df_orders,
+          'col':'buy',
+          'name': 'BUY',
+          'color': 'green',
+          'symbol': 'circle-open' #https://plotly.com/python/reference/scatter/#scatter-marker-symbol
+         },
+         {'df':df_orders,
+          'col':'sell',
+          'name': 'SELL',
+          'color': 'red',
+          'symbol': 'circle-open' #https://plotly.com/python/reference/scatter/#scatter-marker-symbol
+         },
+     ]
+    fig = ohlc_chart(klines, show_pnl=False ,events=events)
+    chart = fig.to_html(config = {'scrollZoom': True, }) 
+
+
     return render(request, 'bot.html',{
         'title': str(bot),
         'nav_title': str(bot),
@@ -72,6 +106,7 @@ def bot(request, bot_id):
         'environment_advertisement': environment_advertisement,
         #'resultados': bot.get_resultados(),
         'log': bot.get_log(),
+        'chart': chart,
     })
 
 @login_required

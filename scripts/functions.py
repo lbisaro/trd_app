@@ -121,6 +121,7 @@ def ohlc_chart(klines,**kwargs):
 
     """ 
     klines -> dataframe with columns [datetime,open,close,high,low,volume,pnl]
+           -> dataframe with columns [datetime,price,pnl]
     show_pnl = True
     indicators = [
          {'col': 'MA_F',
@@ -146,44 +147,59 @@ def ohlc_chart(klines,**kwargs):
     indicators = kwargs.get('indicators', None )
     events    = kwargs.get('events', None )
     
-    chart_rows = 2
+    chart_rows = 1
     domain_0 = 0.0
     if show_pnl:
         chart_rows += 1
         domain_0 += 0.15
+    
+    if 'volume' in klines:
+        chart_rows += 1
 
     fig = make_subplots(rows=chart_rows, shared_xaxes=True)
 
-    # Create subplot for candlesticks
-    fig.add_trace(
-        go.Candlestick(
-            x=klines["datetime"],
-            open=klines["open"],
-            high=klines["high"],
-            low=klines["low"],
-            close=klines["close"],
-            increasing_line_color= 'rgba(242,54,69,0.5)', 
-            decreasing_line_color= 'rgba(8,153,129,0.5)',
-            name="BTCUDST", 
-            line=dict(width=0.75,),
-            
-        ),
-        row=1,
-        col=1,
-    )
+    # Create subplot for candlesticks o price
+    if 'price' in klines:
+        fig.add_trace(
+            go.Scatter(
+                x=klines["datetime"], y=klines["price"], name="Price", mode="lines", 
+                line={'width': 0.5},  
+                marker=dict(color='gray'),
+            ),
+            row=1,
+            col=1,
+        )    
+    else:
+        fig.add_trace(
+            go.Candlestick(
+                x=klines["datetime"],
+                open=klines["open"],
+                high=klines["high"],
+                low=klines["low"],
+                close=klines["close"],
+                increasing_line_color= 'rgba(242,54,69,0.5)', 
+                decreasing_line_color= 'rgba(8,153,129,0.5)',
+                name="BTCUDST", 
+                line=dict(width=0.75,),
+                
+            ),
+            row=1,
+            col=1,
+        )
 
     # Create subplot for volume
-    fig.add_trace(
-        go.Bar(
-            x=klines["datetime"],
-            y=klines["volume"],
-            name="Volumen",  
-            marker=dict(color="rgba(126,198,222,0.2)"),
-            marker_line_width=0,
-        ),
-        row=2,
-        col=1,
-    )
+    if 'volume' in klines:
+        fig.add_trace(
+            go.Bar(
+                x=klines["datetime"],
+                y=klines["volume"],
+                name="Volumen",  
+                marker=dict(color="rgba(126,198,222,0.2)"),
+                marker_line_width=0,
+            ),
+            row=2,
+            col=1,
+        )
 
     if indicators:
         for ind in indicators:
@@ -219,7 +235,7 @@ def ohlc_chart(klines,**kwargs):
                 line={'width': 0.75},  
                 marker=dict(color="rgba(126,198,222,1)"),
             ),
-            row=3,
+            row=chart_rows,
             col=1,
         )
 

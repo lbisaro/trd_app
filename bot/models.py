@@ -686,6 +686,11 @@ class Bot(models.Model):
         botpnl.price = price
         botpnl.save()
 
+    def get_pnl(self):
+        pnl = BotPnl.objects.filter(bot_id=self.id).order_by('datetime')
+        pnl_df = pd.DataFrame.from_records(pnl.values())
+        return pnl_df
+
 class Order(models.Model):
     bot = models.ForeignKey(Bot, on_delete = models.CASCADE)
     datetime = models.DateTimeField(default=timezone.now)
