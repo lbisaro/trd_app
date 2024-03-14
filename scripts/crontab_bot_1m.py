@@ -141,7 +141,7 @@ def run():
             json_rsp['error'].append(f'bot.id: {bot.id} {e}')
             
 
-    
+    """
     ### Actualizar velas de los Symbols
     try:
         update_klines = exchInfo.update_klines()
@@ -151,7 +151,7 @@ def run():
         err = str(err)
         msg_text = f'No fue posible encontrar velas\n{err}'
         json_rsp['error'].append(msg_text)
-
+    """
 
     #Buscar ordenes incompletas, agrupadas por usuario
     #Si existen, reconectar con el Exchange para cada usuario 
