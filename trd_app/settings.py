@@ -146,7 +146,7 @@ LANGUAGE_CODE = 'es'
 
 TIME_ZONE = 'America/Argentina/Buenos_Aires'
 #TIME_ZONE = 'UTC'
-USE_TZ = True
+USE_TZ = False
 
 DATE_FORMAT = 'd-m-Y'
 DATE_INPUT_FORMATS = 'd-m-Y'
