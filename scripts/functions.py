@@ -172,7 +172,7 @@ def ohlc_chart(klines,**kwargs):
     if 'price' in klines:
         fig.add_trace(
             go.Scatter(
-                x=klines["datetime"], y=klines["price"], name="Price", mode="lines", 
+                x=klines["datetime"], y=klines["price"], name="Price", mode="lines", showlegend=False, 
                 line={'width': 0.5},  
                 marker=dict(color='#f8b935'),
             ),
@@ -191,6 +191,7 @@ def ohlc_chart(klines,**kwargs):
                 decreasing_line_color= 'rgba(8,153,129,0.5)',
                 name="BTCUDST", 
                 line=dict(width=0.75,),
+                showlegend=False, 
                 
             ),
             row=1,
@@ -253,7 +254,7 @@ def ohlc_chart(klines,**kwargs):
     if show_pnl:
         fig.add_trace(
             go.Scatter(
-                x=klines["datetime"], y=klines['pnl'], name="PNL", mode="lines", 
+                x=klines["datetime"], y=klines['pnl'], name="PNL", mode="lines", showlegend=False, 
                 line={'width': 1.25},  
                 marker=dict(color="#00c6d5"),
             ),
@@ -288,6 +289,7 @@ def ohlc_chart(klines,**kwargs):
     #Ajustar el tamaño de cada sub_plot
     fig.update_layout(
         yaxis1=dict(
+            title="Precio",
             domain=[domain_0, 1],
             showticklabels=True,
         ),

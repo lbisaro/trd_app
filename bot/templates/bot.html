@@ -97,10 +97,10 @@
     <div class="row">
         <ul class="nav nav-tabs" id="myTab" role="tablist" style="font-size: 0.9em;">
             <li class="nav-item" role="resumen">
-              <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">Resumen</button>
+              <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">General</button>
             </li>
             <li class="nav-item" role="trades">
-                <button class="nav-link" id="trades-tab" data-bs-toggle="tab" data-bs-target="#trades-tab-pane" type="button" role="tab" aria-controls="trades-tab-pane" aria-selected="false">Operaciones</button>
+                <button class="nav-link" id="trades-tab" data-bs-toggle="tab" data-bs-target="#trades-tab-pane" type="button" role="tab" aria-controls="trades-tab-pane" aria-selected="false">Operaciones cerradas</button>
             </li>
             <li class="nav-item" role="log">
                 <button class="nav-link" id="log-tab" data-bs-toggle="tab" data-bs-target="#log-tab-pane" type="button" role="tab" aria-controls="log-tab-pane" aria-selected="false">Log</button>
@@ -108,45 +108,19 @@
           </ul>
           <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="resumen-tab-pane" role="tabpanel" aria-labelledby="resumen-tab" tabindex="0" >
-                <div class="row pt-4">
-                    <div class="col-6" id="general" style="font-size: 0.8em;" >
-                        <h6 class="text-info">General</h5>
-                        {% for item in resultados.general %}
-                            <div class="row pb-1">
-                                <div class="col-6">{{item.t}}</div><div class="col-6 {{item.c}}" >{{item.v}}</div>
-                            </div> 
-                        {% endfor %}
-                    </div>
-                    <div class="col-3" id="operaciones" style="font-size: 0.8em;" >
-                        <h6 class="text-info">Operaciones</h5>
-                        {% for item in resultados.operaciones %}
-                            <div class="row pb-1">
-                                <div class="col-6">{{item.t}}</div><div class="col-6 {{item.c}}" >{{item.v}}</div>
-                            </div> 
-                        {% endfor %}
-                    </div>
-                    <div class="col-3" id="indicadores" style="font-size: 0.8em;" >
-                        <h6 class="text-info">Indicadores</h5>
-                        {% for item in resultados.indicadores %}
-                        <div class="row pb-1">
-                            <div class="col-6">{{item.t}}</div><div class="col-6 {{item.c}}">{{item.v}}</div>
-                        </div> 
-                        {% endfor %}
-                    </div>
-                </div>
                 <div class="row pt-4">  
-                    <h6 class="text-info">Ordenes en curso</h5>
-                    <div class="col">        
-                        <table class="table-dg table-trade-info">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Par</th>
-                                    <th>Operacion</th>
-                                    <th class="text-end">Cantidad</th>
-                                    <th class="text-end">Precio</th>
-                                    <th class="text-end">USD</th>
-                                    <th class="text-end">Comision USD</th>
+                    <h6 class="text-info">Operacion en curso</h5>
+                        <div class="col">        
+                            <table class="table-dg table-trade-info">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Par</th>
+                                        <th>Operacion</th>
+                                        <th class="text-end">Cantidad</th>
+                                        <th class="text-end">Precio</th>
+                                        <th class="text-end">USD</th>
+                                        <th class="text-end">Comision USD</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -169,8 +143,12 @@
                         </table>
                     </div>
                 </div>
+                <div class="row pt-4">  
+                    <h6 class="text-info">Grafico</h5>
+                    {{ chart|safe }}
+                </div>
             </div>
-
+            
             <div class="tab-pane fade" id="trades-tab-pane" role="tabpanel" aria-labelledby="trades-tab" tabindex="0">
                 <table class="table-dg table-trade-info">
                     <thead>
@@ -182,7 +160,7 @@
                             <th class="text-end">Cantidad</th>
                             <th class="text-end">Compra</th>
                             <th class="text-end">Venta</th>
-                            <th class="text-end">Resultado USD</th>
+                            <th class="text-end">Resultado {{quote_asset}}</th>
                             <th class="text-end">Resultado %</th>
                             <th class="text-end">Ordenes</th>
                         </tr>
@@ -230,7 +208,7 @@
     </div>
 </div>
 
-{{ chart|safe }}    
+
 
 <input type="hidden" id="bot_id" value="{bot_id}" >
 
