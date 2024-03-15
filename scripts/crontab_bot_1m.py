@@ -114,7 +114,7 @@ def run():
                     botClass._orders[order.id] = order
             
             # Obtener precios de los symbols activos en cada iteracion de usuario
-            price = exch.get_symbol_price(botClass.symbol)
+            price = exchInfo.get_symbol_price(botClass.symbol)
             if abs(botClass.wallet_base*price) < 2: #Si el total de qty representa menos de 2 dolares, se toma como 0
                 botClass.wallet_base = 0.0
 
