@@ -5,6 +5,8 @@ from bot import views_estrategia as ve
 from bot import views_bot as vb
 from bot import views_backtesting as vbt_old
 from bot import views_backtest as vbt
+from bot import views_graph_test as vgt
+
 from bot import views_symbols as vs
 
 urlpatterns = [
