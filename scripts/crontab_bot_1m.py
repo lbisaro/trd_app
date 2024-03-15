@@ -37,7 +37,7 @@ def run():
         except Exception as err:
             raise ValidationError(err)
     
-    exchInfo = Exchange(type='general_apikey',exchange='bnc',prms=None)
+    exchInfo = Exchange(type='info',exchange='bnc',prms=None)
     
     ### Si hay estrategias activas
     signal_rows = {}
