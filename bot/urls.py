@@ -44,5 +44,7 @@ urlpatterns = [
     path('backtesting/',vbt_old.backtesting,name='backtesting'),
     path('backtesting/config/<str:bot_class_name>/',vbt_old.config,name='backtesting_config'),
     path('backtesting/run/',vbt_old.run,name='backtesting_run'),
+
+    path('chart/',vgt.chart,name='chart'),
     
 ]
