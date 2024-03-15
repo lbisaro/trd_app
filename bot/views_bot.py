@@ -41,10 +41,6 @@ def bot(request, bot_id):
 
     #Avisos por entornos de ejecucion de TEST
     environment_advertisement = []
-    #Entorno General
-    if local.LOC_BNC_TESNET:
-        environment_advertisement.append('El analisis de estrategias se ejecuta en entorno de TEST')
-    #Entorno de usuario
     usuario=request.user
     usuario_id = usuario.id
     profile = UserProfile.objects.get(user_id=usuario_id)
