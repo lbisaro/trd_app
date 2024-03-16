@@ -114,7 +114,7 @@ class BotSWSupertrend(Bot_Core):
         
         
     def start(self):
-        self.klines = supertrend(self.klines,length=7,multiplier=2)  
+        self.klines = supertrend(self.klines,length=7,multiplier=3)  
         #self.klines = volume_level(self.klines,period=200)  
         
         self.klines['signal'] = np.where((self.klines['st_trigger']>0) , 'COMPRA' , 'NEUTRO')  #& (self.klines['vol_signal']>0)
