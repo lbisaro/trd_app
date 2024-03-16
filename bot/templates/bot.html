@@ -108,10 +108,10 @@
           </ul>
           <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="resumen-tab-pane" role="tabpanel" aria-labelledby="resumen-tab" tabindex="0" >
-                <div class="row pt-4">  
+                <div class="row pt-4" >  
                     <h6 class="text-info">Operacion en curso</h5>
-                        <div class="col">        
-                            <table class="table-dg table-trade-info">
+                        <div class="col" id="open_orders" style="display: none;">        
+                            <table class="table-dg table-trade-info" >
                                 <thead>
                                     <tr>
                                         <th>Fecha</th>
@@ -221,6 +221,7 @@
 
 $(document).ready( function () {
     //get_resultados()
+    $('#open_orders').show()
 })
 function get_resultados() {
     url = '{% url "get_resultados" bot_id %}';
