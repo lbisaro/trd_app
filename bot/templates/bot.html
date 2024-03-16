@@ -54,11 +54,11 @@
         
         {% if estrategia_activo == 0%} <span class="text-danger">Inactiva</span>{% endif %}
     </div>
+    <div class="row pt-2">
     {% for advertisement in environment_advertisement %}
-        <div class="row">
-            <h6 class="text-warning text-center">{{advertisement}}</h6>
-        </div>
+        <h3 class="alert alert-warning text-center text-center role="alert">{{advertisement}}</h3>
     {% endfor %}
+    </div>
     
     {% if activo == 0 %}
     <div class="row pb-2">
