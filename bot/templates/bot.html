@@ -78,26 +78,17 @@
 
     <div class="row pb-2" style="font-size: 0.8em;">
         <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
-            <div class="w-25 py-1">Capital USD: <b>{{quote_qty|stringformat:".2f"}}</b></div>
-            <div class="w-25 py-1">Stop Loss General: <b>{{stop_loss|stringformat:".2f"}} %</b></div>
-            <div class="w-25 py-1">Maximo DrowDawn: <b>{{max_drawdown|stringformat:".2f" }} %</b></div>
+            <div class="w-25 py-1">Capital : <span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{quote_actual|stringformat:".2f"}} {{quote_asset}} / <b>{{quote_qty|stringformat:".2f"}}</b></span></div>
+            <div class="w-25 py-1">PNL: <span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{pnl_perc|stringformat:".2f"}}% ({{pnl|stringformat:".2f"}} {{quote_asset}})</span></div>
+            <div class="w-25 py-1">Stop Loss General: {{stop_loss|stringformat:".2f"}} %</div>
+            <div class="w-25 py-1">Maximo DrowDawn: {{max_drawdown_reg|stringformat:".2f" }}/{{max_drawdown|stringformat:".2f" }} %</div>
         </div>
     </div>
-    {% if status %}
-    <div class="row" style="font-size: 0.8em;">
-        <h6 class="text-info">Estado de la posicion actual</h6>
-        <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
-            {% for k,item in status.items %}
-                <div class="w-25 py-1">{{item.l}}: <b {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</b></div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
+    
     <div class="row">
         <ul class="nav nav-tabs" id="myTab" role="tablist" style="font-size: 0.9em;">
             <li class="nav-item" role="resumen">
-              <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">General</button>
+              <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">Operacion en curso</button>
             </li>
             <li class="nav-item" role="trades">
                 <button class="nav-link" id="trades-tab" data-bs-toggle="tab" data-bs-target="#trades-tab-pane" type="button" role="tab" aria-controls="trades-tab-pane" aria-selected="false">Operaciones cerradas</button>
@@ -108,8 +99,18 @@
           </ul>
           <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="resumen-tab-pane" role="tabpanel" aria-labelledby="resumen-tab" tabindex="0" >
+                {% if status %}
+                <div class="row pt-4" style="font-size: 0.8em;">
+                    <h6 class="text-info">Estado</h6>
+                    <div class="d-flex flex-row flex-wrap rounded pb-1 mb-1">
+                        {% for k,item in status.items %}
+                            <div class="w-25 py-1">{{item.l}}: <b {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</b></div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
                 <div class="row pt-4" >  
-                    <h6 class="text-info">Operacion en curso</h6>
+                    <h6 class="text-info">Ordenes</h6>
                         <div class="col" id="open_orders" style="display: none;">        
                             <table class="table-dg table-trade-info" >
                                 <thead>
@@ -119,8 +120,8 @@
                                         <th>Operacion</th>
                                         <th class="text-end">Cantidad</th>
                                         <th class="text-end">Precio</th>
-                                        <th class="text-end">USD</th>
-                                        <th class="text-end">Comision USD</th>
+                                        <th class="text-end">{{quote_asset}}</th>
+                                        <th class="text-end">Comision {{quote_asset}}</th>
                                 </tr>
                             </thead>
                             <tbody>

@@ -39,6 +39,11 @@ def bot(request, bot_id):
     intervalo = fn.get_intervals(bot.estrategia.interval_id,'name')
     status = eval(bot.status) if len(bot.status) > 0 else []
 
+    quote_actual = bot.quote_qty
+    if 'wallet_tot' in status: 
+        quote_actual = status['wallet_tot']['r']
+        del status['wallet_tot']
+
     #Avisos por entornos de ejecucion de TEST
     environment_advertisement = []
     usuario=request.user
@@ -52,7 +57,14 @@ def bot(request, bot_id):
     botClass = bot.get_instance()
     symbol_info = Exchange('info','bnc',prms=None).get_symbol_info(symbol=botClass.symbol)
     quote_asset = symbol_info['quote_asset']
+    
+    pnl = quote_actual-bot.quote_qty
+    pnl_perc = (pnl/bot.quote_qty)*100
+    
+
     klines = bot.get_pnl()
+    max_drawdown_reg = botClass.ind_maximo_drawdown(klines,'pnl')
+
     if not klines.empty:
         klines.drop(columns=['id', 'bot_id'],inplace=True)
         ultimo_registro = klines.iloc[-1,:]
@@ -122,14 +134,18 @@ def bot(request, bot_id):
         'activo': bot.activo,
         'creado': bot.creado,
         'quote_qty': round(bot.quote_qty,2),
+        'quote_actual': round(quote_actual,2),
         'stop_loss': round(bot.stop_loss,2),
         'max_drawdown': round(bot.max_drawdown,2),
+        'max_drawdown_reg': round(max_drawdown_reg,2),
         'can_delete': bot.can_delete(),
         'can_activar': bot.can_activar(),
         'parametros': bot.parse_parametros(),
         'trades': bot.get_trades(),
         'orders': bot.get_orders_en_curso(),
         'status': status,
+        'pnl': pnl,
+        'pnl_perc': pnl_perc,
         'environment_advertisement': environment_advertisement,
         'quote_asset': quote_asset,
         'log': bot.get_log(),
