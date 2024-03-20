@@ -179,6 +179,7 @@ class Bot(models.Model):
         botClass.set(self.parse_parametros())
         botClass.quote_qty = self.quote_qty
         botClass.valid()
+        botClass.status = self.get_status()
         return botClass
 
     def get_bots_activos():
@@ -665,6 +666,10 @@ class Bot(models.Model):
         
         return json_rsp
     
+    def get_status(self):
+        actual_status = eval(self.status) if len(self.status) > 0 else {}
+        return actual_status
+    
     def update_status(self,new_status):
         actual_status = eval(self.status) if len(self.status) > 0 else {}
         for k in new_status:
@@ -674,9 +679,7 @@ class Bot(models.Model):
 
         #Analizando si aplica registrar el PNL de acuerdo al timeframe del bot
         apply_intervals = fn.get_apply_intervals(timezone.now())
-        print('.',end='')
         if self.estrategia.interval_id in apply_intervals:
-            print(timezone.now(),' - Actualizando PNL')
             self.add_pnl(actual_status['wallet_tot']['r'],actual_status['price']['r'])
     
     def add_pnl(self,pnl,price):

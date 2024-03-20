@@ -6,28 +6,29 @@ import scripts.functions as fn
 from scripts.Bot_Core_utils import Order
     
 class Bot_Core_stats:
+    status = {}
+
     def get_status(self):
 
-        status = {}
         last_exec = dt.datetime.now()
-        status['last_exec'] = {'l': 'Ultima ejecucion','v': last_exec.strftime('%d-%m-%Y %H:%M'), 'r': last_exec.strftime('%d-%m-%Y %H:%M')}
+        self.status['last_exec'] = {'l': 'Ultima ejecucion','v': last_exec.strftime('%d-%m-%Y %H:%M'), 'r': last_exec.strftime('%d-%m-%Y %H:%M')}
         
         price = round(self.price,self.qd_price)
-        status['price'] = {'l': 'Ultimo precio','v': f'{price}', 'r': price}
+        self.status['price'] = {'l': 'Ultimo precio','v': f'{price}', 'r': price}
 
         wallet_base = round(self.wallet_base,self.qd_qty)
         wallet_base_in_quote = round(self.wallet_base*self.price,self.qd_quote)
         v = f'{wallet_base} {self.base_asset} ({wallet_base_in_quote} {self.quote_asset})'
-        status['wallet_base'] = {'l': 'Comprado','v': v,'r':wallet_base}
+        self.status['wallet_base'] = {'l': 'Comprado','v': v,'r':wallet_base}
         
         wallet_quote = round(self.wallet_quote,self.qd_quote)
         v = f'{wallet_quote} {self.quote_asset}'
-        status['wallet_quote'] = {'l': 'Disponible','v': v,'r':wallet_quote}
+        self.status['wallet_quote'] = {'l': 'Disponible','v': v,'r':wallet_quote}
         
         wallet_tot = round(self.wallet_quote+wallet_base_in_quote,self.qd_quote)
 
         v = f'{wallet_tot} {self.quote_asset}'
-        status['wallet_tot'] = {'l': 'Capital actual','v': v,'r':wallet_tot}
+        self.status['wallet_tot'] = {'l': 'Capital actual','v': v,'r':wallet_tot}
 
         #wallet_pnl = round(((wallet_tot/self.quote_qty)-1)*100,2)
         #wallet_pnl_sign = '' if wallet_pnl <= 0 else '+'
@@ -43,9 +44,9 @@ class Bot_Core_stats:
         pos_quote_sign = '' if pos_quote <= 0 else '+'
         v = f'{pos_quote_sign}{pos_quote:.2f}  {self.quote_asset}'
         cls = 'text-success' if pos_quote > 0 else ('text-danger' if pos_quote < 0 else '')
-        status['pos_pnl'] = {'l': 'PNL','v': v,'r':pos_quote, 'cls': cls}
+        self.status['pos_pnl'] = {'l': 'PNL','v': v,'r':pos_quote, 'cls': cls}
 
-        return status
+        return self.status
 
     def get_brief(self):
         kline_ini = self.klines.loc[self.klines.index[0]]

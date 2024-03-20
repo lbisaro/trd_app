@@ -38,7 +38,7 @@ def supertrend(df,length=7,multiplier=3):
 
     return df
 
-def volume_level(df,period=50,level_high=1.5,level_low=0.2):
+def volume_level(df,period=50,level_high=1.5,level_low=0.2,col='volume'):
     """
     Level:
         ExtraHigh = 3
@@ -58,15 +58,15 @@ def volume_level(df,period=50,level_high=1.5,level_low=0.2):
     thresholdHigh = level_high
     thresholdLow = level_low
 
-    df['vol_mean'] = df['volume'].rolling(window=vol_period).mean()
-    df['vol_std']  = df['volume'].rolling(window=vol_period).std()
+    df['vol_mean'] = df[col].rolling(window=vol_period).mean()
+    df['vol_std']  = df[col].rolling(window=vol_period).std()
     df['vol_h'] = df['vol_std'] * thresholdHigh + df['vol_mean']
     df['vol_l'] = df['vol_std'] * thresholdLow + df['vol_mean']
 
     df['signal_sign'] = np.where(df['close']>df['open'],1,-1)
     
     #El volumen debe estar entre medio (vol_l) y alto (vol_h)
-    df['vol_signal'] = np.where((df['volume']>df['vol_l']) & (df['volume']<df['vol_h']), 1 * df['signal_sign'],None)
+    df['vol_signal'] = np.where((df[col]>df['vol_l']) & (df[col]<df['vol_h']), 1 * df['signal_sign'],None)
 
     df = df.drop(['vol_mean','vol_std','vol_h','vol_l','signal_sign'], axis=1)
     return df

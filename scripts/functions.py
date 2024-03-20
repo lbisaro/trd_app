@@ -4,6 +4,8 @@ from math import floor
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import plotly
+import json
 
 def get_intervals(i='ALL',c='ALL'):
     columns=['id','interval_id','name','binance','pandas_resample','minutes']
@@ -187,8 +189,8 @@ def ohlc_chart(klines,**kwargs):
                 high=klines["high"],
                 low=klines["low"],
                 close=klines["close"],
-                increasing_line_color= 'rgba(242,54,69,0.5)', 
-                decreasing_line_color= 'rgba(8,153,129,0.5)',
+                increasing_line_color= 'rgba(8,153,129,0.5)', 
+                decreasing_line_color= 'rgba(242,54,69,0.5)',
                 name="BTCUDST", 
                 line=dict(width=0.75,),
                 showlegend=False, 
@@ -321,3 +323,23 @@ def ohlc_chart(klines,**kwargs):
     fig.update_yaxes(showline=False, linewidth=0.5,zeroline= False, linecolor='#40444e', gridcolor='rgba(0,0,0,0)') 
 
     return fig
+
+def plotly_to_json(fig):
+        # Serializar fig a JSON
+    # Obtener los datos y el layout del objeto Figure
+    data = fig.data
+    layout = fig.layout
+    
+    # Convertir los datos a una lista serializable
+    serialized_data = [trace.to_plotly_json() for trace in data]
+
+    
+    # Convertir el layout a un diccionario serializable
+    serialized_layout = layout.to_plotly_json()
+    
+    # Crear un diccionario que contenga los datos serializados y el layout
+    serialized_fig = {'data': serialized_data, 'layout': serialized_layout}
+
+    fig_json = json.dumps(serialized_fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    return fig_json
