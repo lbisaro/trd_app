@@ -5,9 +5,17 @@
 {% load static %}
 
 {% block action_bar %}
+
+{% if symbol.activo > 0 %}
+    <a class="btn btn-danger  btn-sm" href="{% url 'symbol_toogle_activo' symbol.id %}">Desactivar</a>
+{% else %}
+    <a class="btn btn-success  btn-sm" href="{% url 'symbol_toogle_activo' symbol.id %}">Activar</a>
+{% endif %}
+
 {% if can_delete %}
     <button class="btn btn-danger  btn-sm" onclick="eliminar()">Eliminar</a>
 {% endif %}
+
 
 {% endblock %}
 

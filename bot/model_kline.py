@@ -29,7 +29,12 @@ class Symbol(models.Model):
         verbose_name = "Par"
         verbose_name_plural='Pares'
         
-    
+    def toogle_activo(self):
+        print('self.activo: ',self.activo)
+        self.activo = 1 if self.activo < 1 else 0
+        print('self.activo: ',self.activo)
+        self.save()
+
     def activate(self):
         self.activo = 1
         self.save()

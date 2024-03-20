@@ -108,3 +108,10 @@ def update_klines(request,symbol):
         json_rsp['ok'] = False
     
     return JsonResponse(json_rsp)
+
+@login_required
+def symbol_toogle_activo(request,symbol_id):
+    symbol = get_object_or_404(Symbol, pk=symbol_id)
+    symbol.toogle_activo()
+            
+    return redirect('/bot/symbol/'+str(symbol.id))
