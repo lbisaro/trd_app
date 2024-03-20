@@ -2,8 +2,49 @@
 {% block title %}Chart Test{% endblock %}
 {% block nav_title %}Chart Test{% endblock %}
 
+{% block head %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock head %}
+
+
 {% block content %}
 
     
-    {{ chart|safe }}
+    <p>Seleccionar el Par</p>
+    <p>
+        <select id=symbol class="fotm-control" onchange="get_chart(this.value)">
+            <option value = 'BTCUSDT'>BTCUSDT</option>
+            <option value = 'ETHUSDT'>ETHUSDT</option>
+            <option value = 'BNBUSDT'>BNBUSDT</option>
+        </select>
+    </p>
+    <div id="grafico"></div>
+
 {% endblock content %}
+
+{% block script %}
+<script>
+function get_chart(symbol)
+{
+    data = null;
+    url = 'get/'+symbol;
+    get_ajax(url,data).done( function (rsp) {
+        if (rsp.error)
+        {
+            html_alert('Errores detectados',rsp.error,'text-danger')
+            showConfig()
+        }
+        else if (rsp.ok)
+        {
+            if (rsp.fig_json)
+            {
+                var fig = JSON.parse(rsp.fig_json);
+                Plotly.newPlot('grafico', fig.data, fig.layout);
+            }
+        }
+    }); 
+
+}
+</script>
+
+{% endblock %}
