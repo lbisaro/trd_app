@@ -8,9 +8,11 @@ from django.db.models.functions import TruncDay, TruncHour, TruncMinute
 from django.utils import timezone
 from datetime import datetime, timedelta
 import pandas as pd
+import numpy as np
 import scripts.functions as fn
 import warnings
 import pytz
+
 
 
 class Symbol(models.Model):
@@ -30,9 +32,7 @@ class Symbol(models.Model):
         verbose_name_plural='Pares'
         
     def toogle_activo(self):
-        print('self.activo: ',self.activo)
         self.activo = 1 if self.activo < 1 else 0
-        print('self.activo: ',self.activo)
         self.save()
 
     def activate(self):

@@ -6,7 +6,7 @@ import datetime
 class UserProfile(models.Model):
     user = models.OneToOneField(User,on_delete=models.CASCADE)
     activation_key = models.CharField(max_length=40, blank=True)
-    key_expires = models.DateTimeField(default=timezone.now()+ datetime.timedelta(2))
+    key_expires = models.DateTimeField(default=timezone.now) #()+ datetime.timedelta(2)
     config = models.TextField(null=False, blank=False, default='{}')
 
     def __str__(self):

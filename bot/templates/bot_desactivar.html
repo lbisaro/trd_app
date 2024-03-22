@@ -1,56 +1,17 @@
 {% extends 'base.html' %}
-{% block title %}Bot #{{bot_id}}{% endblock %}
-{% block nav_title %}Bot #{{bot_id}}{% endblock %}
+{% block title %}Bot #{{bot_id}} Desactivar{% endblock %}
+{% block nav_title %}Bot #{{bot_id}} Desactivar{% endblock %}
 
 {% load static %}
 {% load tz %}
 
-{% block action_bar %}
-
-<a class="btn btn-primary  btn-sm" href="{% url 'bot_edit' bot_id %}">Editar Bot</a>
-{% if activo > 0 %}
-    <a class="btn btn-danger  btn-sm" href="{% url 'bot_desactivar' bot_id 'check'%}">Desactivar</a>
-{% elif can_activar %}
-    <a class="btn btn-success  btn-sm" href="{% url 'bot_activar' bot_id %}">Activar</a>
-{% endif %}
-{% if can_delete %}
-    <button class="btn btn-danger  btn-sm" onclick="eliminar()">Eliminar</a>
-{% endif %}
-
-{% endblock %}
-
 {% block content %}
-<div class="modal fade" id="descripcion_modal" tabindex="-1" aria-labelledby="descripcion_modalModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h1 class="modal-title fs-5" id="descripcion_modalModalLabel">Estrategia {{estrategia}}</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            {{descripcion}}
-        </div>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="exch_order_modal" tabindex="-1" aria-labelledby="exch_order_modalModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h1 class="modal-title fs-5" id="exch_order_modalModalLabel">#</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" id="modal_order_info">
-            
-        </div>
-        </div>
-    </div>
-</div>
+
 <div class="container" >
     <div class="row pb-4">
         <div class="col-2">Estrategia:  
         <span class="col fw-bold">{{estrategia}}</span> 
-        <i class="bi bi-info-circle text-warning" data-bs-toggle="modal" data-bs-target="#descripcion_modal"></i>
+        
         
         {% if estrategia_activo == 0%} <span class="text-danger">Inactiva</span>{% endif %}
     </div>
@@ -76,25 +37,27 @@
         </div>
     </div>
 
-    <div class="row pb-2" style="font-size: 0.8em;">
+    <div class="row pt-2" style="font-size: 0.8em;">
         <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
-            <div class="w-25 py-1">Capital : <span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{quote_actual|stringformat:".2f"}} {{quote_asset}} / {{quote_qty|stringformat:".2f"}}</span></div>
+            <div class="w-25 py-1">Capital : <span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{quote_actual|stringformat:".2f"}} {{quote_asset}} / <b>{{quote_qty|stringformat:".2f"}}</b></span></div>
             <div class="w-25 py-1">PNL: <span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{pnl_perc|stringformat:".2f"}}% ({{pnl|stringformat:".2f"}} {{quote_asset}})</span></div>
             <div class="w-25 py-1">Stop Loss General: {{stop_loss|stringformat:".2f"}} %</div>
             <div class="w-25 py-1">Maximo DrowDawn: {{max_drawdown_reg|stringformat:".2f" }}/{{max_drawdown|stringformat:".2f" }} %</div>
         </div>
     </div>
-    
+
+    <div class="row pt-2 mb-2" >
+        <div class="d-flex flex-row flex-wrap rounded border border-1 py-3 mb-1">
+            <div class="w-100 py-1"><h4 class="text-center">Especificar como desactivar el Bot<h4></div>
+            <div class="w-50 py-1 text-center"><a class="btn btn-danger col-8 mx-auto" href="{% url 'bot_desactivar' bot_id 'no_close' %}">Solo desactivar</a></div>
+            <div class="w-50 py-1 text-center"><a class="btn btn-danger col-8 mx-auto" href="{% url 'bot_desactivar' bot_id 'close' %}">Desactivar y cerrar la posicion abierta</a></div>
+        </div>
+    </div>
+
     <div class="row">
         <ul class="nav nav-tabs" id="myTab" role="tablist" style="font-size: 0.9em;">
             <li class="nav-item" role="resumen">
               <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">Operacion en curso</button>
-            </li>
-            <li class="nav-item" role="trades">
-                <button class="nav-link" id="trades-tab" data-bs-toggle="tab" data-bs-target="#trades-tab-pane" type="button" role="tab" aria-controls="trades-tab-pane" aria-selected="false">Operaciones cerradas</button>
-            </li>
-            <li class="nav-item" role="log">
-                <button class="nav-link" id="log-tab" data-bs-toggle="tab" data-bs-target="#log-tab-pane" type="button" role="tab" aria-controls="log-tab-pane" aria-selected="false">Log</button>
             </li>
           </ul>
           <div class="tab-content" id="myTabContent">
@@ -150,71 +113,8 @@
                         </table>
                     </div>
                 </div>
-                {% if chart %}
-                <div class="row pt-4">  
-                    <h6 class="text-info">Grafico</h6>
-                    {{ chart|safe }}
-                </div>
-                {% endif %}
             </div>
-            
-            <div class="tab-pane fade" id="trades-tab-pane" role="tabpanel" aria-labelledby="trades-tab" tabindex="0">
-                <div class="row pt-4">
-                    <table class="table-dg table-trade-info">
-                        <thead>
-                            <tr>
-                                <th>Compra</th>
-                                <th>Venta</th>
-                                <th>Duracion (Dias)</th>
-                                <th>SL/TP</th>
-                                <th class="text-end">Cantidad</th>
-                                <th class="text-end">Compra</th>
-                                <th class="text-end">Venta</th>
-                                <th class="text-end">Resultado {{quote_asset}}</th>
-                                <th class="text-end">Resultado %</th>
-                                <th class="text-end">Ordenes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% for t in trades %}
-                            <tr class="{% if t.result_perc > 0 %}green{% else %}red{% endif %}">
-                                <td>{{t.start|date:"d-m-Y h:i"}}</td>
-                                <td>{{t.end|date:"d-m-Y h:i"}}</td>
-                                <td>{{t.duracion}}</td>
-                                <td>{{t.flag_type}}</td>
-                                <td class="text-end">{{t.buy_acum_base}}</td>
-                                <td class="text-end">{{t.buy_avg_price}}</td>
-                                <td class="text-end">{{t.sell_avg_price}}</td>
-                                <td class="text-end">{{t.result_quote|stringformat:".2f"}}</td>
-                                <td class="text-end">{{t.result_perc|stringformat:".2f"}} %</td>
-                                <td class="text-end">{{t.orders}}</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="tab-pane fade show" id="log-tab-pane" role="tabpanel" aria-labelledby="log-tab" tabindex="0" >
-                <table class="table-dg table-trade-info">
-                    <thead>
-                        <tr>
-                            <th width="10%">Fecha</th>
-                            <th width="10%">Tipo</th>
-                            <th>Texto</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for l in log %}
-                        <tr class="{{l.class}}">
-                            <td>{{l.datetime|date:"d-m-Y h:i"}}</td>
-                            <td>{{l.type}}</td>
-                            <td>{{l.texto}}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
+
           </div>
     </div>
 </div>

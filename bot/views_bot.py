@@ -63,7 +63,9 @@ def bot(request, bot_id):
     
 
     klines = bot.get_pnl()
-    max_drawdown_reg = botClass.ind_maximo_drawdown(klines,'pnl')
+    max_drawdown_reg = 0
+    if len(klines)>0:
+        max_drawdown_reg = botClass.ind_maximo_drawdown(klines,'pnl')
 
     if not klines.empty:
         klines.drop(columns=['id', 'bot_id'],inplace=True)
@@ -254,15 +256,77 @@ def bot_edit(request,bot_id):
         return JsonResponse(json_rsp)
 
 @login_required
-def bot_toogle_activo(request,bot_id):
+def activar(request,bot_id):
     bot = get_object_or_404(Bot, pk=bot_id,usuario=request.user)
-    if bot.activo > 0:
-        bot.desactivar()
-    elif bot.can_activar():
+    if bot.can_activar():
         bot.activar()
-            
     return redirect('/bot/bot/'+str(bot.id))
- 
+            
+@login_required
+def desactivar(request,bot_id,action):
+    bot = get_object_or_404(Bot, pk=bot_id,usuario=request.user)
+    intervalo = fn.get_intervals(bot.estrategia.interval_id,'name')
+    status = eval(bot.status) if len(bot.status) > 0 else []
+
+    quote_actual = bot.quote_qty
+    if 'wallet_tot' in status: 
+        quote_actual = status['wallet_tot']['r']
+        del status['wallet_tot']
+
+    #Avisos por entornos de ejecucion de TEST
+    environment_advertisement = []
+    usuario=request.user
+    usuario_id = usuario.id
+    profile = UserProfile.objects.get(user_id=usuario_id)
+    profile_config = profile.parse_config()
+    if profile_config['bnc']['bnc_env'] == 'test':
+        environment_advertisement.append('El Bot se ejecuta en entorno de TEST')
+
+    #### Creando grafica de la operacion del bot
+    botClass = bot.get_instance()
+    symbol_info = Exchange('info','bnc',prms=None).get_symbol_info(symbol=botClass.symbol)
+    quote_asset = symbol_info['quote_asset']
+    
+    pnl = quote_actual-bot.quote_qty
+    pnl_perc = (pnl/bot.quote_qty)*100
+    
+    ordenes_en_curso = bot.get_orders_en_curso()
+    comprado = 0
+    if 'wallet_base' in status:
+        comprado = status['wallet_base']['r']
+    
+    if action == 'no_close' or (comprado == 0 and len(ordenes_en_curso) == 0):
+        bot.desactivar(close=True)
+        return redirect('/bot/bot/'+str(bot.id))
+    if action == 'close':
+        bot.desactivar(close=True)
+        return redirect('/bot/bot/'+str(bot.id))
+
+
+        
+    return render(request, 'bot_desactivar.html',{
+        'title': str(bot),
+        'nav_title': str(bot),
+        'bot_id': bot.id,
+        'estrategia': bot.estrategia.nombre,
+        'descripcion': bot.estrategia.descripcion,
+        'estrategia_activo': bot.estrategia.activo,
+        'intervalo': intervalo,
+        'estrategia_id': bot.estrategia.id,
+        'creado': bot.creado,
+        'quote_qty': round(bot.quote_qty,2),
+        'quote_actual': round(quote_actual,2),
+        'stop_loss': round(bot.stop_loss,2),
+        'max_drawdown': round(bot.max_drawdown,2),
+        'parametros': bot.parse_parametros(),
+        'orders': ordenes_en_curso,
+        'status': status,
+        'pnl': pnl,
+        'pnl_perc': pnl_perc,
+        'environment_advertisement': environment_advertisement,
+        'quote_asset': quote_asset,
+    })
+
 @login_required
 def bot_delete(request,bot_id):
     json_rsp = {}

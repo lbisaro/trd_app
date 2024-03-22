@@ -6,7 +6,7 @@ import pytz
 import pandas as pd
 from scripts.functions import get_intervals
 
-from bot.model_kline import * 
+from bot.model_kline import Symbol,Kline 
 
 class Exchange():
 

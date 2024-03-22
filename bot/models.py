@@ -14,7 +14,8 @@ import pandas as pd
 import datetime as dt
 from django_pandas.io import read_frame
 from scripts.Bot_Core_utils import Order as BotUtilsOrder
-
+from user.models import UserProfile
+from bot.model_indicator import Indicator
 
 class GenericBotClass:
     
@@ -219,13 +220,83 @@ class Bot(models.Model):
                 buy = 0
                 sell = 0
     
-    def desactivar(self,texto=''):
-        self.bloquear()
+    def desactivar(self,texto='',close=False):
+        self.bloquear(texto=texto,close=close)
     
-    def bloquear(self,texto=''):
+    def bloquear(self,texto='',close=False):
         self.activo = 0
         self.save()
-        self.add_log(BotLog.LOG_DESACTIVAR,texto)
+        log_texto = ''
+        if close:
+
+            ### Close posicion
+            botClass = self.get_instance()
+            botClass.bot_id = self.id
+            botClass.username = self.usuario.username
+            profile = UserProfile.objects.get(user_id=self.usuario.id)
+            profile_config = profile.parse_config()
+            prms = {}
+            prms['bnc_apk'] = profile_config['bnc']['bnc_apk']
+            prms['bnc_aps'] = profile_config['bnc']['bnc_aps']
+            prms['bnc_env'] = profile_config['bnc']['bnc_env']
+            exch = Exchange(type='user_apikey',exchange='bnc',prms=prms)
+
+            resultados = self.get_wallet()
+            symbol_info = exch.get_symbol_info(botClass.symbol)
+            qd_qty = symbol_info['qty_decs_qty']
+            qd_quote = symbol_info['qty_decs_quote']
+            botClass.wallet_quote = round(self.quote_qty + resultados['quote_compras'] + resultados['quote_ventas'] , qd_quote)
+            botClass.wallet_base  = round(resultados['base_compras'] + resultados['base_ventas'] , qd_qty)
+
+            exchange_wallet = exch.get_wallet() 
+
+            orders = self.get_orders_en_curso()
+            botClass._trades = {}
+            botClass._orders = {}
+            for order in orders:
+                if order.completed > 0:
+                    botClass._trades[order.id] = order
+                else:
+                    botClass._orders[order.id] = order
+            
+            price = exch.get_symbol_price(botClass.symbol)
+            if abs(botClass.wallet_base*price) < 2: #Si el total de qty representa menos de 2 dolares, se toma como 0
+                botClass.wallet_base = 0.0
+
+            botClass.signal = 'NEUTRO'
+            botClass.row = pd.DataFrame()
+            botClass.exchange = exch
+            botClass.price = price
+            botClass.exchange_wallet = exchange_wallet
+
+            botClass.backtesting = False
+            botClass.live = True
+
+            botClass.log.bot_id = botClass.bot_id
+            botClass.log.username = botClass.username
+
+            botClass.base_asset = symbol_info['base_asset']
+            botClass.quote_asset = symbol_info['quote_asset']
+            botClass.qd_price = symbol_info['qty_decs_price']
+            botClass.qd_qty = symbol_info['qty_decs_qty']
+            botClass.qd_quote = symbol_info['qty_decs_quote']
+
+            botClass.datetime = dt.datetime.now()
+            
+            botClass.close(BotUtilsOrder.FLAG_SIGNAL)
+            botClass.cancel_orders()
+            
+            self.make_operaciones()
+
+            #Procesando estado actual del bot
+            status = botClass.get_status()
+            self.update_status(status)
+
+            log_texto = 'Cerrar posicion'
+
+            ### End - Close posicion
+
+        self.add_log(BotLog.LOG_DESACTIVAR,texto=log_texto)
     
     def activar(self):
         self.activo = 1

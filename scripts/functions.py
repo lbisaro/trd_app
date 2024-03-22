@@ -16,6 +16,7 @@ def get_intervals(i='ALL',c='ALL'):
                               ['1h01','1h01','1 hora','1h','1H',60],
                               ['1h04','1h04','4 horas','4h','4H',(60*4)],
                               ['2d01','2d01','1 dia','1d','1D',(60*4*24)],
+                              ['2d03','2d03','3 dias','3d','3D',(60*4*24*3)],
                              ],columns=columns)
     intervals.set_index('id',inplace=True)
     if i=='ALL' and c=='ALL':
