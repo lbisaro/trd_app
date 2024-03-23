@@ -38,13 +38,13 @@ def supertrend(df,length=7,multiplier=3):
 
     return df
 
-def volume_level(df,period=50,level_high=1.5,level_low=0.2,col='volume'):
+def volume_level(df,period=50,level_extrahigh=2.0,level_high=1.0,level_medium=0.0,level_low=-1.0,col='volume'):
     """
     Level:
-        ExtraHigh = 3
-        High = 1.5
-        Medium = 0.2
-        Normal = -0.5
+        ExtraHigh   =   2.0     3.0
+        High        =   1.0     1.5
+        Medium      =   0.0     0.2
+        Normal      =  -1.0    -0.5
 
         Volumen optimo entre High y Medium
 
@@ -52,23 +52,34 @@ def volume_level(df,period=50,level_high=1.5,level_low=0.2,col='volume'):
            vol_signal = 1  -> Volumen optimo para entradas en Long
            vol_signal = -1 -> Volumen optimo para entradas en Short
         
+           vol_range = [1 a 5] El volumen standard es vol_range = 2 - vol_range = 1 minimo - vol_range = 5 maximo
+
     """
     
     vol_period = period
+    thresholdExtraHigh = level_extrahigh
     thresholdHigh = level_high
+    thresholdMedium = level_medium
     thresholdLow = level_low
 
     df['vol_mean'] = df[col].rolling(window=vol_period).mean()
     df['vol_std']  = df[col].rolling(window=vol_period).std()
+    df['vol_eh'] = df['vol_std'] * thresholdExtraHigh + df['vol_mean']
     df['vol_h'] = df['vol_std'] * thresholdHigh + df['vol_mean']
-    df['vol_l'] = df['vol_std'] * thresholdLow + df['vol_mean']
+    df['vol_m'] = df['vol_std'] * thresholdMedium + df['vol_mean']
+    df['vol_n'] = df['vol_std'] * thresholdLow + df['vol_mean']
+    df['vol_range'] = np.where((df[col]>0)&(df[col]<=df['vol_n']),1,0)
+    df['vol_range'] = np.where((df[col]>df['vol_n'])&(df[col]<=df['vol_m']),2,df['vol_range'])
+    df['vol_range'] = np.where((df[col]>df['vol_m'])&(df[col]<=df['vol_h']),3,df['vol_range'])
+    df['vol_range'] = np.where((df[col]>df['vol_h'])&(df[col]<=df['vol_eh']),4,df['vol_range'])
+    df['vol_range'] = np.where((df[col]>df['vol_eh']),5,df['vol_range'])
 
     df['signal_sign'] = np.where(df['close']>df['open'],1,-1)
     
     #El volumen debe estar entre medio (vol_l) y alto (vol_h)
-    df['vol_signal'] = np.where((df[col]>df['vol_l']) & (df[col]<df['vol_h']), 1 * df['signal_sign'],None)
+    df['vol_signal'] = np.where((df['vol_range']==3), 1 * df['signal_sign'],None)
 
-    df = df.drop(['vol_mean','vol_std','vol_h','vol_l','signal_sign'], axis=1)
+    df = df.drop(['vol_mean','vol_std','vol_eh','vol_h','vol_eh','signal_sign'], axis=1)
     return df
 
 

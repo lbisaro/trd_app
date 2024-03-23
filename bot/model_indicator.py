@@ -11,7 +11,7 @@ import datetime as dt
 import scripts.functions as fn
 from scripts.Exchange import Exchange
 from bot.model_kline import Symbol
-from scripts.indicators import supertrend
+from scripts.indicators import supertrend,volume_level
 
 class Indicator(models.Model):
     """
@@ -99,9 +99,14 @@ class Indicator(models.Model):
                         df['trend'] = np.where((df['st_trend_s']<0) & (df['st_trend_f']<0),-2,df['trend'])
                         df.drop(columns=[col for col in df.columns if col.startswith('st_')],inplace=True)
                         
+                        #Calculo de Volumen
+                        df = volume_level(df)
+
 
                         last = df.iloc[-1]
                         self.add(symb,interval_id,self.INDICATOR_ID_TREND,last['trend'])
+                        self.add(symb,interval_id,self.INDICATOR_ID_VOLUME,last['vol_range'])
+
 
     def add(self,symbol,interval_id,indicator_id,value):
         try:
