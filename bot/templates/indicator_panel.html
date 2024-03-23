@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Indicadores Generales{% endblock %}
+{% block nav_title %}Indicadores Generales{% endblock %}
+
+{% load static %}
+
+{% block head %}
+<style>
+
+</style>
+{% endblock head %}
+
+
+{% block content %}
+
+{% for symbol in symbols %}
+    <div class="container mb-4">
+        <div class="row">
+            <h5 class="text-info">{{symbol}}</h5>
+            <div class="col-3">
+                <h6>Temporalidad</h6>
+            </div>
+            <div class="col-3">
+                <h6>Tendencia</h6>
+            </div>
+            <div class="col-3">
+                <h6>Volumen</h6>
+            </div>
+            <div class="col-3">
+                <h6>Volatilidad</h6>
+            </div>
+        </div>
+        {% for interval in intervals %}
+        <div class="row">
+            <div class="col-3">{{interval.name}}</div>
+            <div class="col-3">
+                <div id="ind_{{symbol}}_{{interval.id}}"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endfor %}
+
+
+{% endblock content %}
+
+
+{% block script %}
+
+<script>
+    
+    {% for ind in indicators %}
+    draw_trend('ind_{{ind.symbol.symbol}}_{{ind.interval_id}}' , {{ind.value}})    
+    {% endfor %}
+
+    function marker_fill(type,color) {
+        return '<i class="bi bi-'+type+'square-fill" style="color:'+color+'"></i> ';
+    }
+    function marker_unfill(type,color) {
+        return '<i class="bi bi-'+type+'square" style="color:'+color+'"></i> ';
+    }
+
+    $(document).ready(function () {
+        /*
+        draw_trend('trend',trend_value);
+        draw_range('volume',volume_value);
+        draw_range('volatility',volatility_value);
+        */
+
+    })
+
+    function draw_trend(div,value) {
+        var html = '';
+        if (value == -2)
+            html = marker_fill('arrow-down-','#f6465d')    
+                  +marker_unfill('arrow-down-left-','#f6465d')      
+                  +marker_unfill('','#a7acb1') 
+                  +marker_unfill('arrow-up-right-','#a7acb1')    
+                  +marker_unfill('arrow-up-','#a7acb1');
+        else if (value == -1)
+            html = marker_unfill('arrow-down-','#a7acb1') 
+                  +marker_fill('arrow-down-left-','#f6465d')      
+                  +marker_unfill('','#a7acb1') 
+                  +marker_unfill('arrow-up-right-','#a7acb1')    
+                  +marker_unfill('arrow-up-','#a7acb1');
+        else if (value == 0)
+            html = marker_unfill('arrow-down-','#a7acb1') 
+                  +marker_unfill('arrow-down-left-','#a7acb1')   
+                  +marker_fill('','#a7acb1') 
+                  +marker_unfill('arrow-up-right-','#a7acb1')    
+                  +marker_unfill('arrow-up-','#a7acb1');
+        else if (value == 1)
+            html = marker_unfill('arrow-down-','#a7acb1') 
+                  +marker_unfill('arrow-down-left-','#a7acb1')   
+                  +marker_unfill('','#a7acb1') 
+                  +marker_fill('arrow-up-right-','#0ecb81')      
+                  +marker_unfill('arrow-up-','#a7acb1');
+        else if (value == 2)
+            html = marker_unfill('arrow-down-','#a7acb1') 
+                  +marker_unfill('arrow-down-left-','#a7acb1')   
+                  +marker_unfill('','#a7acb1') 
+                  +marker_unfill('arrow-up-right-','#0ecb81')      
+                  +marker_fill('arrow-up-','#0ecb81');
+        $('#'+div).html(html);
+    }
+
+    function draw_range(div,value) {
+        var html = '';
+        if (value == 1)
+            html = marker_fill('','#0ecb81') 
+                  +marker_unfill('','#a7acb1')   
+                  +marker_unfill('','#a7acb1') 
+                  +marker_unfill('','#a7acb1')      
+                  +marker_unfill('','#a7acb1');
+        else if (value == 2)
+            html = marker_fill('','#0ecb81') 
+                  +marker_fill('','#0ecb81')   
+                  +marker_unfill('','#a7acb1') 
+                  +marker_unfill('','#a7acb1')      
+                  +marker_unfill('','#a7acb1');
+        else if (value == 3)
+            html = marker_fill('','#0ecb81') 
+                  +marker_fill('','#0ecb81')   
+                  +marker_fill('','#0ecb81') 
+                  +marker_unfill('','#a7acb1')      
+                  +marker_unfill('','#a7acb1');
+        else if (value == 4)
+            html = marker_fill('','#0ecb81') 
+                  +marker_fill('','#0ecb81')   
+                  +marker_fill('','#0ecb81') 
+                  +marker_fill('','#0ecb81')      
+                  +marker_unfill('','#a7acb1');
+        else if (value == 5)
+            html = marker_fill('','#0ecb81') 
+                  +marker_fill('','#0ecb81')   
+                  +marker_fill('','#0ecb81') 
+                  +marker_fill('','#0ecb81')      
+                  +marker_fill('','#0ecb81');
+        $('#'+div).html(html);
+    }
+</script>
+{% endblock %}
