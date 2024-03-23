@@ -75,7 +75,7 @@ class Indicator(models.Model):
         #hr = startDt.strftime('%H')
         mn = startDt.strftime('%M')
         
-        if mn[1]=='0': #Solo entra en los minutos multiplo de 10 / Representa que se ejecuta cada 0 minutos
+        if mn[1]=='0': #Solo entra en los minutos multiplo de 10 / Representa que se ejecuta cada 10 minutos
 
             limit = self.max_periods
             exch = Exchange(type='info',exchange='bnc',prms=None)
@@ -85,22 +85,23 @@ class Indicator(models.Model):
                 symbol = symb.symbol
 
                 for interval_id in self.intervals:
-                    df = exch.get_klines(symbol=symbol,interval_id=interval_id,limit=limit)
+                    if interval_id <= '1h04' or mn == '00': # (Intervalos de 1 o 4 horas) o (Cada 1 hora)
+                        df = exch.get_klines(symbol=symbol,interval_id=interval_id,limit=limit)
 
-                    #Calculo de Tendencia
-                    df = supertrend(df,length=7,multiplier=3)
-                    df.rename(columns={'st_trend': 'st_trend_s'},inplace=True)
-                    df = supertrend(df,length=7,multiplier=2)
-                    df.rename(columns={'st_trend': 'st_trend_f'},inplace=True)
-                    df['trend'] = np.where((df['st_trend_s']>0) & (df['st_trend_f']>0),2,0)
-                    df['trend'] = np.where((df['st_trend_s']>0) & (df['st_trend_f']<0),1,df['trend'])
-                    df['trend'] = np.where((df['st_trend_s']<0) & (df['st_trend_f']>0),-1,df['trend'])
-                    df['trend'] = np.where((df['st_trend_s']<0) & (df['st_trend_f']<0),-2,df['trend'])
-                    df.drop(columns=[col for col in df.columns if col.startswith('st_')],inplace=True)
-                    
+                        #Calculo de Tendencia
+                        df = supertrend(df,length=7,multiplier=3)
+                        df.rename(columns={'st_trend': 'st_trend_s'},inplace=True)
+                        df = supertrend(df,length=7,multiplier=2)
+                        df.rename(columns={'st_trend': 'st_trend_f'},inplace=True)
+                        df['trend'] = np.where((df['st_trend_s']>0) & (df['st_trend_f']>0),2,0)
+                        df['trend'] = np.where((df['st_trend_s']>0) & (df['st_trend_f']<0),1,df['trend'])
+                        df['trend'] = np.where((df['st_trend_s']<0) & (df['st_trend_f']>0),-1,df['trend'])
+                        df['trend'] = np.where((df['st_trend_s']<0) & (df['st_trend_f']<0),-2,df['trend'])
+                        df.drop(columns=[col for col in df.columns if col.startswith('st_')],inplace=True)
+                        
 
-                    last = df.iloc[-1]
-                    self.add(symb,interval_id,self.INDICATOR_ID_TREND,last['trend'])
+                        last = df.iloc[-1]
+                        self.add(symb,interval_id,self.INDICATOR_ID_TREND,last['trend'])
 
     def add(self,symbol,interval_id,indicator_id,value):
         try:
