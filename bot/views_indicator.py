@@ -11,8 +11,6 @@ from scripts.functions import get_intervals
 def panel(request):
     symbols = Symbol.objects.filter(activo = 1)
     indicators = Indicator.objects.filter(last=True)
-    for i in indicators:
-        print(i)
     intervals_id = Indicator.intervals
     intervals = []
     for interval_id in intervals_id:
