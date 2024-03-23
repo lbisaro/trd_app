@@ -20,22 +20,20 @@
             <div class="col-3">
                 <h6>Temporalidad</h6>
             </div>
+            {% for it in indicators_type %}
             <div class="col-3">
-                <h6>Tendencia</h6>
+                <h6>{{it.name}}</h6>
             </div>
-            <div class="col-3">
-                <h6>Volumen</h6>
-            </div>
-            <div class="col-3">
-                <h6>Volatilidad</h6>
-            </div>
+            {% endfor %}
         </div>
         {% for interval in intervals %}
         <div class="row">
             <div class="col-3">{{interval.name}}</div>
+            {% for it in indicators_type %}
             <div class="col-3">
-                <div id="ind_{{symbol}}_{{interval.id}}"></div>
+                <div id="ind_{{it.id}}_{{symbol}}_{{interval.id}}"></div>
             </div>
+            {% endfor %}
         </div>
         {% endfor %}
     </div>
@@ -50,7 +48,9 @@
 <script>
     
     {% for ind in indicators %}
-    draw_trend('ind_{{ind.symbol.symbol}}_{{ind.interval_id}}' , {{ind.value}})    
+    {% if ind.indicator_id == INDICATOR_ID_TREND %}draw_trend('ind_{{ind.indicator_id}}_{{ind.symbol.symbol}}_{{ind.interval_id}}' , {{ind.value}});{% endif %}   
+    {% if ind.indicator_id == INDICATOR_ID_VOLUME %}draw_range('ind_{{ind.indicator_id}}_{{ind.symbol.symbol}}_{{ind.interval_id}}' , {{ind.value}});{% endif %}  
+    {% if ind.indicator_id == INDICATOR_ID_VOLATILITY %}draw_range('ind_{{ind.indicator_id}}_{{ind.symbol.symbol}}_{{ind.interval_id}}' , {{ind.value}});{% endif %}  
     {% endfor %}
 
     function marker_fill(type,color) {
