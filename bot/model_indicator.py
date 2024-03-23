@@ -11,7 +11,7 @@ import datetime as dt
 import scripts.functions as fn
 from scripts.Exchange import Exchange
 from bot.model_kline import Symbol
-from scripts.indicators import supertrend,volume_level
+from scripts.indicators import supertrend,volume_level,volatility_level
 
 class Indicator(models.Model):
     """
@@ -102,10 +102,14 @@ class Indicator(models.Model):
                         #Calculo de Volumen
                         df = volume_level(df)
 
+                        #Calculo de la Volatilidad
+                        df = volatility_level(df)
+
 
                         last = df.iloc[-1]
                         self.add(symb,interval_id,self.INDICATOR_ID_TREND,last['trend'])
                         self.add(symb,interval_id,self.INDICATOR_ID_VOLUME,last['vol_range'])
+                        self.add(symb,interval_id,self.INDICATOR_ID_VOLATILITY,last['vlt_range'])
 
 
     def add(self,symbol,interval_id,indicator_id,value):
