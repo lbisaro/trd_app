@@ -74,7 +74,7 @@ class Bot_CoreLong(Bot_Core):
                 'trail': {
                         'c' :'trail',
                         'd' :'Trail',
-                        'v' : 1,
+                        'v' : 0,
                         't' :'bin',
                         'pub': True,
                         'sn':'Trail', },
