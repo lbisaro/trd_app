@@ -2,6 +2,51 @@ import pandas as pd
 import pandas_ta
 import numpy as np
 
+def resample(df,periods):
+    """
+    Genera un dataframe resampleado de acuerdo a la cantidad de periodos establecidos
+    Ej.: Si df es tiene un timeframe de 15m, y periods = 4, el resample se hace en 1h
+
+    Ejemplo de uso de resample y join_after_resample:
+
+    dfx4 = resample(df,4)
+    rsi_x4 = ta.rsi(dfx4['close'], length=21)
+    df = join_after_resample(df,rsi_x4,'rsi')
+    df['rsi_sma'] = df['rsi'].rolling(14).mean()
+
+    """
+
+    timeframe = df['datetime'].iloc[1]-df['datetime'].iloc[0]
+    resample = timeframe * periods
+
+    # Resamplear el dataframe a 1 dia
+    dfx = df.resample(resample, on="datetime").agg({
+        'open': 'first',
+        'high': 'max',
+        'low': 'min',
+        'close': 'last',
+        'volume': 'sum'
+    })
+    return dfx
+
+def join_after_resample(df,serie,column):
+    """
+    Agrega una serie resampleada al dataframe df, asignando la columna column
+    Asociando los registros con la columna datetime
+
+    Ejemplo de uso de resample y join_after_resample:
+
+    dfx4 = resample(df,4)
+    rsi_x4 = ta.rsi(dfx4['close'], length=21)
+    df = join_after_resample(df,rsi_x4,'rsi')
+    df['rsi_sma'] = df['rsi'].rolling(14).mean()
+
+    """
+
+    df[column] = df['datetime'].map(serie)
+    df[column] = df[column].ffill()
+    return df
+
 def supertrend(df,length=7,multiplier=3):
     """
     Al dataframe le agrega las siguientes columnas
@@ -248,4 +293,95 @@ def donchian(df, period = 20):
     df['dch_max'] = df['high'].rolling(window=period).max()
     df['dch_min'] = df['low'].rolling(window=period).min()
     df['dch_mean'] = (df['dch_max']+df['dch_min'])/2
+    return df
+
+def ITG_Scalper(df, len=14 , FfastLength=12 , FslowLength=26 , FsignalLength=9 , nfilter=False):
+    """
+    Basado en un indicador de Trading View
+    https://www.tradingview.com/script/AcrZjl6Q-ITG-Scalper/
+
+    Genera columnas: long, short, buy_alert, sell_alert
+    """
+
+    
+
+    # Calculating Triple EMA
+    ema1 = df['close'].ewm(span=len, min_periods=len).mean()
+    ema2 = ema1.ewm(span=len, min_periods=len).mean()
+    ema3 = ema2.ewm(span=len, min_periods=len).mean()
+    avg = 3 * (ema1 - ema2) + ema3
+
+    # Trend calculation
+    ma_up = avg >= avg.shift(1)
+    ma_down = avg < avg.shift(1)
+
+    # MACD Filter
+    FfastMA = df['close'].ewm(span=FfastLength, min_periods=FfastLength).mean()
+    FslowMA = df['close'].ewm(span=FslowLength, min_periods=FslowLength).mean()
+    Fmacd = FfastMA - FslowMA
+    Fsignal = Fmacd.rolling(window=FsignalLength).mean()
+
+    Fbuy = (Fmacd >= Fsignal) | ~nfilter
+    Fsell = (Fmacd < Fsignal) | ~nfilter
+
+    # Entry & exit conditions
+    long = ma_up & Fbuy.shift(1)
+    short = ma_down & Fsell.shift(1)
+
+    # Alert conditions
+    buy_alert = long & long.shift(1)
+    sell_alert = short & short.shift(1)
+    
+    df['long'] = long
+    df['short'] = short
+    df['buy_alert'] = buy_alert
+    df['sell_alert'] = sell_alert
+
+    return df
+
+def Edri_Extreme_Points_Buy_Sell(df, ccimomCross='CCI' , ccimomLength=10 , 
+                                     useDivergence=True , rsiOverbought=65 , 
+                                     rsiOversold=35 , rsiLength=14 , 
+                                     emaPeriod=200 , bandMultiplier=1.8):
+    """
+    Basado en un indicador de Trading View
+    https://es.tradingview.com/script/ZXIm3q7G-Edri-Extreme-Points-Buy-Sell/
+
+    Genera columnas: long_entry, short_entry, mean_reversion, upper_band, lower_band
+    """
+    
+    # CCI and Momentum calculation
+    momLength = ccimomLength if ccimomCross == 'Momentum' else 10
+    mom = df['close'] - df['close'].shift(momLength)
+    cci = (df['close'] - df['close'].rolling(window=ccimomLength).mean()) / (0.015 * df['close'].rolling(window=ccimomLength).std())
+    ccimomCrossUp = (mom > 0) if ccimomCross == 'Momentum' else (cci > 0)
+    ccimomCrossDown = (mom < 0) if ccimomCross == 'Momentum' else (cci < 0)
+
+    # RSI calculation
+    src = df['close']
+    up = src.diff().where(src.diff() > 0, 0).rolling(window=rsiLength).mean()
+    down = -src.diff().where(src.diff() < 0, 0).rolling(window=rsiLength).mean()
+    rs = up / down
+    rsi = 100 - (100 / (1 + rs))
+    oversoldAgo = (rsi <= rsiOversold).any()
+    overboughtAgo = (rsi >= rsiOverbought).any()
+    
+    # Regular Divergence Conditions
+    bullishDivergenceCondition = (rsi.shift() > rsi.shift(2)) & (rsi.shift(2) < rsi.shift(4))
+    bearishDivergenceCondition = (rsi.shift() < rsi.shift(2)) & (rsi.shift(2) > rsi.shift(4))
+
+    # Entry Conditions
+    longEntryCondition = ccimomCrossUp & oversoldAgo & (~useDivergence | bullishDivergenceCondition)
+    shortEntryCondition = ccimomCrossDown & overboughtAgo & (~useDivergence | bearishDivergenceCondition)
+
+    # Mean Reversion Indicator
+    meanReversion = df['close'].ewm(span=emaPeriod, adjust=False).mean()
+    stdDev = df['close'].rolling(window=emaPeriod).std()
+    upperBand = meanReversion + stdDev * bandMultiplier
+    lowerBand = meanReversion - stdDev * bandMultiplier
+    df['long_entry'] = longEntryCondition
+    df['short_entry'] = shortEntryCondition
+    df['mean_reversion'] = meanReversion
+    df['upper_band'] = upperBand
+    df['lower_band'] = lowerBand
     return df
