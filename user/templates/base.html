@@ -44,6 +44,9 @@
                     {% if user.is_authenticated %}
 
                     <li class="nav-item">
+                        <a class="nav-link " href="{% url 'indicator_panel' %}">Indicadores</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link " href="{% url 'symbols' %}">Pares</a>
                     </li>
                     <li class="nav-item">
