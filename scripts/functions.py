@@ -44,7 +44,7 @@ def get_binance_intervals():
 def get_apply_intervals(dt):
 
     #Se calcula el time interval con GMT+0 para que Al buscar velas de 4hs o diarias, se obtengan velas cerradas
-    dt = dt+timedelta(hours=3)
+    dt = dt-timedelta(hours=3)
 
     hr = dt.strftime('%H')
     mn = dt.strftime('%M')
