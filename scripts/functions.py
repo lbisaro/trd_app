@@ -135,6 +135,17 @@ def ohlc_chart(klines,**kwargs):
           'name': 'MA Slow',
           'color': 'green',
           },
+    ]
+    indicators_out = [
+         {'col': 'MA_F',
+          'name': 'MA Fast',
+          'color': 'yellow',
+          'row': 1,
+          },
+         {'col': 'MA_S',
+          'name': 'MA Slow',
+          'color': 'green',
+          },
      ]
      open_orders = [
          {'col': 'ORD_1',
@@ -156,8 +167,12 @@ def ohlc_chart(klines,**kwargs):
    
     show_pnl   = kwargs.get('show_pnl', True )
     indicators = kwargs.get('indicators', None )
+    indicators_out = kwargs.get('indicators_out', None )
     open_orders = kwargs.get('open_orders', None )
     events    = kwargs.get('events', None )
+
+    if not 'pnl' in klines.columns:
+        show_pnl = False
     
     chart_rows = 1
     domain_0 = 0.15
@@ -166,8 +181,17 @@ def ohlc_chart(klines,**kwargs):
         chart_rows += 1
         domain_0 += 0.15
     
-    if 'volume' in klines:
-        chart_rows += 1
+    #if 'volume' in klines:
+    chart_rows += 1
+    
+    start_out = chart_rows
+    io_max_row = 0
+    if indicators_out:
+        
+        for io in indicators_out:
+            if io['row']>io_max_row:
+                io_max_row = io['row']
+        chart_rows += io_max_row+1
 
     fig = make_subplots(rows=chart_rows, shared_xaxes=True)
 
@@ -265,6 +289,20 @@ def ohlc_chart(klines,**kwargs):
             col=1,
         )
 
+    
+    if indicators_out:
+        for ind in indicators_out:
+
+            fig.add_trace(
+                go.Scatter(
+                    x=klines["datetime"], y=klines[ind['col']], name=ind['name'], mode="lines", 
+                    line={'width': 0.5},  
+                    marker=dict(color=ind['color']),
+                ),
+                row=start_out+1+ind['row'],
+                col=1,
+            )
+
     # Adjust layout for subplots
     fig.update_layout(
         font=dict(color="#ffffff", family="Helvetica"),
@@ -304,21 +342,22 @@ def ohlc_chart(klines,**kwargs):
                 showticklabels=False,
             ),
             yaxis3=dict(
-                title="PNL",
+                title="PNL" if show_pnl else "",
                 domain=[0, domain_0],
                 showticklabels=True,
             ),
             
         ) 
     else:
-        fig.update_layout(
-            yaxis2=dict(
-                title="PNL",
-                domain=[0, domain_0],
-                showticklabels=True,
-            ),
-            
-        ) 
+        if show_pnl:
+            fig.update_layout(
+                yaxis2=dict(
+                    title="PNL",
+                    domain=[0, domain_0],
+                    showticklabels=True,
+                ),
+                
+            ) 
     
     fig.update_xaxes(showline=True, linewidth=0.5,linecolor='#40444e', gridcolor='#40444e')
     fig.update_yaxes(showline=False, linewidth=0.5,zeroline= False, linecolor='#40444e', gridcolor='rgba(0,0,0,0)') 

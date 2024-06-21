@@ -29,7 +29,7 @@ class Exchange():
                 if prms['bnc_env'] == 'test':
                     self.client = BinanceClient(api_key=apk, api_secret=aps, testnet=True)
                 else:
-                    self.client = BinanceClient(api_key=apk, api_secret=aps)
+                    self.client = BinanceClient(api_key=apk, api_secret=aps, testnet=False)
 
     def check_connection(self):
         try:

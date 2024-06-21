@@ -3,6 +3,7 @@ import pandas as pd
 from scripts.functions import round_down
 from scripts.Bot_Core import Bot_Core
 from scripts.Bot_Core_utils import *
+from datetime import datetime as dt
 
 class BotLiveTest(Bot_Core):
 
@@ -63,8 +64,17 @@ class BotLiveTest(Bot_Core):
         self.klines['signal'] = 'NEUTRO'   
         self.print_orders = False
         self.graph_open_orders = False
+        self.status['live_test_start'] = {'l': 'Live Test Start()','v': 'Probando','r':'Probando'}
     
     def next(self):
+        if not 'live_test_next' in self.status:
+            print(' not live_test_next in self.status')
+            self.status['live_test_next'] = {'l': 'Live Test Next()','v': '0.00','r':0.0}
+        stts = self.status['live_test_next']['r'] + 1
+        self.status['live_test_next']['v'] = str(stts)
+        self.status['live_test_next']['r'] = stts
+
+
         #self.alterna_compra_venta_market()
         self.compra_sl_tp()
     

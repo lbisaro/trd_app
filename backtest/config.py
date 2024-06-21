@@ -53,7 +53,7 @@ periodos = [{'tipo':'Completo',
             },            
             #{'tipo':'Full',
             #'start':'2019-01-01',
-            #'end':'2024-03-07',
+            #'end':'2024-06-20',
             #'symbols': symbols
             #},
             ]

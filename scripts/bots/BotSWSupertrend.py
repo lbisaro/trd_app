@@ -114,7 +114,7 @@ class BotSWSupertrend(Bot_Core):
         
         
     def start(self):
-        self.klines = supertrend(self.klines,length=7,multiplier=3)  
+        self.klines = supertrend(self.klines,length=7,multiplier=2.5)  
         #self.klines = volume_level(self.klines,period=200)  
         
         self.klines['signal'] = np.where((self.klines['st_trigger']>0) , 'COMPRA' , 'NEUTRO')  #& (self.klines['vol_signal']>0)
@@ -122,7 +122,7 @@ class BotSWSupertrend(Bot_Core):
         self.klines['hl2'] = (self.klines['high']+self.klines['low'])/2
         self.klines['ma'] = self.klines['hl2'].rolling(window=21).mean()
 
-        self.print_orders = True
+        self.print_orders = False
         self.graph_open_orders = False
         self.graph_signals = False
 
@@ -155,8 +155,9 @@ class BotSWSupertrend(Bot_Core):
                 buy_order = self.get_order(buy_order_id)
                 
                 #Stop-loss price
-                limit_price = round(buy_order.price * (1-(self.stop_loss/100)) ,self.qd_price)
-                self.sell_limit(qty,Order.FLAG_STOPLOSS,limit_price,tag='STOP_LOSS')
+                if self.stop_loss > 0:
+                    limit_price = round(buy_order.price * (1-(self.stop_loss/100)) ,self.qd_price)
+                    self.sell_limit(qty,Order.FLAG_STOPLOSS,limit_price,tag='STOP_LOSS')
                 
         elif 'st_trend' in self.row and hold > 10 and self.signal == 'VENTA': 
             self.close(Order.FLAG_SIGNAL)
@@ -177,10 +178,9 @@ class BotSWSupertrend(Bot_Core):
         if 'st_trend' in self.row and hold > 10:
             qty = self.wallet_base
             sl_order = self.get_order_by_tag('STOP_LOSS')
-
-            limit_price = round(self.row['st_low'],self.qd_price)
-            if limit_price < sl_order.limit_price:
-                limit_price = sl_order.limit_price
-            if sl_order and (sl_order.limit_price != limit_price or sl_order.qty != qty):
-
-                self.update_order_by_tag('STOP_LOSS',limit_price=limit_price, qty=qty)
+            if sl_order:
+                limit_price = round(self.row['st_low'],self.qd_price)
+                if limit_price < sl_order.limit_price:
+                    limit_price = sl_order.limit_price
+                if sl_order and (sl_order.limit_price != limit_price or sl_order.qty != qty):
+                    self.update_order_by_tag('STOP_LOSS',limit_price=limit_price, qty=qty)

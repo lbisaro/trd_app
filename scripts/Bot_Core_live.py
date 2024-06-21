@@ -19,7 +19,7 @@ class Bot_Core_live:
         #Es por eso que se devuelve la ante-ultima
         return self.klines.iloc[-2]
     
-    def live_execute(self):
+    def live_execute(self,just_check_orders=False):
         #self.log.info('live_execute()')
         self.backtesting = False
         self.live = True
@@ -40,8 +40,9 @@ class Bot_Core_live:
         
         if self.live_check_orders():
             jsonRsp['execute'] = True
-
-        self.next()
+        
+        if not just_check_orders:
+            self.next()
 
         return jsonRsp
 
