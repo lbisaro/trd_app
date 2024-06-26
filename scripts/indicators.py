@@ -29,7 +29,7 @@ def resample(df,periods):
     })
     return dfx
 
-def join_after_resample(df,serie,column):
+def join_after_resample(df,serie,column,periods=None):
     """
     Agrega una serie resampleada al dataframe df, asignando la columna column
     Asociando los registros con la columna datetime
@@ -44,7 +44,11 @@ def join_after_resample(df,serie,column):
     """
 
     df[column] = df['datetime'].map(serie)
-    df[column] = df[column].ffill()
+    if periods is None:
+        df[column] = df[column].ffill()
+    else:
+        df[column] = df[column].fillna(method='ffill', limit=periods)
+
     return df
 
 def supertrend(df,length=7,multiplier=3):
@@ -170,10 +174,16 @@ def volatility_level(df,period=40,level_extrahigh=2.5,level_high=0.75,level_medi
 
 # Función para calcular los pivotes de máximos y mínimos
 def find_pivots(df,dev_threshold=0,dev_trend=0.33):
+    df['pivot_last'] = ''
     df['max_pivots'] = None
     df['min_pivots'] = None
     df['max_trend'] = None
     df['min_trend'] = None
+    df['max_last'] = None
+    df['min_last'] = None
+    df['max_diff'] = 0
+    df['min_diff'] = 0
+
 
     if 1 < dev_trend < 0:
         assert "dev_trend debe ser un valor entre 0 y 1"
@@ -218,9 +228,133 @@ def find_pivots(df,dev_threshold=0,dev_trend=0.33):
             last = 'min'
             min_val = None
 
+        dict[i]['pivot_last'] = last
+        #Diferencia de maximos y minimos
+        if dict[i]['max_pivots'] is not None:
+            dict[i]['max_last'] = dict[i]['max_pivots']
+            if i>0 and dict[i-1]['max_last'] is not None:
+                if dict[i]['max_last']>dict[i-1]['max_last']:
+                    dict[i]['max_diff'] = 1  
+                elif dict[i]['max_last']<dict[i-1]['max_last']:
+                    dict[i]['max_diff'] = -1  
+        elif i>0:
+            dict[i]['max_last'] = dict[i-1]['max_last']
+            dict[i]['max_diff'] = dict[i-1]['max_diff']
+
+        if dict[i]['min_pivots'] is not None:
+            dict[i]['min_last'] = dict[i]['min_pivots']
+            if i>0 and dict[i-1]['min_last'] is not None:
+                if dict[i]['min_last']>dict[i-1]['min_last']:
+                    dict[i]['min_diff'] = 1  
+                elif dict[i]['min_last']<dict[i-1]['min_last']:
+                    dict[i]['min_diff'] = -1  
+        elif i>0:
+            dict[i]['min_last'] = dict[i-1]['min_last']
+            dict[i]['min_diff'] = dict[i-1]['min_diff']
+
+
     df = pd.DataFrame.from_dict(dict, orient='index')
     return df
 
+def fibonacci_levels(start, end):
+    levels = [0.0,23.6,38.2,50.0,61.8,78.6,100.0,127.2,161.8]
+    prices = {}
+    if start > end:
+        high = start
+        low = end
+        diff = high - low
+        for i in range(len(levels)):
+            key = f'{levels[i]:.1f}%'
+            prices[key] = low + (levels[i]/100) * diff
+    else:
+        high = end
+        low = start
+        diff = high - low
+        for i in range(len(levels)):
+            key = f'{levels[i]:.1f}%'
+            prices[key] = high - (levels[i]/100) * diff
+
+    return prices  
+
+def zigzag(df, deviation=3):
+    df['ZigZag'] = None
+    df['ZigZag_trend'] = 0
+    PEAK = 1
+    VALLEY = -1
+    up_thresh = deviation/100 + 1
+    down_thresh = -deviation/100 + 1
+    trend = 0
+    max = None
+    max_trend = 0
+    min = None
+    min_trend = 0
+    max_index = 0
+    min_index = 0
+    
+    for index,row in df.iterrows():
+        #Inicializar max y min
+        if max is None: 
+            max = row['high']
+            min = row['low']
+
+        #Detectar el primer pivot para definir la tendencia inicial
+        elif trend == 0:
+            if row['high'] / max <= down_thresh:
+                trend = PEAK if max_trend == 0 else VALLEY
+                
+            if row['high'] > max:
+                max = row['high']
+                max_trend = index
+
+            if row['low'] / min >= up_thresh:
+                trend = VALLEY if min_trend == 0 else PEAK
+
+            if row['low'] < min:
+                min = row['low']
+                min_trend = index
+
+            if trend is not None:
+                
+                last_pivot = max if trend > 0 else min
+                max = -np.inf
+                min = np.inf
+
+        #Detectar picos siguientes
+        elif trend == VALLEY:
+
+            if row['low']<min:
+                min = row['low']
+            
+            
+            x = row['low']
+            r = x / last_pivot
+            if r >= up_thresh:
+                df.at[index,'ZigZag'] = min 
+                trend = PEAK
+                min = np.inf
+                last_pivot = x
+                
+            elif x < last_pivot:
+                last_pivot = x
+                    
+        else:
+            if row['high']>max:
+                max = row['high']
+            
+            x = row['high']
+            r = x / last_pivot
+            if r <= down_thresh:
+                df.at[index,'ZigZag'] = max 
+                trend = VALLEY
+                max = -np.inf
+                last_pivot = x
+                
+            elif x > last_pivot:
+                last_pivot = x
+
+        df.at[index,'ZigZag_Trend'] = trend
+        
+    return df
 
 class Fibonacci:
     """
