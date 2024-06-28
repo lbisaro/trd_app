@@ -46,9 +46,9 @@ def join_after_resample(df,serie,column,periods=None):
     df[column] = df['datetime'].map(serie)
     if periods is None:
         df[column] = df[column].ffill()
-    else:
+    elif periods > 0:
         df[column] = df[column].fillna(method='ffill', limit=periods)
-
+    
     return df
 
 def supertrend(df,length=7,multiplier=3):

@@ -92,7 +92,8 @@ class BotFibonacci(Bot_Core):
         sell_last_high = None
 
         for index, row in self.klines.iterrows():
-            if row['ZigZag'] is not None:
+            if row['ZigZag'] is not None and row['ZigZag'] > 0:
+                                
                 last_zz[2] = last_zz[1]
                 last_zz[1] = last_zz[0]
                 last_zz[0] = row['ZigZag']
@@ -109,6 +110,7 @@ class BotFibonacci(Bot_Core):
                 fib_levels = fibonacci_levels(buy_last_high,buy_last_low)
                 for key in fib_levels.keys():
                     self.klines.at[index, f'fl_{key}'] = fib_levels[key]
+                #if fib_levels['23.6%'] <= row['close'] <= fib_levels['38.2%']:
                 if fib_levels['23.6%'] <= row['close'] <= fib_levels['38.2%']:
                     self.klines.at[index, 'signal'] = 'COMPRA'
                     buy_last_low = None
@@ -144,42 +146,33 @@ class BotFibonacci(Bot_Core):
 
                 take_profit_price = round(self.row['fl_100.0%'] , self.qd_price)
                 self.take_profit = round(((take_profit_price/self.price)-1)*100,2)
-
-                #print(' - - - - - > Price ',self.price,' SL ',stop_loss_price,' TP ',take_profit_price,' -  SL: ',self.stop_loss,' TP ',self.take_profit)
                 
-                quote_perc = self.quote_perc
-                if self.stop_loss > 3:
-                    quote_perc = self.quote_perc/2
-                elif self.stop_loss > 8:
-                    quote_perc = self.quote_perc/3
-
-                if self.take_profit/self.stop_loss > 0.0:
-                    if self.interes == 's': #Interes Simple
-                        
-                        quote_qty = self.quote_qty if self.wallet_quote >= self.quote_qty else self.wallet_quote
-                        quote_to_sell = round_down(quote_qty*(quote_perc/100) , self.qd_quote )
-                    elif self.interes == 'c': #Interes Compuesto
-                        quote_to_sell = round_down(self.wallet_quote*(quote_perc/100) , self.qd_quote ) 
+                if self.interes == 's': #Interes Simple
                     
-                    quote_to_sell = round_down(quote_to_sell , self.qd_quote ) 
-                    base_to_buy = round_down((quote_to_sell/price) , self.qd_qty) 
+                    quote_qty = self.quote_qty if self.wallet_quote >= self.quote_qty else self.wallet_quote
+                    quote_to_sell = round_down(quote_qty*(self.quote_perc/100) , self.qd_quote )
+                elif self.interes == 'c': #Interes Compuesto
+                    quote_to_sell = round_down(self.wallet_quote*(self.quote_perc/100) , self.qd_quote ) 
                 
-                    orderid_buy = self.buy(base_to_buy,Order.FLAG_SIGNAL)
-                    if orderid_buy > 0:
+                quote_to_sell = round_down(quote_to_sell , self.qd_quote ) 
+                base_to_buy = round_down((quote_to_sell/price) , self.qd_qty) 
+            
+                orderid_buy = self.buy(base_to_buy,Order.FLAG_SIGNAL)
+                if orderid_buy > 0:
 
-                        buyed_qty = self._trades[orderid_buy].qty
-                        
-                        self.position = True
-                        self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price)
-                        #self.orderid_tp = self.sell_limit(buyed_qty,Order.FLAG_TAKEPROFIT,take_profit_price) 
+                    buyed_qty = self._trades[orderid_buy].qty
                     
-                        if self.orderid_sl == 0:
-                            print('\033[31mERROR\033[0m',self.row['datetime'],'STOP-LOSS',buyed_qty,' ',quote_to_sell,self.wallet_quote)  
-                        #if self.orderid_tp == 0:
-                        #    print('\033[31mERROR\033[0m',self.row['datetime'],'TAKE-PROFIT',buyed_qty,' ',quote_to_sell,self.wallet_quote) 
-                    
-                    else:
-                        print('\033[31mERROR\033[0m',self.row['datetime'],'BUY price',self.price,'USD',quote_to_sell,self.wallet_quote)
+                    self.position = True
+                    self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price)
+                    #self.orderid_tp = self.sell_limit(buyed_qty,Order.FLAG_TAKEPROFIT,take_profit_price) 
+                
+                    if self.orderid_sl == 0:
+                        print('\033[31mERROR\033[0m',self.row['datetime'],'STOP-LOSS',buyed_qty,' ',quote_to_sell,self.wallet_quote)  
+                    #if self.orderid_tp == 0:
+                    #    print('\033[31mERROR\033[0m',self.row['datetime'],'TAKE-PROFIT',buyed_qty,' ',quote_to_sell,self.wallet_quote) 
+                
+                else:
+                    print('\033[31mERROR\033[0m',self.row['datetime'],'BUY price',self.price,'USD',quote_to_sell,self.wallet_quote)
 
         if signal == 'VENTA':
             self.close(Order.FLAG_SIGNAL)
