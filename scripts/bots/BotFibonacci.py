@@ -110,7 +110,6 @@ class BotFibonacci(Bot_Core):
                 fib_levels = fibonacci_levels(buy_last_high,buy_last_low)
                 for key in fib_levels.keys():
                     self.klines.at[index, f'fl_{key}'] = fib_levels[key]
-                #if fib_levels['23.6%'] <= row['close'] <= fib_levels['38.2%']:
                 if fib_levels['23.6%'] <= row['close'] <= fib_levels['38.2%']:
                     self.klines.at[index, 'signal'] = 'COMPRA'
                     buy_last_low = None

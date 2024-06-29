@@ -33,22 +33,25 @@ class Bot_Core_backtest:
 
         self.wallet_base = 0.0
         self.wallet_quote = self.quote_qty
-        
-        #Aplicar la señal de compra/venta
-    
+
         self.klines = klines
         self.sub_klines = sub_klines
+
+        #Limitando el backtest a un maximo de velas
+        self.klines = self.klines[0:3000]
+        
+        #Aplicar la señal de compra/venta
+        
         self.start()
         
         #quitando las velas previas a la fecha de start
         self.timeframe_length = self.klines['datetime'].iloc[1] - self.klines['datetime'].iloc[0]
         
-        #Carla la vela anterior al inicio del ciclo
+        #Carga la vela anterior al inicio del ciclo
         self.row = self.klines[self.klines['datetime'] == pd.to_datetime(from_date)-self.timeframe_length ].iloc[0]
         
         self.klines = self.klines[self.klines['datetime'] >= pd.to_datetime(from_date)]
         self.klines = self.klines.reset_index(drop=True)
-
         
         self.sub_klines = self.sub_klines[self.sub_klines['datetime'] >= pd.to_datetime(from_date)]
         self.sub_klines = self.sub_klines.set_index('datetime')
@@ -79,7 +82,7 @@ class Bot_Core_backtest:
         self.klines['unix_dt'] = (self.klines['datetime'] - dt.datetime(1970, 1, 1)).dt.total_seconds() * 1000 +  10800000
 
         #Procesando eventos de Señanes de compra/venta y ordenes
-        if self.interval_id < '2d01':
+        if False: #self.interval_id < '2d01':
             agg_funcs = {
                     "unix_dt": "first",
                     "open": "first",

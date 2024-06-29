@@ -157,10 +157,8 @@ class Bot_Core_stats:
         ratio_sortino_modificado = self.ind_ratio_sortino_modificado(self.df_trades,umbral_objetivo_riesgo) if trades_tot > 0 else 0.0
 
 
-        brief.append(['indicadores', 'Volatilidad del capital',    
-                    f'{volatilidad_cap:.2f}%'])          
-        brief.append(['indicadores', 'Volatilidad del par',    
-                    f'{volatilidad_sym:.2f}%'])          
+        brief.append(['indicadores', 'CAGR',    
+                    f'{cagr:.2f}%'])          
         brief.append(['indicadores', 'Maximo DrawDown Capital',    
                     f'{max_drawdown_cap:.2f}%'])          
         brief.append(['indicadores', 'Maximo DrawDown Par',    
@@ -169,8 +167,11 @@ class Bot_Core_stats:
                     f'{max_drawup_cap:.2f}%'])          
         brief.append(['indicadores', 'Maximo DrawUp Par',    
                     f'{max_drawup_sym:.2f}%'])   
-        brief.append(['indicadores', 'CAGR',    
-                    f'{cagr:.2f}%'])          
+        brief.append(['indicadores', 'Volatilidad del capital',    
+                    f'{volatilidad_cap:.2f}%'])          
+        brief.append(['indicadores', 'Volatilidad del par',    
+                    f'{volatilidad_sym:.2f}%'])         
+        """ 
         brief.append(['indicadores', 'Ratio Sharpe',    
                     f'{ratio_sharpe:.2f}'])          
         brief.append(['indicadores', f'Ratio Sortino ({risk_free_rate})',    
@@ -183,7 +184,7 @@ class Bot_Core_stats:
                     f'{modificacion_sharpe:.2f}'])          
         brief.append(['indicadores', f'Ratio Sortino Modificado ({umbral_objetivo_riesgo})',    
                     f'{ratio_sortino_modificado:.2f}'])          
-
+        """
         return brief
 
     def get_resultados(self):
@@ -237,8 +238,8 @@ class Bot_Core_stats:
         resultados.append({'ind':'ratio_volatilidad',self.symbol: ratio_volatilidad})          
         resultados.append({'ind':'ratio_max_drawdown',self.symbol: ratio_max_drawdown })
         resultados.append({'ind':'ratio_max_drawup',self.symbol: ratio_max_drawup })
-        resultados.append({'ind':'ratio_calmar',self.symbol: ratio_calmar })          
-        resultados.append({'ind':'modificacion_sharpe',self.symbol: modificacion_sharpe })
+        #resultados.append({'ind':'ratio_calmar',self.symbol: ratio_calmar })          
+        #resultados.append({'ind':'modificacion_sharpe',self.symbol: modificacion_sharpe })
 
         return resultados
         
