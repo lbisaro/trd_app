@@ -17,7 +17,7 @@ from bot.model_kline import Symbol
 class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
         
     DIAS_X_MES = 30.4375 #Resulta de tomar 3 años de 365 dias + 1 de 366 / 4 años / 12 meses
-    exch_comision_perc = 0.2 #0.4% - Comision por operacion de compra o venta
+    exch_comision_perc = 0.1 # - Comision por operacion de compra o venta
 
     signal = 'NEUTRO'
     order_id = 1

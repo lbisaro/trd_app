@@ -126,6 +126,7 @@ def ohlc_chart(klines,**kwargs):
     klines -> dataframe with columns [datetime,open,close,high,low,volume,pnl]
            -> dataframe with columns [datetime,price,pnl]
     show_pnl = True
+    show_volume = True
     indicators = [
          {'col': 'MA_F',
           'name': 'MA Fast',
@@ -165,35 +166,54 @@ def ohlc_chart(klines,**kwargs):
      ]
      """
    
+    show_volume   = kwargs.get('show_volume', True )
     show_pnl   = kwargs.get('show_pnl', True )
     indicators = kwargs.get('indicators', None )
     indicators_out = kwargs.get('indicators_out', None )
     open_orders = kwargs.get('open_orders', None )
     events    = kwargs.get('events', None )
 
+    if not 'volume' in klines.columns:
+        show_volume = False
     if not 'pnl' in klines.columns:
         show_pnl = False
     
     chart_rows = 1
-    domain_0 = 0.15
+    row_heights = [400]
 
+    vol_rows = 0
+    pnl_rows = 0
+        
     if show_pnl:
-        chart_rows += 1
-        domain_0 += 0.15
+        pnl_rows = 1
+        row_heights.append(100)
     
-    #if 'volume' in klines:
-    chart_rows += 1
+    if show_volume:
+        vol_rows = 1
+        row_heights.append(100)
+
     
-    start_out = chart_rows
+    
     io_max_row = 0
     if indicators_out:
-        
         for io in indicators_out:
             if io['row']>io_max_row:
                 io_max_row = io['row']
-        chart_rows += io_max_row+1
+    
+    chart_rows = 1+vol_rows+pnl_rows+io_max_row
+    for i in range(0,io_max_row):
+        row_heights.append(70)
+    
 
-    fig = make_subplots(rows=chart_rows, shared_xaxes=True)
+    total_height = sum(row_heights)
+
+    row_heights_prop = []
+    for h in row_heights:
+        row_heights_prop.append( h/total_height )
+
+    fig = make_subplots(rows=chart_rows, 
+                        shared_xaxes=True,
+                        row_heights=row_heights_prop)
 
     # Create subplot for candlesticks o price
     if 'price' in klines:
@@ -206,7 +226,7 @@ def ohlc_chart(klines,**kwargs):
             row=1,
             col=1,
         )    
-    else:
+    elif 'close' in klines:
         fig.add_trace(
             go.Candlestick(
                 x=klines["datetime"],
@@ -222,20 +242,6 @@ def ohlc_chart(klines,**kwargs):
                 
             ),
             row=1,
-            col=1,
-        )
-
-    # Create subplot for volume
-    if 'volume' in klines:
-        fig.add_trace(
-            go.Bar(
-                x=klines["datetime"],
-                y=klines["volume"],
-                name="Volumen",  
-                marker=dict(color="rgba(126,198,222,0.2)"),
-                marker_line_width=0,
-            ),
-            row=2,
             col=1,
         )
 
@@ -280,29 +286,47 @@ def ohlc_chart(klines,**kwargs):
                 row=1,
                 col=1,
             )
+
+    if show_volume:
+
+        fig.append_trace(
+            go.Bar(
+                x=klines["datetime"],
+                y=klines["volume"],
+                name="Volumen",  
+                showlegend=False, 
+                marker=dict(color="rgba(83,189,235,0.75)"),
+                marker_line_width=0,
+            ),
+            row=2,
+            col=1,
+        )
             
     if show_pnl:
-        fig.add_trace(
+        fig.append_trace(
             go.Scatter(
-                x=klines["datetime"], y=klines['pnl'], name="PNL", mode="lines", showlegend=False, 
+                x=klines["datetime"], 
+                y=klines['pnl'], 
+                name="PNL", 
+                mode="lines", 
+                showlegend=False, 
                 line={'width': 1.25},  
                 marker=dict(color="#00c6d5"),
             ),
-            row=chart_rows,
+            row=2+vol_rows,
             col=1,
         )
-
     
     if indicators_out:
         for ind in indicators_out:
 
-            fig.add_trace(
+            fig.append_trace(
                 go.Scatter(
                     x=klines["datetime"], y=klines[ind['col']], name=ind['name'], mode="lines", 
                     line={'width': 0.5},  
                     marker=dict(color=ind['color']),
                 ),
-                row=start_out+1+ind['row'],
+                row= 1 + vol_rows + pnl_rows + ind['row'],
                 col=1,
             )
 
@@ -311,13 +335,13 @@ def ohlc_chart(klines,**kwargs):
         font=dict(color="#ffffff", family="Helvetica"),
         paper_bgcolor="rgba(0,0,0,0)",  # Transparent background
         plot_bgcolor="rgba(0,0,0,0)",  # Transparent plot area 
-        height=600,
+        height=total_height,
         
         #title="",
         #xaxis_title="",
         #yaxis_title="",
 
-        xaxis=dict(domain=[0, 1]),
+        #xaxis=dict(domain=[0, 0]),
         xaxis_rangeslider_visible=False,
  
         modebar_bgcolor="rgba(0,0,0,0)",
@@ -334,33 +358,42 @@ def ohlc_chart(klines,**kwargs):
     fig.update_layout(
         yaxis1=dict(
             title="Precio",
-            domain=[domain_0, 1],
+            #domain=[domain_0, 1],
             showticklabels=True,
         ),
     )
-    if 'volume' in klines: 
+    if show_volume and show_pnl: 
         fig.update_layout(
             yaxis2=dict(
-                domain=[domain_0, domain_0+0.2],
-                showticklabels=False,
+                title="Volume",
+                #domain=[domain_0, domain_0+0.2],
+                showticklabels=True,
             ),
             yaxis3=dict(
-                title="PNL" if show_pnl else "",
-                domain=[0, domain_0],
+                title="PNL",
+                #domain=[0, domain_0],
                 showticklabels=True,
             ),
             
         ) 
-    else:
-        if show_pnl:
-            fig.update_layout(
-                yaxis2=dict(
-                    title="PNL",
-                    domain=[0, domain_0],
-                    showticklabels=True,
-                ),
-                
-            ) 
+    elif show_volume:
+        fig.update_layout(
+            yaxis2=dict(
+                title="Volume",
+                #domain=[0, domain_0],
+                showticklabels=True,
+            ),
+            
+        )
+    elif show_pnl:
+        fig.update_layout(
+            yaxis2=dict(
+                title="PNL",
+                #domain=[0, domain_0],
+                showticklabels=True,
+            ),
+            
+        ) 
     
     fig.update_xaxes(showline=True, linewidth=0.5,linecolor='#40444e', gridcolor='#40444e')
     fig.update_yaxes(showline=False, linewidth=0.5,zeroline= False, linecolor='#40444e', gridcolor='rgba(0,0,0,0)') 
