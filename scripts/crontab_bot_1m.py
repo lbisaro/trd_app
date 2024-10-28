@@ -76,7 +76,7 @@ def run():
 
                 exch = Exchange(type='user_apikey',exchange='bnc',prms=prms)                
 
-            #log.info(f'Bot: {bot}')
+            log.info(f'Bot: {bot}')
                 
             
             ### - Disparar las señales a los bots activos
@@ -87,8 +87,8 @@ def run():
             if bot.estrategia_id in signal_rows:
                 signal_row = signal_rows[bot.estrategia_id]
                 signal = signal_row['signal']
-            if signal != 'NEUTRO':
-                log.info(f'{bot} - aa Signal: {signal}')
+            #if signal != 'NEUTRO':
+            log.info(f'{bot} - aa Signal: {signal}')
 
 
             #Cargando Billetera del Bot
