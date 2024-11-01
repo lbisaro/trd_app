@@ -146,6 +146,9 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
         return 0
         
     def sell_limit(self,qty,flag,limit_price,**kwargs):
+        if flag != Order.FLAG_TAKEPROFIT and flag != Order.FLAG_STOPLOSS:
+            raise 'El flag de las ordenes limit puede ser FLAG_TAKEPROFIT o FLAG_STOPLOSS'
+        
         qty = round_down(qty,self.qd_qty)
         if qty*limit_price>=10:
             self.order_id += 1
@@ -155,33 +158,15 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
         return 0  
     
     def buy_limit(self,qty,flag,limit_price,**kwargs):
+        if flag != Order.FLAG_TAKEPROFIT and flag != Order.FLAG_STOPLOSS:
+            raise 'El flag de las ordenes limit puede ser FLAG_TAKEPROFIT o FLAG_STOPLOSS'
+        
         qty = round(qty,self.qd_qty)
         if qty*limit_price>=10:
             self.order_id += 1
             limit_price = round(limit_price,self.qd_price)
             order = Order(self.order_id,Order.TYPE_LIMIT,self.datetime,Order.SIDE_BUY,qty,limit_price,flag,**kwargs)
             return self.add_order(order)
-        return 0    
-    
-    def sell_trail(self,qty,flag,limit_price,activation_price,trail_perc,**kwargs):
-        qty = round_down(qty,self.qd_qty)
-        if qty*limit_price>=10:
-            self.order_id += 1
-            order = Order(self.order_id,Order.TYPE_TRAILING,self.datetime,Order.SIDE_SELL,qty,limit_price,flag,**kwargs)
-            order.activation_price = activation_price
-            order.trail_perc = trail_perc
-            return self.add_order(order)
-        return 0    
-    
-    def buy_trail(self,qty,flag,limit_price,activation_price,trail_perc,**kwargs):
-        qty = round(qty,self.qd_qty)
-        if qty*limit_price>=10:
-            self.order_id += 1
-            order = Order(self.order_id,Order.TYPE_TRAILING,self.datetime,Order.SIDE_BUY,qty,limit_price,flag,**kwargs)
-            order.activation_price = activation_price
-            order.trail_perc = trail_perc
-            return self.add_order(order)
-
         return 0    
         
     def cancel_order(self,orderid):
@@ -301,8 +286,6 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
         bot_order.tag = tmp_order.tag
         bot_order.type = tmp_order.type
         bot_order.activation_price = tmp_order.activation_price
-        bot_order.active = tmp_order.active
-        bot_order.trail_perc = tmp_order.trail_perc
         bot_order.save()
         return bot_order
     

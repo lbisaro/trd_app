@@ -77,42 +77,6 @@ class Bot_Core_live:
                         if order.side == BotCoreUtilsOrder.SIDE_SELL and order.flag == BotCoreUtilsOrder.FLAG_STOPLOSS:
                             if price <= order.limit_price:
                                 executed = self.live_execute_order(order.id)
-
-                    if order.type == BotCoreUtilsOrder.TYPE_TRAILING:
-                        raise Exception('/------------------- EXECUTE ORDER TRAIL - PENDIENTE DE DESARROLLO ---------------------/')
-                        """
-                        if order.side == BotCoreUtilsOrder.SIDE_SELL:
-                            if order.active:
-                                if price < order.limit_price:
-                                    executed = self.live_execute_order(order.id)
-
-                            if order.id in self._orders: #Verifica si la orden no se ejecuto
-                                if not order.active and (price >= order.activation_price or order.activation_price == 0):
-                                    order.active = True
-
-                                if order.active:
-                                    new_limit_price = price * (1-(order.trail_perc/100))
-                                    if new_limit_price >= order.limit_price: 
-                                        order.limit_price = round(new_limit_price,self.qd_price)
-                                    if price < order.limit_price < price:
-                                        executed = self.live_execute_order(order.id)
-
-                        if order.side == BotCoreUtilsOrder.SIDE_BUY:
-                            if order.active:
-                                if price < order.limit_price < price:
-                                    executed = self.live_execute_order(order.id)
-                                    
-                            if order.id in self._orders: #Verifica si la orden no se ejecuto
-                                if not order.active and (price < order.activation_price or order.activation_price == 0):
-                                    order.active = True
-                                    
-                                if order.active:
-                                    new_limit_price = price * (1+(order.trail_perc/100))
-                                    if new_limit_price <= order.limit_price: 
-                                        order.limit_price = round(new_limit_price,self.qd_price)
-                                    if price < order.limit_price < price:
-                                        executed = self.live_execute_order(order.id)
-                        """
         
         return executed
     

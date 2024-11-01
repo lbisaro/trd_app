@@ -63,6 +63,8 @@ def run(request):
         from_date = request.POST['from_date']
         to_date = request.POST['to_date']
 
+        mirror = request.POST['mirror']
+
         atributos = run_bot.__dict__
         json_rsp['parametros'] = {}
         for attr in atributos:
@@ -78,8 +80,16 @@ def run(request):
             return JsonResponse(json_rsp)
         
         backtest = Backtest()
+        
         klines = backtest.get_df_from_file(backtest_file)
         sub_klines = backtest.get_sub_df_from_file(backtest_file)
+        if mirror == '10' or mirror == '11':
+            klines = fn.ohlc_mirror_v(klines)
+            sub_klines = fn.ohlc_mirror_v(sub_klines)
+        if mirror == '01' or mirror == '11':
+            klines = fn.ohlc_mirror_h(klines)
+            sub_klines = fn.ohlc_mirror_h(sub_klines)
+        
         bt = run_bot.backtest(klines,from_date,to_date,'completed',sub_klines)
         json_rsp['bt'] = bt
 

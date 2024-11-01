@@ -11,7 +11,6 @@ class Bot_CoreLong(Bot_Core):
     stop_loss = 0.0
     take_profit = 0.0
     interes = ''
-    trail = 1
 
     #Gestion de ordenes y posicion tomada
     position = False #Define si existe una posicion abierta
@@ -23,8 +22,7 @@ class Bot_CoreLong(Bot_Core):
         self.quote_perc = 0.0
         self.stop_loss = 0.0
         self.take_profit = 0.0
-        self.interes = '' 
-        self.trail = 0       
+        self.interes = ''    
 
         #Gestion de ordenes y posicion tomada
         self.position = False #Define si existe una posicion abierta
@@ -71,13 +69,7 @@ class Bot_CoreLong(Bot_Core):
                         't' :'t_int',
                         'pub': True,
                         'sn':'Int', },
-                'trail': {
-                        'c' :'trail',
-                        'd' :'Trail',
-                        'v' : 0,
-                        't' :'bin',
-                        'pub': True,
-                        'sn':'Trail', },
+
                 }
 
     def valid(self):
@@ -92,8 +84,6 @@ class Bot_CoreLong(Bot_Core):
             err.append("El Take Profit debe ser un valor entre 0 y 100")
         if self.interes != 'c' and self.interes != 's':
             err.append("Se debe establecer el tipo de interes. (Simple o Compuesto)")
-        if self.trail > 0 and self.take_profit > 0:
-            err.append("No es posible establecer take-profit para ordenes de venta Trail")
 
         if len(err):
             raise Exception("\n".join(err))
@@ -126,19 +116,15 @@ class Bot_CoreLong(Bot_Core):
                     self.position = True
                     if self.stop_loss:
                         stop_loss_price = round(self.price - self.price*(self.stop_loss/100) , self.qd_price)
-                        if self.trail > 0:
-                            self.orderid_sl = self.sell_trail(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price,0,self.stop_loss)
-                        else:
-                            self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price)
+                        self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price)
                         if self.orderid_sl == 0:
                             print('\033[31mERROR\033[0m',self.row['datetime'],'STOP-LOSS',buyed_qty,' ',quote_to_sell,self.wallet_quote)  
 
                     if self.take_profit:
                         take_profit_price = round(self.price + self.price*(self.take_profit/100) , self.qd_price)
-                        if self.trail == 0:
-                            self.orderid_tp = self.sell_limit(buyed_qty,Order.FLAG_TAKEPROFIT,take_profit_price) 
-                            if self.orderid_tp == 0:
-                                print('\033[31mERROR\033[0m',self.row['datetime'],'TAKE-PROFIT',buyed_qty,' ',quote_to_sell,self.wallet_quote) 
+                        self.orderid_tp = self.sell_limit(buyed_qty,Order.FLAG_TAKEPROFIT,take_profit_price) 
+                        if self.orderid_tp == 0:
+                            print('\033[31mERROR\033[0m',self.row['datetime'],'TAKE-PROFIT',buyed_qty,' ',quote_to_sell,self.wallet_quote) 
                 else:
                     print('\033[31mERROR\033[0m',self.row['datetime'],'BUY price',self.price,'USD',quote_to_sell,self.wallet_quote)
             

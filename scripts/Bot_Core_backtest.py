@@ -7,7 +7,7 @@ from scripts.Exchange import Exchange
 import scripts.functions as fn
 
 class Bot_Core_backtest:
-
+    
     def backtest(self,klines,from_date,to_date,rsp_mode,sub_klines):
         self.backtesting = True
         self.order_id = 0
@@ -38,7 +38,7 @@ class Bot_Core_backtest:
         self.sub_klines = sub_klines
 
         #Limitando el backtest a un maximo de velas
-        self.klines = self.klines[0:3000]
+        self.klines = self.klines[0:10000]
         
         #Aplicar la señal de compra/venta
         
@@ -127,7 +127,6 @@ class Bot_Core_backtest:
                 'order_type': { 
                         Order.TYPE_MARKET:'',
                         Order.TYPE_LIMIT:'LIMIT',
-                        Order.TYPE_TRAILING:'TRAIL',
                         },
                 'qd_price': self.qd_price, 
                 'qd_qty': self.qd_qty, 
@@ -203,7 +202,7 @@ class Bot_Core_backtest:
         if self.graph_open_orders:
             for i in self._orders: #Ordenes abiertas
                 order = self._orders[i]
-                if ( order.type == Order.TYPE_LIMIT ) or ( order.type == Order.TYPE_TRAILING and order.active ):
+                if ( order.type == Order.TYPE_LIMIT ) :
                     unix_dt = self.datetime.timestamp() * 1000 +  10800000
                     if order.side == Order.SIDE_SELL and order.flag == Order.FLAG_STOPLOSS:
                         self.sl_price_data.append({'dt': unix_dt,'SL':order.limit_price})
@@ -246,58 +245,22 @@ class Bot_Core_backtest:
                     
                     if i in self._orders: #Se consulta si esta o no porque puede que se ejecute mas de una orden en la misma vela
                         order  = self._orders[i]
-
                         if order.type == Order.TYPE_LIMIT:
-                            if order.side == Order.SIDE_BUY and order.flag != Order.FLAG_STOPLOSS:
-                                if sub_row['low'] <= order.limit_price:
+                            if order.side == Order.SIDE_BUY and order.flag == Order.FLAG_TAKEPROFIT:
+                                if sub_row['low'] <= order.limit_price:# <= sub_row['high']:
                                     executed =  self.execute_order(order.id)
                                     
                             if order.side == Order.SIDE_BUY and order.flag == Order.FLAG_STOPLOSS:
-                                if sub_row['high'] >= order.limit_price:
+                                if sub_row['high'] >= order.limit_price:# >= sub_row['low']:
                                     executed =  self.execute_order(order.id)
                                     
-                            if order.side == Order.SIDE_SELL and order.flag != Order.FLAG_STOPLOSS:
-                                if sub_row['high'] >= order.limit_price:
+                            if order.side == Order.SIDE_SELL and order.flag == Order.FLAG_STOPLOSS:
+                                if sub_row['low'] <= order.limit_price:# <= sub_row['high']:
                                     executed = self.execute_order(order.id)
                                     
-                            if order.side == Order.SIDE_SELL and order.flag == Order.FLAG_STOPLOSS:
-                                if sub_row['low'] <= order.limit_price:
+                            if order.side == Order.SIDE_SELL and order.flag == Order.FLAG_TAKEPROFIT:
+                                if sub_row['high'] >= order.limit_price:# >= sub_row['low']:
                                     executed = self.execute_order(order.id)
-
-                        if order.type == Order.TYPE_TRAILING:
-
-                            if order.side == Order.SIDE_SELL:
-                                if order.active:
-                                    if sub_row['low'] < order.limit_price < sub_row['high']:
-                                        executed = self.execute_order(order.id)
-
-                                if order.id in self._orders: #Verifica si la orden no se ejecuto
-                                    if not order.active and (sub_row['high'] >= order.activation_price or order.activation_price == 0):
-                                        order.active = True
-
-                                    if order.active:
-                                        new_limit_price = sub_row['high'] * (1-(order.trail_perc/100))
-                                        if new_limit_price >= order.limit_price: 
-                                            order.limit_price = round(new_limit_price,self.qd_price)
-                                        if sub_row['low'] < order.limit_price < sub_row['high']:
-                                            executed = self.execute_order(order.id)
-
-                            if order.side == Order.SIDE_BUY:
-                                if order.active:
-                                    if sub_row['low'] < order.limit_price < sub_row['high']:
-                                        executed = self.execute_order(order.id)
-                                        
-                                if order.id in self._orders: #Verifica si la orden no se ejecuto
-                                    if not order.active and (sub_row['low'] < order.activation_price or order.activation_price == 0):
-                                        order.active = True
-                                        
-                                    if order.active:
-                                        new_limit_price = self.row['low'] * (1+(order.trail_perc/100))
-                                        if new_limit_price <= order.limit_price: 
-                                            order.limit_price = round(new_limit_price,self.qd_price)
-                                        if sub_row['low'] < order.limit_price < sub_row['high']:
-                                            executed = self.execute_order(order.id)                                
-
 
                         #Establece la cantidad de Base y Quote bloqueadas en ordenes
                         if i in self._orders: #La orden no fue ejecutada
@@ -309,9 +272,8 @@ class Bot_Core_backtest:
         return executed
         
     def backtest_execute_order(self,orderid):
-        
         if not( orderid in self._orders):
-            raise "La orden a ejecutar no existe en la lista de ordenes abiertas"
+            return False
 
         order = self._orders[orderid]
         order.price = order.limit_price

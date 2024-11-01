@@ -15,7 +15,6 @@ class Order:
 
     TYPE_MARKET = 0
     TYPE_LIMIT = 1
-    TYPE_TRAILING = 2
 
     FLAG_SIGNAL = 0
     FLAG_STOPLOSS = 1
@@ -39,11 +38,6 @@ class Order:
     tag = ''
     pos_order_id = 0
 
-    #Trail parameters
-    activation_price = 0
-    active = False
-    trail_perc = 0
-
     def __init__(self,id,type,datetime,side,qty,price,flag,**kwargs):
         self.bot_id = 0
         self.completed = 0
@@ -65,8 +59,6 @@ class Order:
             self.tag = kwargs['tag']
 
         self.activation_price = 0
-        self.active = False
-        self.trail_perc = 0
         self.pos_order_id = 0
         
     
@@ -77,10 +69,6 @@ class Order:
         params = f'{self.datetime:%Y-%m-%d %Z %H:%M:%S} #{self.id} {self.str_side()}\t{self.qty}\t{self.price} {self.str_type()} {self.str_flag()} '
         if self.type != self.TYPE_MARKET:
             params += f'Limit Price {self.limit_price} '
-        if self.type == self.TYPE_TRAILING:
-            params += f'Trl {self.trail_perc}% '     
-            if self.active:
-                params += ' ACT'   
         if len(self.tag):
             params += f' {self.tag}'    
 
@@ -95,9 +83,7 @@ class Order:
             return ''
     
     def str_type(self):
-        if self.type == self.TYPE_TRAILING:
-            return 'TRAIL'        
-        elif self.type == self.TYPE_LIMIT:
+        if self.type == self.TYPE_LIMIT:
             return 'LIMIT'
         else:
             return ''

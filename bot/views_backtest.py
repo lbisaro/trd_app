@@ -144,6 +144,8 @@ def create(request):
 def view(request,backtest_id):
     backtest = get_object_or_404(Backtest, pk=backtest_id)
     resultados = backtest.get_resultados()
+    
+    tendencias = Backtest.tendencias
 
     df_resultados = None
     next = None
@@ -163,45 +165,37 @@ def view(request,backtest_id):
         context['next'] = next
       
 
-    else:           
-        rango_fechas_completo = ''
-        rango_fechas_alcista = ''
-        rango_fechas_lateral = ''
-        rango_fechas_bajista = ''
+    else:  
+        rango_fechas = {}  
+        context['tendencias'] = tendencias       
+        for tendencia in tendencias:
+            rango_fechas[tendencia] = ''
+        
         for periodo in resultados['periodos']:
-            if periodo['tendencia'] == 'Completo' and rango_fechas_completo == '':
-                rango_fechas_completo += dt.datetime.strptime(periodo['start'],'%Y-%m-%d').strftime('%d-%m-%Y')
-                rango_fechas_completo += ' '+dt.datetime.strptime(periodo['end'],'%Y-%m-%d').strftime('%d-%m-%Y')
-            if periodo['tendencia'] == 'Alcista' and rango_fechas_alcista == '':
-                rango_fechas_alcista += dt.datetime.strptime(periodo['start'],'%Y-%m-%d').strftime('%d-%m-%Y')
-                rango_fechas_alcista += ' '+dt.datetime.strptime(periodo['end'],'%Y-%m-%d').strftime('%d-%m-%Y')
-            if periodo['tendencia'] == 'Bajista' and rango_fechas_bajista == '':
-                rango_fechas_bajista += dt.datetime.strptime(periodo['start'],'%Y-%m-%d').strftime('%d-%m-%Y')
-                rango_fechas_bajista += ' '+dt.datetime.strptime(periodo['end'],'%Y-%m-%d').strftime('%d-%m-%Y')
-            if periodo['tendencia'] == 'Lateral' and rango_fechas_lateral == '':
-                rango_fechas_lateral += dt.datetime.strptime(periodo['start'],'%Y-%m-%d').strftime('%d-%m-%Y')
-                rango_fechas_lateral += ' '+dt.datetime.strptime(periodo['end'],'%Y-%m-%d').strftime('%d-%m-%Y')
+            if rango_fechas[periodo['tendencia']] == '':
+                rango_fechas[periodo['tendencia']] += dt.datetime.strptime(periodo['start'],'%Y-%m-%d').strftime('%d-%m-%Y')
+                rango_fechas[periodo['tendencia']] += ' '+dt.datetime.strptime(periodo['end'],'%Y-%m-%d').strftime('%d-%m-%Y')
                 
         df_resultados = backtest.get_resumen_resultados()
         plantilla = get_template('backtest_results_table.html')
+        
+        
         context['html_General']    = plantilla.render({'df': df_resultados['Media']    })
-        context['html_Completo']   = plantilla.render({'df': df_resultados['Completo']})
-        context['html_Alcista']    = plantilla.render({'df': df_resultados['Alcista']  })
-        context['html_Lateral']    = plantilla.render({'df': df_resultados['Lateral']  })
-        context['html_Bajista']    = plantilla.render({'df': df_resultados['Bajista']  })
+        for tendencia in tendencias:
+            context[f'html_{tendencia}']   = plantilla.render({'df': df_resultados[tendencia]})
+            
         context['titulo_general']  = 'General'    
-        context['titulo_completo'] = 'Completo '+rango_fechas_completo   
-        context['titulo_alcista']  = 'Alcista '+rango_fechas_alcista    
-        context['titulo_lateral']  = 'Lateral '+rango_fechas_lateral    
-        context['titulo_bajista']  = 'Bajista '+rango_fechas_bajista   
+        for tendencia in tendencias:
+            context[f'titulo_{tendencia}'] = f'{tendencia} '+rango_fechas[tendencia] 
+           
 
         scoring = backtest.calcular_scoring_completpo(df_resultados)
 
         backtest.scoring = round(scoring['Completo'],1)
-        scoring_alcista = scoring['Alcista']
-        scoring_bajista = scoring['Bajista']
-        scoring_lateral = scoring['Lateral']
-        backtest.scoring_str = f'Alcista: {scoring_alcista:.1f} Bajista: {scoring_bajista:.1f} Lateral: {scoring_lateral:.1f} '
+        backtest.scoring_str = ''
+        for tendencia in tendencias:
+            backtest.scoring_str += f'{tendencia}: {scoring[tendencia]:.1f} '
+        
         backtest.save()
         context['scoring']  = f'{backtest.scoring:.1f}'
         context['scoring_str']  = backtest.scoring_str  

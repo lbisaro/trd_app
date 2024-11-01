@@ -19,7 +19,7 @@
         </div>
     </div>
     <div class="row pt-2">
-        <div class="form-group col">
+        <div class="form-group col-6">
             <label for="periodo" class="form-label">Periodo</label>
             <input class="form-control" list="datalistOptionsPeriodo" id="periodo" placeholder="Type to search...">
             <datalist id="datalistOptionsPeriodo">
@@ -27,6 +27,15 @@
                 <option value="{{p.str}}" data-file="{{p.file}}" data-start="{{p.start}}" data-end="{{p.end}}" data-symbol="{{p.symbol}}" data-interval_id="{{p.interval_id}}">
                 {% endfor %}
             </datalist>
+        </div>
+        <div class="form-group col-6">
+            <label for="mirror" class="form-label">Espejar Velas</label>
+            <select class="form-control" id="mirror">
+                <option value="00">No</option>
+                <option value="10">Verticalmente</option>
+                <option value="01">Horizontalmente</option>
+                <option value="11">Vertical y Horizontalmente</option>
+            </select>
         </div>
     </div>
 
@@ -140,6 +149,7 @@
                 interval_id: periodo.attr('data-interval_id'),
                 file: periodo.attr('data-file'),
                 quote_qty: $('#quote_qty').val(),
+                mirror: $('#mirror').val(),
             }
         err = ''
         if (!data.interval_id || !data.symbol || !data.from_date || !data.to_date || !data.file)

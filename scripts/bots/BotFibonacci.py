@@ -77,13 +77,19 @@ class BotFibonacci(Bot_Core):
             raise Exception("\n".join(err))
         
     def start(self):
+        
         self.klines = zigzag(self.klines, deviation = self.deviation)
 
         self.klines['signal'] = ''
-        #Obteniendo los keys de los niveles de Fibo con maximo y minimo al azar
-        fib_levels = fibonacci_levels(1,0.5)
-        for key in fib_levels.keys():
-            self.klines[f'fl_{key}'] = np.nan
+        self.fibo_sl = '0.0%'
+        self.fibo_gold_h = '38.2%'
+        self.fibo_gold_l = '23.6%'
+        self.fibo_tp = '100.0%'
+        self.klines[self.fibo_sl] = None
+        self.klines[self.fibo_gold_h] = None
+        self.klines[self.fibo_gold_l] = None
+        self.klines[self.fibo_tp] = None
+        
 
         last_zz = [0,0,0]
         buy_last_low = None
@@ -108,18 +114,24 @@ class BotFibonacci(Bot_Core):
                         
             if buy_last_low is not None and buy_last_high is not None:
                 fib_levels = fibonacci_levels(buy_last_high,buy_last_low)
-                for key in fib_levels.keys():
-                    self.klines.at[index, f'fl_{key}'] = fib_levels[key]
-                if fib_levels['23.6%'] <= row['close'] <= fib_levels['38.2%']:
+                self.klines.at[index, self.fibo_sl] = fib_levels[self.fibo_sl]
+                self.klines.at[index, self.fibo_tp] = fib_levels[self.fibo_tp]
+                self.klines.at[index, self.fibo_gold_h] = fib_levels[self.fibo_gold_h]
+                self.klines.at[index, self.fibo_gold_l] = fib_levels[self.fibo_gold_l]
+                
+                if fib_levels[self.fibo_gold_l] <= row['close'] <= fib_levels[self.fibo_gold_h]:
                     self.klines.at[index, 'signal'] = 'COMPRA'
                     buy_last_low = None
                     buy_last_high = None
 
             if sell_last_low is not None and sell_last_high is not None:
                 fib_levels = fibonacci_levels(sell_last_low,sell_last_high)
-                for key in fib_levels.keys():
-                    self.klines.at[index, f'fl_{key}'] = fib_levels[key]
-                if fib_levels['23.6%'] >= row['close'] >= fib_levels['38.2%']:
+                self.klines.at[index, self.fibo_sl] = fib_levels[self.fibo_sl]
+                self.klines.at[index, self.fibo_tp] = fib_levels[self.fibo_tp]
+                self.klines.at[index, self.fibo_gold_h] = fib_levels[self.fibo_gold_h]
+                self.klines.at[index, self.fibo_gold_l] = fib_levels[self.fibo_gold_l]
+
+                if fib_levels[self.fibo_gold_l] >= row['close'] >= fib_levels[self.fibo_gold_h]:
                     self.klines.at[index, 'signal'] = 'VENTA'
                     sell_last_low = None
                     sell_last_high = None
@@ -140,10 +152,10 @@ class BotFibonacci(Bot_Core):
         if not self.position:
             if signal == 'COMPRA':
                 #Analisis del riesgo a tomar
-                stop_loss_price = round(self.row['fl_0.0%'] , self.qd_price)
+                stop_loss_price = round(self.row[self.fibo_sl] , self.qd_price)
                 self.stop_loss = round((1-(stop_loss_price/self.price))*100,2)
 
-                take_profit_price = round(self.row['fl_100.0%'] , self.qd_price)
+                take_profit_price = round(self.row[self.fibo_tp] , self.qd_price)
                 self.take_profit = round(((take_profit_price/self.price)-1)*100,2)
                 
                 if self.interes == 's': #Interes Simple

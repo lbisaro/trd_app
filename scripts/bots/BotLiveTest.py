@@ -26,8 +26,7 @@ class BotLiveTest(Bot_Core):
         self.start_base = 0.0
         
         self.last_order_id = -1
-        self.trail_b = 2
-        self.trail_s = 2
+
     
     descripcion = 'Bot de Balanceo de Billetera \n'\
                   'Realiza una compra al inicio, \n'\
@@ -101,19 +100,11 @@ class BotLiveTest(Bot_Core):
             qty = round_down((self.wallet_quote * (self.quote_perc/100)) / self.price , self.qd_qty)
             self.last_order_id = self.buy(qty=qty,flag=Order.FLAG_TAKEPROFIT)
             print('BUY  qty: ',qty,' order_id: ',self.last_order_id)
-            #self.last_order_id = self.buy_trail(qty=qty,
-            #                                    flag=Order.FLAG_TAKEPROFIT,
-            #                                    limit_price=self.price * (1+(self.trail_b/3/100)),
-            #                                    activation_price=0,
-            #                                    trail_perc = self.trail_b)
+
         else:
             qty = self.wallet_base
             self.last_order_id = self.sell(qty=qty,flag=Order.FLAG_SIGNAL)
             print('SELL qty: ',qty,' order_id: ',self.last_order_id)
-            #self.last_order_id = self.sell_trail(qty=qty,
-            #                                    flag=Order.FLAG_TAKEPROFIT,
-            #                                    limit_price=self.price * (1-(self.trail_s/3/100)),
-            #                                    activation_price=0,
-            #                                    trail_perc = self.trail_s)
+
             
             

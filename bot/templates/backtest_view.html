@@ -91,36 +91,22 @@
             <li class="nav-item" role="general">
               <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general-tab-pane" type="button" role="tab" aria-controls="general-tab-pane" aria-selected="false" tabindex="-1">{{titulo_general}}</button>
             </li>
-            <li class="nav-item" role="completo">
-              <button class="nav-link " id="completo-tab" data-bs-toggle="tab" data-bs-target="#completo-tab-pane" type="button" role="tab" aria-controls="completo-tab-pane" aria-selected="true">{{titulo_completo}}</button>
+            {% for tendencia in tendencias %}
+            <li class="nav-item" role="{{tendencia}}">
+              <button class="nav-link " id="{{tendencia}}-tab" data-bs-toggle="tab" data-bs-target="#{{tendencia}}-tab-pane" type="button" role="tab" aria-controls="{{tendencia}}-tab-pane" aria-selected="true">{{tendencia}}</button>
             </li>
-            <li class="nav-item" role="alcista">
-              <button class="nav-link " id="alcista-tab" data-bs-toggle="tab" data-bs-target="#alcista-tab-pane" type="button" role="tab" aria-controls="alcista-tab-pane" aria-selected="true">{{titulo_alcista}}</button>
-            </li>
-            <li class="nav-item" role="lateral">
-              <button class="nav-link" id="lateral-tab" data-bs-toggle="tab" data-bs-target="#lateral-tab-pane" type="button" role="tab" aria-controls="lateral-tab-pane" aria-selected="false" tabindex="-1">{{titulo_lateral}}</button>
-            </li>
-            <li class="nav-item" role="bajista">
-                <button class="nav-link" id="bajista-tab" data-bs-toggle="tab" data-bs-target="#bajista-tab-pane" type="button" role="tab" aria-controls="bajista-tab-pane" aria-selected="false" tabindex="-1">{{titulo_bajista}}</button>
-              </li>
+            {% endfor %}
           </ul>
 
         <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="general-tab-pane" role="tabpanel" aria-labelledby="general-tab" tabindex="0" >
                 {{html_General}}
             </div>
-            <div class="tab-pane   " id="completo-tab-pane" role="tabpanel" aria-labelledby="completo-tab" tabindex="1" >
+            {% for tendencia in tendencias %}
+            <div class="tab-pane   " id="{{tendencia}}-tab-pane" role="tabpanel" aria-labelledby="{{tendencia}}-tab" tabindex="1" >
                 {{html_Completo}}
             </div>
-            <div class="tab-pane   " id="alcista-tab-pane" role="tabpanel" aria-labelledby="alcista-tab" tabindex="2" >
-                {{html_Alcista}}
-            </div>
-            <div class="tab-pane   " id="lateral-tab-pane" role="tabpanel" aria-labelledby="lateral-tab" tabindex="3" >
-                {{html_Lateral}}
-            </div>
-            <div class="tab-pane   " id="bajista-tab-pane" role="tabpanel" aria-labelledby="bajista-tab" tabindex="4" >
-                {{html_Bajista}}
-            </div>
+            {% endfor %}
         </div>
     </div>
 {% endif %}

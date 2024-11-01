@@ -246,16 +246,20 @@ def ohlc_chart(klines,**kwargs):
         )
 
     if indicators:
+        
         for ind in indicators:
             f_klines = klines[klines[ind['col']]>0]
             mode = "lines"
             if 'mode' in ind:
                 mode = ind['mode']
+            symbol = 'x'
+            if 'symbol' in ind:
+                symbol = ind['symbol']
             fig.add_trace(
                 go.Scatter(
-                    x=f_klines["datetime"], y=f_klines[ind['col']], name=ind['name'], mode=mode, 
+                    x=f_klines["datetime"], y=f_klines[ind['col']], name=ind['name'], mode=mode,
                     line={'width': 0.5},  
-                    marker=dict(color=ind['color']),
+                    marker=dict(color=ind['color'], symbol=symbol, size=2,), 
                 ),
                 row=1,
                 col=1,

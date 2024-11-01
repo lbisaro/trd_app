@@ -17,7 +17,7 @@ class Backtest(models.Model):
     ESTADO_ENCURSO = 50
     ESTADO_COMPLETO = 100
 
-    tendencias = ['Completo','Alcista','Lateral','Bajista']
+    tendencias = ['Completo'] #,'Alcista','Lateral','Bajista'
 
     klines_folder = os.path.join(settings.BASE_DIR,'backtest','klines')
     results_folder = os.path.join(settings.BASE_DIR,'backtest','results')
@@ -161,13 +161,7 @@ class Backtest(models.Model):
         tendencia = col_media_tendencia[6:]
         
         niveles = [6,10,20]
-        if tendencia == 'Alcista':
-            niveles = [10,15,30]
-        if tendencia == 'Bajista':
-            niveles = [-15,0,6]
-        if tendencia == 'Lateral':
-            niveles = [3,6,12]
-
+        
         if ind == 'cagr':
             if col_media <= niveles[0]:
                 return 0
@@ -269,6 +263,8 @@ class Backtest(models.Model):
     def calcular_scoring_completpo(self,resumen_resultados):
         json_rsp = {}
 
+        tendencias = Backtest.tendencias
+
         #max_scoring surge de: 
         # un valor promedio de 3 como maximo para cada merica
         # multiplicado por el valor maximo de cagr (3) 
@@ -276,41 +272,15 @@ class Backtest(models.Model):
         # 3 * 3 * 2 = 18 
         max_scoring = 18
 
-        #Completo
-        scoring = resumen_resultados['Media']['Scoring Completo']
-        cagr = scoring.loc['cagr']
-        max_drawdown_cap = scoring.loc['max_drawdown_cap']
-        count = scoring.count()
-        sum = scoring.sum() - cagr - max_drawdown_cap
-        avg = sum / (count-2)
-        json_rsp['Completo'] = (( cagr * max_drawdown_cap * avg ) /18 ) *100  
+        for tendencia in tendencias:
+            scoring = resumen_resultados['Media'][f'Scoring {tendencia}']
+            cagr = scoring.loc['cagr']
+            max_drawdown_cap = scoring.loc['max_drawdown_cap']
+            count = scoring.count()
+            sum = scoring.sum() - cagr - max_drawdown_cap
+            avg = sum / (count-2)
+            json_rsp[tendencia] = (( cagr * max_drawdown_cap * avg ) /18 ) *100  
 
-        #Alcista
-        scoring = resumen_resultados['Media']['Scoring Alcista']
-        cagr = scoring.loc['cagr']
-        max_drawdown_cap = scoring.loc['max_drawdown_cap']
-        count = scoring.count()
-        sum = scoring.sum() - cagr - max_drawdown_cap
-        avg = sum / (count-2)
-        json_rsp['Alcista'] = ((cagr * max_drawdown_cap * avg) /18 ) *100
-        
-        #Bajista
-        scoring = resumen_resultados['Media']['Scoring Bajista']
-        cagr = scoring.loc['cagr']
-        max_drawdown_cap = scoring.loc['max_drawdown_cap']
-        count = scoring.count()
-        sum = scoring.sum() - cagr - max_drawdown_cap
-        avg = sum / (count-2)
-        json_rsp['Bajista'] = ((cagr * max_drawdown_cap * avg) /18 ) *100
-
-        #Lateral
-        scoring = resumen_resultados['Media']['Scoring Lateral']
-        cagr = scoring.loc['cagr']
-        max_drawdown_cap = scoring.loc['max_drawdown_cap']
-        count = scoring.count()
-        sum = scoring.sum() - cagr - max_drawdown_cap
-        avg = sum / (count-2)
-        json_rsp['Lateral'] = ((cagr * max_drawdown_cap * avg) /max_scoring ) *100
         return json_rsp
 
 

@@ -138,7 +138,6 @@
                                     <td>{{o.symbol}}</td>
                                     <td>{% if o.side == 0 %}COMPRA{% else %}VENTA{% endif %} {{o.str_type}} {{o.str_flag}}
                                         {% if o.limit_price > 0 %} (Limit Price {{o.limit_price}}) {% endif %}
-                                        {% if o.trail_perc > 0 %} (Trail {{o.trail_perc}}%) {% endif %}
                                     </td>
                                     <td class="text-end">{{o.qty}}</td>
                                     <td class="text-end">{% if o.completed > 0 %} {{o.price}} {% else %} - {% endif %}</td>

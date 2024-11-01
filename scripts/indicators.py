@@ -519,3 +519,9 @@ def Edri_Extreme_Points_Buy_Sell(df, ccimomCross='CCI' , ccimomLength=10 ,
     df['upper_band'] = upperBand
     df['lower_band'] = lowerBand
     return df
+
+def psar(df, af0=0.02, af=0.2, max_af=0.2):
+    tmp = pandas_ta.trend.psar(df['high'], df['low'], df['close'], af0=af0, af=af, max_af=max_af)
+    df['psar_low'] = tmp.filter(like='PSARl').iloc[:, 0]
+    df['psar_high'] = tmp.filter(like='PSARs').iloc[:, 0]
+    return df

@@ -102,7 +102,7 @@ def bot(request, bot_id):
                 
             df_orders.drop(columns=['id', 'bot_id', 'completed', 'qty', 'price', 'orderid',
             'pos_order_id', 'symbol_id', 'side', 'flag', 'type', 'limit_price',
-            'activation_price', 'active', 'trail_perc', 'tag'],inplace=True)
+            'tag'],inplace=True)
 
         
             if df_orders['buy'].count() > 0:

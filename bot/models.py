@@ -434,8 +434,6 @@ class Bot(models.Model):
 
                 if o.type == BotUtilsOrder.TYPE_LIMIT:
                    trade['flag_type'] += 'Limit '
-                elif o.type == BotUtilsOrder.TYPE_TRAILING:
-                   trade['flag_type'] += 'Trail '
 
                 if o.flag == BotUtilsOrder.FLAG_STOPLOSS:
                    trade['flag_type'] += 'SL '
@@ -778,12 +776,9 @@ class Order(models.Model):
     side = models.IntegerField(default=0, null=False, blank=False, db_index=True)
     #Definido en BotUtilsOrder: FLAG_SIGNAL, FLAG_STOPLOSS, FLAG_TAKEPROFIT
     flag = models.IntegerField(default=0, null=False, blank=False)
-    #Definido en BotUtilsOrder: TYPE_MARKET, TYPE_LIMIT, FLAG_TRAIL
+    #Definido en BotUtilsOrder: TYPE_MARKET, TYPE_LIMIT
     type = models.IntegerField(default=0, null=False, blank=False)
     limit_price = models.FloatField(null=False, blank=True, default=0.0)
-    activation_price = models.FloatField(null=False, blank=True, default=0.0)
-    active = models.IntegerField(null=False, blank=False, default=0)
-    trail_perc = models.FloatField(null=False, blank=True, default=0.0)
     tag = models.TextField(null=False, blank=True, default='')
     
     class Meta:
@@ -794,10 +789,6 @@ class Order(models.Model):
         params = f'{self.datetime:%Y-%m-%d %Z %H:%M:%S} #{self.id} {self.str_side()}\t{self.qty}\t{self.price} {self.str_type()} {self.str_flag()} '
         if self.type != BotUtilsOrder.TYPE_MARKET:
             params += f'Limit Price {self.limit_price} '
-        if self.type == BotUtilsOrder.TYPE_TRAILING:
-            params += f'Trl {self.trail_perc}% '     
-            if self.active:
-                params += ' ACT'   
         if len(self.tag):
             params += f' {self.tag} '    
 
@@ -818,9 +809,7 @@ class Order(models.Model):
         return ''
 
     def str_type(self):
-        if self.type == BotUtilsOrder.TYPE_TRAILING:
-            return 'TRAIL'        
-        elif self.type == BotUtilsOrder.TYPE_LIMIT:
+        if self.type == BotUtilsOrder.TYPE_LIMIT:
             return 'LIMIT'
         else:
             return ''
