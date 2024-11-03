@@ -119,13 +119,8 @@ class BotPolyfit(Bot_Core):
         self.print_orders = False
         self.graph_open_orders = False
         self.graph_signals = False
-
-
     
     def next(self):
-        print('--kk 3.2 - self.row')
-        print('self.signal ',self.signal)
-        print('--kk 3.2 - self.row')
         if self.signal == 'COMPRA': 
             tag = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
             quote_qty = self.quote_qty if self.wallet_quote >= self.quote_qty else self.wallet_quote
