@@ -120,6 +120,15 @@ class Estrategia(models.Model):
             str += prm[p]['sn']+': '+prm[p]['str']
         return f"{str}"
 
+    def get_estrategias():
+        query = "SELECT * "
+        query += "FROM bot_estrategia "
+        query += "WHERE activo = 1 "
+        query += "AND (SELECT count(id) FROM bot_bot WHERE activo = 1 AND bot_bot.estrategia_id = bot_estrategia.id)"
+        query += "ORDER BY bot_estrategia.id"
+        estrategias = Estrategia.objects.raw(query)
+        return estrategias
+        
     def get_estrategias_to_run(intervals):
         query = "SELECT * "
         query += "FROM bot_estrategia "

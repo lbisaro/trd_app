@@ -16,14 +16,10 @@ def run():
 
     json_rsp['error'] = []
 
-    ### Establecer hora y minutos de start para definir que estrategias ejecutar de acuerdo al intervalo
-    apply_intervals = fn.get_apply_intervals(startDt)
-    json_rsp['apply_intervals'] = apply_intervals
-    #print(f'Intervalo: {apply_intervals}')
     
     ### Obtener estrategias activas (Activas y Con bots activos) con intervalos aplicables a la hora de ejecucion del script
     ### Crear una lista con los Symbol de las estrategias activas
-    estrategias = Estrategia.get_estrategias_to_run(apply_intervals)
+    estrategias = Estrategia.get_estrategias()
     active_symbols = []
     for estr in estrategias:
         #log.info(f'Estrategia: {estr}')
