@@ -21,7 +21,6 @@ class BotFibonacci(Bot_Core):
         self.quote_perc = 0.0
         self.stop_loss = 0.0
         self.take_profit = 0.0
-        self.deviation = 0
         self.interes = 's'  
 
         #Gestion de ordenes y posicion tomada
@@ -48,13 +47,6 @@ class BotFibonacci(Bot_Core):
                         't' :'perc',
                         'pub': True,
                         'sn':'Quote', },
-                 'deviation': {
-                        'c' :'deviation',
-                        'd' :'Desvio para Pivotes',
-                        'v' :'2',
-                        't' :'perc',
-                        'pub': True,
-                        'sn':'Dev', },
                 'interes': {
                         'c' :'interes',
                         'd' :'Tipo de interes',
@@ -70,15 +62,13 @@ class BotFibonacci(Bot_Core):
             err.append("Se debe especificar el Par")
         if self.quote_perc <= 0 or self.quote_perc > 100:
             err.append("El Porcentaje de capital por operacion debe ser un valor entre 0.01 y 100")
-        if self.deviation < 0.5 or self.deviation > 100:
-            err.append("El Desvio para Pivotes debe ser un porcentaje entre 0.5 y 100")
 
         if len(err):
             raise Exception("\n".join(err))
         
     def start(self):
         
-        self.klines = zigzag(self.klines, deviation = self.deviation)
+        self.klines = zigzag(self.klines)
 
         self.klines['signal'] = ''
         self.fibo_sl = '0.0%'

@@ -276,83 +276,24 @@ def fibonacci_levels(start, end):
 
     return prices  
 
-def zigzag(df, deviation=3):
-    df['ZigZag'] = None
-    df['ZigZag_trend'] = 0
-    PEAK = 1
-    VALLEY = -1
-    up_thresh = deviation/100 + 1
-    down_thresh = -deviation/100 + 1
-    trend = 0
-    max = None
-    max_trend = 0
-    min = None
-    min_trend = 0
-    max_index = 0
-    min_index = 0
+def predict_price(window,fwd):
     
-    for index,row in df.iterrows():
-        #Inicializar max y min
-        if max is None: 
-            max = row['high']
-            min = row['low']
+    x_pred = len(window) + fwd - 1
 
-        #Detectar el primer pivot para definir la tendencia inicial
-        elif trend == 0:
-            if row['high'] / max <= down_thresh:
-                trend = PEAK if max_trend == 0 else VALLEY
-                
-            if row['high'] > max:
-                max = row['high']
-                max_trend = index
+    x = np.arange(len(window))  # Índice temporal de la ventana
+    y = window.values  # Valores de 'price' en la ventana
+    
+    # Ajuste de grado 1 para la pendiente
+    a, b = np.polyfit(x, y, 1)
 
-            if row['low'] / min >= up_thresh:
-                trend = VALLEY if min_trend == 0 else PEAK
+    pred = x_pred * a + b
 
-            if row['low'] < min:
-                min = row['low']
-                min_trend = index
+    return pred  
 
-            if trend is not None:
-                
-                last_pivot = max if trend > 0 else min
-                max = -np.inf
-                min = np.inf
-
-        #Detectar picos siguientes
-        elif trend == VALLEY:
-
-            if row['low']<min:
-                min = row['low']
-            
-            
-            x = row['low']
-            r = x / last_pivot
-            if r >= up_thresh:
-                df.at[index,'ZigZag'] = min 
-                trend = PEAK
-                min = np.inf
-                last_pivot = x
-                
-            elif x < last_pivot:
-                last_pivot = x
-                    
-        else:
-            if row['high']>max:
-                max = row['high']
-            
-            x = row['high']
-            r = x / last_pivot
-            if r <= down_thresh:
-                df.at[index,'ZigZag'] = max 
-                trend = VALLEY
-                max = -np.inf
-                last_pivot = x
-                
-            elif x > last_pivot:
-                last_pivot = x
-
-        df.at[index,'ZigZag_Trend'] = trend
+def zigzag(df):
+    df = psar(df)
+    df['ZigZag'] = np.where((df['psar_high']>0) & (df['psar_low'].shift(1)>0), df['psar_high'] , None)
+    df['ZigZag'] = np.where((df['psar_low']>0) & (df['psar_high'].shift(1)>0), df['psar_low'] , df['ZigZag'])
         
     return df
 
