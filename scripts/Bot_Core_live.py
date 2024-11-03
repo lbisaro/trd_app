@@ -42,9 +42,8 @@ class Bot_Core_live:
             jsonRsp['execute'] = True
         
         if not just_check_orders:
-            print('--kk 3.1')
             self.next()
-            print('--kk 3.2')
+            
 
         return jsonRsp
 
