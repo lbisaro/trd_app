@@ -86,7 +86,6 @@ def run():
             if bot.estrategia_id in signal_rows:
                 signal_row = signal_rows[bot.estrategia_id]
                 signal = signal_row['signal']
-                print(signal_row)
             if signal != 'NEUTRO':
                 log.info(f'{bot} - aa Signal: {signal}')
 
