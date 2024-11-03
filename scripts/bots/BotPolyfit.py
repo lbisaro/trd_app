@@ -124,16 +124,16 @@ class BotPolyfit(Bot_Core):
     
     def next(self):
         print('--kk 3.2 - self.row')
-        print(self.row)
+        print('self.signal ',self.signal)
         print('--kk 3.2 - self.row')
-        if self.row['signal'] == 'COMPRA': 
+        if self.signal == 'COMPRA': 
             tag = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
             quote_qty = self.quote_qty if self.wallet_quote >= self.quote_qty else self.wallet_quote
             quote_to_sell = round_down(quote_qty*(self.quote_perc/100) , self.qd_quote )
             qty = round_down(quote_to_sell / self.price , self.qd_qty)
             #self.buy_limit(qty=qty,limit_price = self.row['ema'],flag=Order.FLAG_TAKEPROFIT,tag='BUY')
             self.buy(qty=qty,flag=Order.FLAG_SIGNAL,tag=tag)
-        #if self.row['signal'] == 'VENTA':
+        #if self.signal == 'VENTA':
         #    self.sell(qty=self.wallet_base,flag=Order.FLAG_SIGNAL)
 
     
