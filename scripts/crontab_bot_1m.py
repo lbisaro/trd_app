@@ -77,7 +77,7 @@ def run():
             exch = Exchange(type='user_apikey',exchange='bnc',prms=prms)                
 
         #log.info(f'Bot: {bot}')
-            
+        print('--kk 1')
         
         ### - Disparar las señales a los bots activos
         ### - Cuando se dispare una señal a un Bot 
@@ -90,7 +90,7 @@ def run():
         if signal != 'NEUTRO':
             log.info(f'{bot} - aa Signal: {signal}')
 
-
+        print('--kk 2')
         #Cargando Billetera del Bot
         resultados = bot.get_wallet()
         symbol_info = exch.get_symbol_info(botClass.symbol)
@@ -124,8 +124,9 @@ def run():
         botClass.exchange = exch
         botClass.price = price
         botClass.exchange_wallet = exchange_wallet
+        print('--kk 3')
         execRes = botClass.live_execute()
-
+        print('--kk 4')
         #if len(execRes) > 0:
         #    log.info(f'Execute: {execRes}')
 
