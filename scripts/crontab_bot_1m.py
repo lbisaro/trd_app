@@ -57,7 +57,7 @@ def run():
     bots = Bot.get_bots_activos()
     usuario_id = -1
     for bot in bots:
-        #print(f'Bot: {bot}')
+        print(f'Bot: {bot}')
         #try:
         botClass = bot.get_instance()
         botClass.bot_id = bot.id
