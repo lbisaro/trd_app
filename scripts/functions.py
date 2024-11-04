@@ -48,8 +48,7 @@ def get_apply_intervals(dt):
 
     hr = dt.strftime('%H')
     mn = dt.strftime('%M')
-    print(f'get_apply_intervals dt {hr}:{mn}')
-
+    
     whereIn = "'0m01'"
     if mn[1]=='0' or mn[1]=='5':
         whereIn = whereIn + ",'0m05'"
