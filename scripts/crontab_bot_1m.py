@@ -19,7 +19,8 @@ def run():
     ### Establecer hora y minutos de start para definir que estrategias ejecutar de acuerdo al intervalo
     apply_intervals = fn.get_apply_intervals(startDt)
     json_rsp['apply_intervals'] = apply_intervals
-    #print(f'Intervalo: {apply_intervals}')
+    print(f'date: {startDt}')
+    print(f'Intervalo: {apply_intervals}')
     
     ### Obtener estrategias activas (Activas y Con bots activos) con intervalos aplicables a la hora de ejecucion del script
     ### Crear una lista con los Symbol de las estrategias activas
