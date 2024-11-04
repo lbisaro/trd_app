@@ -90,24 +90,25 @@ class Estrategia(models.Model):
         pe = eval(self.parametros)
         for prm in pe:
             for v in prm:
-                parametros[v]['v'] = prm[v]
-                parametros[v]['str'] = str(prm[v])
+                if v in parametros:
+                    parametros[v]['v'] = prm[v]
+                    parametros[v]['str'] = str(prm[v])
 
-                if parametros[v]['t'] == 'perc':
-                    val = float(parametros[v]['v'])
-                    parametros[v]['str'] = f'{val:.2f} %'
+                    if parametros[v]['t'] == 'perc':
+                        val = float(parametros[v]['v'])
+                        parametros[v]['str'] = f'{val:.2f} %'
 
-                if parametros[v]['t'] == 't_int':
-                    if parametros[v]['v'] == 's':
-                        parametros[v]['str'] = 'Simple'
-                    elif parametros[v]['v'] == 'c':
-                        parametros[v]['str'] = 'Compuesto'
+                    if parametros[v]['t'] == 't_int':
+                        if parametros[v]['v'] == 's':
+                            parametros[v]['str'] = 'Simple'
+                        elif parametros[v]['v'] == 'c':
+                            parametros[v]['str'] = 'Compuesto'
 
-                if parametros[v]['t'] == 'bin':
-                    if int(parametros[v]['v']) > 0:
-                        parametros[v]['str'] = 'Si'
-                    else:
-                        parametros[v]['str'] = 'No'
+                    if parametros[v]['t'] == 'bin':
+                        if int(parametros[v]['v']) > 0:
+                            parametros[v]['str'] = 'Si'
+                        else:
+                            parametros[v]['str'] = 'No'
                     
         return parametros
 
