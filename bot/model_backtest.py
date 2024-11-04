@@ -157,6 +157,16 @@ class Backtest(models.Model):
 
         return json_rsp
 
+    def get_scoring_str(self,resumen_resultados):
+        tendencias = Backtest.tendencias
+        scoring_str = ''
+        for tendencia in tendencias:
+            media = resumen_resultados['Media'][f'Media {tendencia}']
+            cagr = media.loc['cagr']
+            max_drawdown_cap = media.loc['max_drawdown_cap']
+            scoring_str = f'CAGR {cagr:.2f} DD {max_drawdown_cap:.2f} '
+        return scoring_str
+
     def calcular_scoring_columna(self,ind,col_media,col_media_tendencia):
         tendencia = col_media_tendencia[6:]
         
@@ -260,7 +270,7 @@ class Backtest(models.Model):
                 return 3
         return -1
     
-    def calcular_scoring_completpo(self,resumen_resultados):
+    def calcular_scoring_completo(self,resumen_resultados):
         json_rsp = {}
 
         tendencias = Backtest.tendencias
@@ -282,8 +292,6 @@ class Backtest(models.Model):
             json_rsp[tendencia] = (( cagr * max_drawdown_cap * avg ) /18 ) *100  
 
         return json_rsp
-
-
 
     def get_results_file(self):
         file = f'{self.results_folder}/id_{self.id}.json'
@@ -338,24 +346,25 @@ class Backtest(models.Model):
         pe = eval(self.parametros)
         for prm in pe:
             for v in prm:
-                parametros[v]['v'] = prm[v]
-                parametros[v]['str'] = prm[v]
+                if v in parametros:
+                    parametros[v]['v'] = prm[v]
+                    parametros[v]['str'] = prm[v]
 
-                if parametros[v]['t'] == 'perc':
-                    val = float(parametros[v]['v'])
-                    parametros[v]['str'] = f'{val:.2f} %'
+                    if parametros[v]['t'] == 'perc':
+                        val = float(parametros[v]['v'])
+                        parametros[v]['str'] = f'{val:.2f} %'
 
-                if parametros[v]['t'] == 't_int':
-                    if parametros[v]['v'] == 's':
-                        parametros[v]['str'] = 'Simple'
-                    elif parametros[v]['v'] == 'c':
-                        parametros[v]['str'] = 'Compuesto'
+                    if parametros[v]['t'] == 't_int':
+                        if parametros[v]['v'] == 's':
+                            parametros[v]['str'] = 'Simple'
+                        elif parametros[v]['v'] == 'c':
+                            parametros[v]['str'] = 'Compuesto'
 
-                if parametros[v]['t'] == 'bin':
-                    if int(parametros[v]['v']) > 0:
-                        parametros[v]['str'] = 'Si'
-                    else:
-                        parametros[v]['str'] = 'No'
+                    if parametros[v]['t'] == 'bin':
+                        if int(parametros[v]['v']) > 0:
+                            parametros[v]['str'] = 'Si'
+                        else:
+                            parametros[v]['str'] = 'No'
                     
         return parametros
 

@@ -189,12 +189,10 @@ def view(request,backtest_id):
             context[f'titulo_{tendencia}'] = f'{tendencia} '+rango_fechas[tendencia] 
            
 
-        scoring = backtest.calcular_scoring_completpo(df_resultados)
-
+        scoring = backtest.calcular_scoring_completo(df_resultados)
+        
         backtest.scoring = round(scoring['Completo'],1)
-        backtest.scoring_str = ''
-        for tendencia in tendencias:
-            backtest.scoring_str += f'{tendencia}: {scoring[tendencia]:.1f} '
+        backtest.scoring_str = backtest.get_scoring_str(df_resultados)       
         
         backtest.save()
         context['scoring']  = f'{backtest.scoring:.1f}'

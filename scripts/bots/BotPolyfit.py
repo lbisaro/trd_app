@@ -6,6 +6,7 @@ from scripts.Bot_Core_utils import *
 import scripts.indicators as ind
 import random
 import string
+import datetime as dt
 
 class BotPolyfit(Bot_Core):
 
@@ -13,7 +14,6 @@ class BotPolyfit(Bot_Core):
     ma = 0          #Periodos para Media movil simple 
     quote_perc =  0 #% de compra inicial, para stock
     periods = 0      #Periodo de analisis
-    fwd = 0         #Periodo de prediccion
     gap = 0         #Rango +/- de porcentaje en el que no se determina la tendencia
 
     last_order_id = 0
@@ -24,13 +24,11 @@ class BotPolyfit(Bot_Core):
         self.stop_loss = 0.0
         self.take_profit = 0.0
         self.periods = 0
-        self.fwd = 0
         self.gap = 0.5
         
     
     descripcion = 'Bot Polyfit, basado en prediccion de precio por diferencia de cuadrados. \n'\
                   'Los periodos de analisis corresponden con la cantidad de datos para evaluar la tendencia \n'\
-                  'Los periodos de prediccion corresponden con la cantidad de peridos hacia adelante en los que se predice el precio \n'\
                  
     
     parametros = {'symbol':  {  
@@ -68,13 +66,6 @@ class BotPolyfit(Bot_Core):
                         't' :'int',
                         'pub': True,
                         'sn':'PR', },
-                  'fwd': {
-                        'c' :'fwd',
-                        'd' :'Periodos de prediccion',
-                        'v' :'1',
-                        't' :'int',
-                        'pub': True,
-                        'sn':'FWD', }, 
                   'gap': {
                         'c' :'gap',
                         'd' :'Gap',
@@ -92,8 +83,6 @@ class BotPolyfit(Bot_Core):
             err.append("El Porcentaje de capital por operacion debe ser mayor a 0")
         if self.periods < 3:
             err.append("Los Periodos de analisis debe ser mayor a 3")
-        if self.fwd < 1:
-            err.append("El Periodos de prediccion debe ser mayor a 1")
         if self.gap < 0:
             err.append("El GAP debe ser mayor o igual a 0")
         if self.stop_loss < 0:
@@ -104,9 +93,21 @@ class BotPolyfit(Bot_Core):
         if len(err):
             raise Exception("\n".join(err))
         
+    def get_status(self):
+        status_datetime = dt.datetime.now()
+        status = super().get_status()
+        
+        if self.signal != 'NEUTRO':
+            if self.signal == 'COMPRA':
+                cls = 'text-success'
+            else: 
+                cls = 'text-danger'
+            status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
+        return status
+        
     def start(self):
         gap = self.gap/100
-        self.klines['pred'] = self.klines['close'].rolling(self.periods).apply(lambda x: ind.predict_price(x,self.fwd))
+        self.klines['pred'] = self.klines['close'].rolling(self.periods).apply(lambda x: ind.predict_price(x))
         self.klines['change']  = ((self.klines['pred']/self.klines['pred'].shift(1))-1)
        
         self.klines['trend+'] = np.where(self.klines['change']>gap,self.klines['pred'],None)

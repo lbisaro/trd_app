@@ -44,6 +44,7 @@ class Bot_Core_backtest:
         
         self.start()
         
+        
         #quitando las velas previas a la fecha de start
         self.timeframe_length = self.klines['datetime'].iloc[1] - self.klines['datetime'].iloc[0]
         

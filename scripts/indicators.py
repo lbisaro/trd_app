@@ -276,7 +276,7 @@ def fibonacci_levels(start, end):
 
     return prices  
 
-def predict_price(window,fwd):
+def predict_price(window,fwd=1):
     
     x_pred = len(window) + fwd - 1
 
