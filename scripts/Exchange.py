@@ -15,21 +15,26 @@ class Exchange():
 
     def __init__(self,type,exchange,prms):
         self.exchange = exchange
-        if exchange == 'bnc':
-            if type == 'info':
-                self.client = BinanceClient()
-        
-            elif type == 'general_apikey':
-                self.client = BinanceClient(api_key=LOC_BNC_AK, api_secret=LOC_BNC_SK, testnet=LOC_BNC_TESNET)
-
-            elif type == 'user_apikey':
-                apk = prms['bnc_apk']
-                aps = prms['bnc_aps']
+        try:
+            if exchange == 'bnc':
+                if type == 'info':
+                    self.client = BinanceClient()
             
-                if prms['bnc_env'] == 'test':
-                    self.client = BinanceClient(api_key=apk, api_secret=aps, testnet=True)
-                else:
-                    self.client = BinanceClient(api_key=apk, api_secret=aps, testnet=False)
+                elif type == 'general_apikey':
+                    self.client = BinanceClient(api_key=LOC_BNC_AK, api_secret=LOC_BNC_SK, testnet=LOC_BNC_TESNET)
+
+                elif type == 'user_apikey':
+                    apk = prms['bnc_apk']
+                    aps = prms['bnc_aps']
+                
+                    if prms['bnc_env'] == 'test':
+                        self.client = BinanceClient(api_key=apk, api_secret=aps, testnet=True)
+                    else:
+                        self.client = BinanceClient(api_key=apk, api_secret=aps, testnet=False)
+        except Exception as e:
+            errMsg = f'Error de conexion exchange - type {type} - exchange: {exchange}'
+            print(errMsg)
+            raise errMsg
 
     def check_connection(self):
         try:

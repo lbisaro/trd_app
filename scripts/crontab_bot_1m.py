@@ -77,6 +77,11 @@ def run():
 
                 exch = Exchange(type='user_apikey',exchange='bnc',prms=prms)                
 
+            if not exch.check_connection():
+                errMsg = f'Error de conexion con el exchange. - idusaurio: {bot.usuario.id}'
+                print(errMsg)
+                raise errMsg
+            
             #log.info(f'Bot: {bot}')
             
             ### - Disparar las señales a los bots activos
@@ -96,6 +101,7 @@ def run():
             #Cargando Billetera del Bot
             resultados = bot.get_wallet()
             symbol_info = exch.get_symbol_info(botClass.symbol)
+
             qd_qty = symbol_info['qty_decs_qty']
             qd_quote = symbol_info['qty_decs_quote']
             botClass.wallet_quote = round(bot.quote_qty + resultados['quote_compras'] + resultados['quote_ventas'] , qd_quote)
@@ -136,7 +142,7 @@ def run():
             if not just_check_orders:
                 status = botClass.get_status()
                 bot.update_status(status)
-                
+            
 
         except Exception as e:
             log.error(f'bot.id: {bot.id} {e}')
