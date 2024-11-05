@@ -31,14 +31,14 @@ class BotHeikinAshi2(Bot_Core):
                 'quote_perc': {
                         'c' :'quote_perc',
                         'd' :'Lote de compras (%)',
-                        'v' :'20',
+                        'v' :'95',
                         't' :'perc',
                         'pub': True,
                         'sn':'Compra', },
                 'interes': {
                         'c' :'interes',
                         'd' :'Tipo de interes',
-                        'v' :'s',
+                        'v' :'c',
                         't' :'t_int',
                         'pub': True,
                         'sn':'Int', },
@@ -81,7 +81,29 @@ class BotHeikinAshi2(Bot_Core):
         self.print_orders = False
         self.graph_open_orders = True
         self.graph_signals = False
-    
+        
+    def get_status(self):
+        status_datetime = dt.datetime.now()
+        status = super().get_status()
+        
+        if self.signal != 'NEUTRO':
+            if self.signal == 'COMPRA':
+                cls = 'text-success'
+            else: 
+                cls = 'text-danger'
+            status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
+        
+        if self.row['HA_side']:
+            if self.row['HA_side'] > 0:
+                cls = 'text-success'
+                trend = 'Alza'
+            else: 
+                cls = 'text-danger'
+                trend = 'Baja'
+            status['trend'] = {'l': 'Tendencia','v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.row['HA_side'], 'cls': cls}
+
+        return status    
+
     def next(self):
         price = self.price
         start_cash = round(self.quote_qty ,self.qd_quote)
