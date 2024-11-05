@@ -94,14 +94,14 @@ class BotHeikinAshi2(Bot_Core):
                 cls = 'text-danger'
             status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
         
-        if self.row['HA_side']:
-            if self.row['HA_side'] > 0:
-                cls = 'text-success'
-                trend = 'Alza'
-            else: 
-                cls = 'text-danger'
-                trend = 'Baja'
-            status['trend'] = {'l': 'Tendencia','v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.row['HA_side'], 'cls': cls}
+        #if self.row['HA_side']:
+        #    if self.row['HA_side'] > 0:
+        #        cls = 'text-success'
+        #        trend = 'Alza'
+        #    else: 
+        #        cls = 'text-danger'
+        #        trend = 'Baja'
+        #    status['trend'] = {'l': 'Tendencia','v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.row['HA_side'], 'cls': cls}
 
         return status    
 
