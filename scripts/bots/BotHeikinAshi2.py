@@ -75,6 +75,7 @@ class BotHeikinAshi2(Bot_Core):
 
         df['buy'] = np.where((df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1)),1,None)
 
+        self.klines['HA_side'] = df['HA_side']
         self.klines['buy'] = df['buy']
         self.klines['stop_loss'] = df['HA_tp']
         self.klines['signal'] = np.where(self.klines['buy']==1,'COMPRA','NEUTRO')   
@@ -94,14 +95,14 @@ class BotHeikinAshi2(Bot_Core):
                 cls = 'text-danger'
             status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
         
-        #if self.row['HA_side']:
-        #    if self.row['HA_side'] > 0:
-        #        cls = 'text-success'
-        #        trend = 'Alza'
-        #    else: 
-        #        cls = 'text-danger'
-        #        trend = 'Baja'
-        #    status['trend'] = {'l': 'Tendencia','v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.row['HA_side'], 'cls': cls}
+        if self.row['HA_side']:
+            if self.row['HA_side'] > 0:
+                cls = 'text-success'
+                trend = 'Alza'
+            else: 
+                cls = 'text-danger'
+                trend = 'Baja'
+            status['trend'] = {'l': 'Tendencia','v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.row['HA_side'], 'cls': cls}
 
         return status    
 
