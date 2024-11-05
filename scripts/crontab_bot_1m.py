@@ -87,51 +87,51 @@ def run():
             if bot.estrategia_id in signal_rows:
                 signal_row = signal_rows[bot.estrategia_id]
                 signal = signal_row['signal']
-            if signal != 'NEUTRO':
-                log.info(f'{bot} - Signal: {signal}')
+                if signal != 'NEUTRO':
+                    log.info(f'{bot} - Signal: {signal}')
 
-            #Cargando Billetera del Bot
-            resultados = bot.get_wallet()
-            symbol_info = exch.get_symbol_info(botClass.symbol)
-            qd_qty = symbol_info['qty_decs_qty']
-            qd_quote = symbol_info['qty_decs_quote']
-            botClass.wallet_quote = round(bot.quote_qty + resultados['quote_compras'] + resultados['quote_ventas'] , qd_quote)
-            botClass.wallet_base  = round(resultados['base_compras'] + resultados['base_ventas'] , qd_qty)
-            
-            #Cargando Billetera del Exchange
-            exchange_wallet = exch.get_wallet() 
+                #Cargando Billetera del Bot
+                resultados = bot.get_wallet()
+                symbol_info = exch.get_symbol_info(botClass.symbol)
+                qd_qty = symbol_info['qty_decs_qty']
+                qd_quote = symbol_info['qty_decs_quote']
+                botClass.wallet_quote = round(bot.quote_qty + resultados['quote_compras'] + resultados['quote_ventas'] , qd_quote)
+                botClass.wallet_base  = round(resultados['base_compras'] + resultados['base_ventas'] , qd_qty)
+                
+                #Cargando Billetera del Exchange
+                exchange_wallet = exch.get_wallet() 
 
 
-            #Cargando Ordenes en curso
-            orders = bot.get_orders_en_curso()
-            botClass._trades = {}
-            botClass._orders = {}
-            for order in orders:
-                if order.completed > 0:
-                    botClass._trades[order.id] = order
-                else:
-                    botClass._orders[order.id] = order
-            
-            # Obtener precios de los symbols activos en cada iteracion de usuario
-            price = exchInfo.get_symbol_price(botClass.symbol)
-            if abs(botClass.wallet_base*price) < 2: #Si el total de qty representa menos de 2 dolares, se toma como 0
-                botClass.wallet_base = 0.0
+                #Cargando Ordenes en curso
+                orders = bot.get_orders_en_curso()
+                botClass._trades = {}
+                botClass._orders = {}
+                for order in orders:
+                    if order.completed > 0:
+                        botClass._trades[order.id] = order
+                    else:
+                        botClass._orders[order.id] = order
+                
+                # Obtener precios de los symbols activos en cada iteracion de usuario
+                price = exchInfo.get_symbol_price(botClass.symbol)
+                if abs(botClass.wallet_base*price) < 2: #Si el total de qty representa menos de 2 dolares, se toma como 0
+                    botClass.wallet_base = 0.0
 
-            #Cargando datos para la ejecucion
-            botClass.signal = signal
-            botClass.row = signal_row
-            botClass.exchange = exch
-            botClass.price = price
-            botClass.exchange_wallet = exchange_wallet
-            execRes = botClass.live_execute()
-            #if len(execRes) > 0:
-            #    log.info(f'Execute: {execRes}')
+                #Cargando datos para la ejecucion
+                botClass.signal = signal
+                botClass.row = signal_row
+                botClass.exchange = exch
+                botClass.price = price
+                botClass.exchange_wallet = exchange_wallet
+                execRes = botClass.live_execute()
+                #if len(execRes) > 0:
+                #    log.info(f'Execute: {execRes}')
 
-            bot.make_operaciones()
+                bot.make_operaciones()
 
-            #Procesando estado actual del bot
-            status = botClass.get_status()
-            bot.update_status(status)
+                #Procesando estado actual del bot
+                status = botClass.get_status()
+                bot.update_status(status)
                 
 
         except Exception as e:
