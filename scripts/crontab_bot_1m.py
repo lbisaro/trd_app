@@ -64,7 +64,7 @@ def run():
             botClass.bot_id = bot.id
             botClass.username = bot.usuario.username
 
-            if bot.usuario.id != usuario_id:
+            if bot.usuario.id != usuario_id or usuario_id == -1:
                 #log.info(f'Usuario: {bot.usuario.username}')
 
                 usuario_id = bot.usuario.id
@@ -142,26 +142,6 @@ def run():
             log.error(f'bot.id: {bot.id} {e}')
             json_rsp['error'].append(f'bot.id: {bot.id} {e}')
             
-
-    """
-    ### Actualizar velas de los Symbols
-    try:
-        update_klines = exchInfo.update_klines()
-        json_rsp['klines'] = update_klines
-                
-    except Exception as err:
-        err = str(err)
-        msg_text = f'No fue posible encontrar velas\n{err}'
-        json_rsp['error'].append(msg_text)
-    """
-
-    #Buscar ordenes incompletas, agrupadas por usuario
-    #Si existen, reconectar con el Exchange para cada usuario 
-    # Repetir la busqueda de ordenes incompletas en un bucle para todos los usuarios  
-    # El bucle no puede ser infinito
-    # Si quedan ordenes incompletas, se revisaran en la proxima corrida del crontab
-
-
     #Para cada job activo recalcular max-drawdown y demas indicadores y cachearlo en la db
     # Luego del recalculo verificar si se debe detener el bot por exceder
     # el max-drawdown general o el stop-loss general
