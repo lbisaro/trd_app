@@ -49,8 +49,8 @@ def run():
         klines = exchInfo.get_klines(botClass.symbol, estr.interval_id, limit=201)
         signal_row = botClass.live_get_signal(klines)
         signal = signal_row['signal']
-        log.info(f'{estr} {signal}')
         if signal_row['signal'] != 'NEUTRO':
+            log.info(f'{estr} {signal}')
             print(estr, signal_row['datetime'], signal_row['signal'])
         signal_rows[estr.id] = signal_row
     
@@ -81,6 +81,7 @@ def run():
                 errMsg = f'crontab_bot_1m.py - Error de conexion con el exchange. - idusaurio: {bot.usuario.id}'
                 print(errMsg)
                 raise Exception(errMsg)
+                
                 
             
             #log.info(f'Bot: {bot}')
