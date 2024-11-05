@@ -107,6 +107,7 @@ class BotHeikinAshi2(Bot_Core):
         return status    
 
     def next(self):
+        print(self.row)
         price = self.price
         start_cash = round(self.quote_qty ,self.qd_quote)
         
