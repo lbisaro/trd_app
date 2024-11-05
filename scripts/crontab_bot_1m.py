@@ -27,7 +27,7 @@ def run():
     active_symbols = []
     for estr in estrategias:
         #log.info(f'Estrategia: {estr}')
-        print(f'Estrategia: {estr}')
+        #print(f'Estrategia: {estr}')
         gen_bot = GenericBotClass().get_instance(estr.clase)
         gen_bot.set(estr.parse_parametros())
         try:
@@ -50,7 +50,8 @@ def run():
         signal_row = botClass.live_get_signal(klines)
         signal = signal_row['signal']
         log.info(f'{estr} {signal}')
-        print(estr, signal_row['datetime'], signal_row['signal'])
+        if signal_row['signal'] != 'NEUTRO':
+            print(estr, signal_row['datetime'], signal_row['signal'])
         signal_rows[estr.id] = signal_row
     
     ### - Obtener lista de bots activos ordenados por usuario_id
