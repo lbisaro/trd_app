@@ -31,10 +31,10 @@ class Exchange():
                         self.client = BinanceClient(api_key=apk, api_secret=aps, testnet=True)
                     else:
                         self.client = BinanceClient(api_key=apk, api_secret=aps, testnet=False)
-        except Exception as e:
-            errMsg = f'Error de conexion exchange - type {type} - exchange: {exchange}'
+        except Exception:
+            errMsg = f'exchange::__init__() - sError de conexion exchange - type {type} - exchange: {exchange}'
             print(errMsg)
-            raise errMsg
+            raise Exception(errMsg)
 
     def check_connection(self):
         try:

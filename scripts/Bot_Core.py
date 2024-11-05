@@ -147,7 +147,7 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
         
     def sell_limit(self,qty,flag,limit_price,**kwargs):
         if flag != Order.FLAG_TAKEPROFIT and flag != Order.FLAG_STOPLOSS:
-            raise 'El flag de las ordenes limit puede ser FLAG_TAKEPROFIT o FLAG_STOPLOSS'
+            raise Exception('El flag de las ordenes limit puede ser FLAG_TAKEPROFIT o FLAG_STOPLOSS')
         
         qty = round_down(qty,self.qd_qty)
         if qty*limit_price>=10:
@@ -159,7 +159,7 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
     
     def buy_limit(self,qty,flag,limit_price,**kwargs):
         if flag != Order.FLAG_TAKEPROFIT and flag != Order.FLAG_STOPLOSS:
-            raise 'El flag de las ordenes limit puede ser FLAG_TAKEPROFIT o FLAG_STOPLOSS'
+            raise Exception('El flag de las ordenes limit puede ser FLAG_TAKEPROFIT o FLAG_STOPLOSS')
         
         qty = round(qty,self.qd_qty)
         if qty*limit_price>=10:

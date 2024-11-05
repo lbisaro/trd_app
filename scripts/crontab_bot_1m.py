@@ -78,9 +78,10 @@ def run():
                 exch = Exchange(type='user_apikey',exchange='bnc',prms=prms)                
 
             if not exch.check_connection():
-                errMsg = f'Error de conexion con el exchange. - idusaurio: {bot.usuario.id}'
+                errMsg = f'crontab_bot_1m.py - Error de conexion con el exchange. - idusaurio: {bot.usuario.id}'
                 print(errMsg)
-                raise errMsg
+                raise Exception(errMsg)
+                
             
             #log.info(f'Bot: {bot}')
             
