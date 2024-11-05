@@ -107,29 +107,29 @@ class BotHeikinAshi2(Bot_Core):
         return status    
 
     def next(self):
-        if 'stop_loss' in self.row:
-            price = self.price
-            start_cash = round(self.quote_qty ,self.qd_quote)
-            
-            if price*self.wallet_base > 10:
-                limit_price = round(self.row['stop_loss'],self.qd_price)
-                self.update_order_by_tag(tag="STOP_LOSS",limit_price=limit_price)
-            
-            elif self.signal == 'COMPRA' and price*self.wallet_base < 12:
-                if self.interes == 's': #Interes Simple
-                    cash = start_cash if start_cash <= self.wallet_quote else self.wallet_quote
-                else: #Interes Compuesto
-                    cash = self.wallet_quote
+    
+        price = self.price
+        start_cash = round(self.quote_qty ,self.qd_quote)
+        
+        if price*self.wallet_base > 10:
+            limit_price = round(self.row['stop_loss'],self.qd_price)
+            self.update_order_by_tag(tag="STOP_LOSS",limit_price=limit_price)
+        
+        elif self.signal == 'COMPRA' and price*self.wallet_base < 12:
+            if self.interes == 's': #Interes Simple
+                cash = start_cash if start_cash <= self.wallet_quote else self.wallet_quote
+            else: #Interes Compuesto
+                cash = self.wallet_quote
 
-                lot_to_buy = cash * (self.quote_perc/100)
-                if lot_to_buy <= self.wallet_quote and lot_to_buy > 10:
-                    qty = round_down(lot_to_buy/self.price,self.qd_qty)
-                    buy_order_id = self.buy(qty,Order.FLAG_SIGNAL)
-                    if buy_order_id:
-                        limit_price = round(self.row['stop_loss'],self.qd_price)
-                        self.sell_limit(qty, Order.FLAG_STOPLOSS, limit_price = limit_price,tag="STOP_LOSS")
-                        
-            
+            lot_to_buy = cash * (self.quote_perc/100)
+            if lot_to_buy <= self.wallet_quote and lot_to_buy > 10:
+                qty = round_down(lot_to_buy/self.price,self.qd_qty)
+                buy_order_id = self.buy(qty,Order.FLAG_SIGNAL)
+                if buy_order_id:
+                    limit_price = round(self.row['stop_loss'],self.qd_price)
+                    self.sell_limit(qty, Order.FLAG_STOPLOSS, limit_price = limit_price,tag="STOP_LOSS")
+                    
+        
 
-                
+            
             
