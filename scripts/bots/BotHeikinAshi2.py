@@ -3,6 +3,7 @@ import pandas as pd
 from scripts.functions import round_down
 from scripts.Bot_Core import Bot_Core
 from scripts.Bot_Core_utils import *
+import datetime as dt
 
 class BotHeikinAshi2(Bot_Core):
 
