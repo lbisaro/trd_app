@@ -21,6 +21,7 @@ def resample(df,periods):
 
     # Resamplear el dataframe a 1 dia
     dfx = df.resample(resample, on="datetime").agg({
+        'datetime': 'first',
         'open': 'first',
         'high': 'max',
         'low': 'min',
@@ -43,7 +44,10 @@ def join_after_resample(df,serie,column,periods=None):
 
     """
 
-    df[column] = df['datetime'].map(serie)
+    df.set_index('datetime', inplace=True, drop=False)
+    serie.set_index('datetime', inplace=True, drop=False)
+    df = df.merge(serie[[column]], left_on=df['datetime'], right_index=True, how='left')
+
     if periods is None:
         df[column] = df[column].ffill()
     elif periods > 0:

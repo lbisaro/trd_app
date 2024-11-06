@@ -7,6 +7,7 @@ from datetime import datetime as dt
 
 class BotLiveTest(Bot_Core):
 
+    short_name = 'LiveTest'
     symbol = ''
     ma = 0          #Periodos para Media movil simple 
     quote_perc =  0 #% de compra inicial, para stock

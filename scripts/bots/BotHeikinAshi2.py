@@ -7,6 +7,7 @@ import datetime as dt
 
 class BotHeikinAshi2(Bot_Core):
 
+    short_name = 'HAL'
     symbol = ''
     quote_perc =  0 
     quote_perc_down = 0 
@@ -20,7 +21,9 @@ class BotHeikinAshi2(Bot_Core):
 
 
     
-    descripcion = 'Bot basado en velas Heikin Ashi'
+    descripcion = 'Bot basado en velas Heikin Ashi\n'\
+                  'Genera señales de compra con los cambios de tendencia\n'\
+                  'Cierra la operación por Stop Loss dinamico'
     
     parametros = {'symbol':  {  
                         'c' :'symbol',
@@ -69,7 +72,6 @@ class BotHeikinAshi2(Bot_Core):
 
         df['HA_sl'] =  np.where((df['HA_side']==1) & (df['HA_side'].shift(1)==1),df['HA_low'].shift(2),None)
         df['HA_tp'] =  np.where((df['HA_side']==-1) & (df['HA_side'].shift(1)==-1),df['HA_high'].shift(2),None)
-
         df['HA_sl'].ffill(inplace=True)
         df['HA_tp'].ffill(inplace=True)
 

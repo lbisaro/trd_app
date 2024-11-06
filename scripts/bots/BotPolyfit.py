@@ -3,18 +3,20 @@ import pandas as pd
 from scripts.functions import round_down
 from scripts.Bot_Core import Bot_Core
 from scripts.Bot_Core_utils import *
-import scripts.indicators as ind
+from scripts.indicators import predict_price,psar,resample,join_after_resample
 import random
 import string
 import datetime as dt
 
 class BotPolyfit(Bot_Core):
 
+    short_name = 'PolyFit'
     symbol = ''
     ma = 0          #Periodos para Media movil simple 
     quote_perc =  0 #% de compra inicial, para stock
     periods = 0      #Periodo de analisis
     gap = 0         #Rango +/- de porcentaje en el que no se determina la tendencia
+    resample = 0
 
     last_order_id = 0
     
@@ -25,6 +27,7 @@ class BotPolyfit(Bot_Core):
         self.take_profit = 0.0
         self.periods = 0
         self.gap = 0.5
+        self.resample = 0
         
     
     descripcion = 'Bot Polyfit, basado en prediccion de precio por diferencia de cuadrados. \n'\
@@ -66,6 +69,13 @@ class BotPolyfit(Bot_Core):
                         't' :'int',
                         'pub': True,
                         'sn':'PR', },
+                  'resample': {
+                        'c' :'resample',
+                        'd' :'PSAR Resample',
+                        'v' :'4',
+                        't' :'int',
+                        'pub': True,
+                        'sn':'rsmpl', },
                   'gap': {
                         'c' :'gap',
                         'd' :'Gap',
@@ -106,14 +116,31 @@ class BotPolyfit(Bot_Core):
         return status
         
     def start(self):
+
+        df = self.klines.copy()
+        if self.resample > 1:
+            dfr = resample(df,self.resample)
+            dfr = psar(dfr)
+            dfr['psar'] = np.where(dfr['psar_high']>0,dfr['psar_high'],dfr['psar_low'])
+            df = join_after_resample(df,dfr,'psar')
+            df['psar'].ffill(inplace=True)
+            df['psar_low'] = np.where(df['psar']<df['close'],df['psar'],None)
+            df['psar_high'] = np.where(df['psar']>df['close'],df['psar'],None)
+            df.drop('datetime', axis=1, inplace=True)
+            df.reset_index(inplace=True)
+        else:
+            df = psar(df)
+
+        self.klines = df
         gap = self.gap/100
-        self.klines['pred'] = self.klines['close'].rolling(self.periods).apply(lambda x: ind.predict_price(x))
+        self.klines['pred'] = self.klines['close'].rolling(self.periods).apply(lambda x: predict_price(x))
         self.klines['change']  = ((self.klines['pred']/self.klines['pred'].shift(1))-1)
        
         self.klines['trend+'] = np.where(self.klines['change']>gap,self.klines['pred'],None)
         self.klines['trend-'] = np.where(self.klines['change']<-gap,self.klines['pred'],None)
 
-        self.klines['signal']  = np.where((self.klines['trend+'] >0) 
+        self.klines['signal']  = np.where((self.klines['psar_low'] >0) 
+                                          & (self.klines['trend+'] >0) 
                                           & (self.klines['trend+']<self.klines['close']),'COMPRA','NEUTRO')
         self.klines['signal']  = np.where(self.klines['change']<0,'VENTA',self.klines['signal'])
               

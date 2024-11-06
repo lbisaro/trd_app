@@ -10,6 +10,7 @@
         <h3 class="text-danger text-center">Estrategia inactiva</h3>
     </div>
     {% endif %}
+    {% if estrategia_id %}
     <div class="row">
         <div class="col-12 form-group">
             <label class="form-label" for="nombre">Nombre de la estrategia</label>                                    
@@ -17,6 +18,9 @@
     
         </div>
     </div>
+    {% else %}
+    <input type="hidden" id="nombre" class="form-control" value="AUTO"> 
+    {% endif %}
     <div class="row">
         <div class="form-group col-4 pt-3">
             {% if qtyBots > 0 %}

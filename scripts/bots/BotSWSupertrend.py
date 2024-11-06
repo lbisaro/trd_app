@@ -10,6 +10,7 @@ import datetime as dt
 
 class BotSWSupertrend(Bot_Core):
 
+    short_name = 'STrend'
     symbol = ''
     ma = 0          #Periodos para Media movil simple 
     quote_perc =  0 #% de compra inicial, para stock

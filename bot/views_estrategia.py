@@ -57,7 +57,30 @@ def estrategia_create(request):
         })
     else:
         estrategia = Estrategia()
-        estrategia.nombre=request.POST['nombre'] 
+
+        #Generando nombre automatico
+        gen_bot = GenericBotClass().get_instance(request.POST['clase'])
+        interval = fn.get_intervals(request.POST['interval_id'],'binance')
+        pe = eval(request.POST['parametros'])
+        symbol = ''
+        for prm in pe:
+            for v in prm:
+                if v == 'symbol':
+                    symbol = prm[v]
+        symbol = symbol.replace("USDT", "")
+        nombre = gen_bot.short_name+' '+symbol+' '+interval
+
+        #Verificando si existe un registro con el mismo nombre 
+        version = 0
+        existentes = Estrategia.objects.filter(nombre=nombre).count()
+        while existentes > 0:
+            version += 1
+            existentes = Estrategia.objects.filter(nombre=nombre+f' ({version})').count()
+        if version>0:
+            nombre = nombre+f' ({version})'
+
+        
+        estrategia.nombre= nombre
         estrategia.clase=request.POST['clase']
         estrategia.descripcion=request.POST['descripcion']
         estrategia.interval_id=request.POST['interval_id']

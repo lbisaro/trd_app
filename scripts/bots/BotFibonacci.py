@@ -7,6 +7,7 @@ from scripts.Bot_Core_utils import *
 
 class BotFibonacci(Bot_Core):
 
+    short_name = 'Fibo'
     symbol = ''
     quote_perc = 0.0
     interes = ''

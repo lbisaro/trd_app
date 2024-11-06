@@ -7,6 +7,7 @@ import scripts.indicators as ind
 
 class BotPSAR(Bot_Core):
 
+    short_name = 'PSAR'
     symbol = ''
     ma = 0          #Periodos para Media movil simple 
     quote_perc =  0 #% de compra inicial, para stock
