@@ -5,8 +5,10 @@ pandas
 numpy
 pickleshare
 python-binance
-ta
+pandas-ta
 django-pandas
+plotly
+mysqlclient
 
 #Libs for Backtesting
 tqdm==4.66.1
