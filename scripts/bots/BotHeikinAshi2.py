@@ -78,15 +78,6 @@ class BotHeikinAshi2(Bot_Core):
         self.klines['signal'] = np.where(self.klines['buy']==1,'COMPRA','NEUTRO')   
 
 
-        #V3 testing
-        #df['HA_sl'] =  np.where((df['HA_side']>=0)  & (df['HA_side'].shift(1)>=0),df['HA_low'].shift(2),None)
-        #df['HA_sl'] = np.where((df['HA_sl'].isnull()) & (df['close'])>df['open'],df['HA_sl'].shift(1),df['HA_sl'])
-        #df['buy'] = np.where((df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1)),1,None)
-        #self.klines['HA_side'] = df['HA_side']
-        #self.klines['buy'] = df['buy']
-        #self.klines['stop_loss'] = df['HA_tp']
-        #self.klines['signal'] = np.where(self.klines['buy']==1,'COMPRA','NEUTRO')   
-
         self.print_orders = False
         self.graph_open_orders = True
         self.graph_signals = False
