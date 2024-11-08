@@ -470,3 +470,26 @@ def psar(df, af0=0.02, af=0.2, max_af=0.2):
     df['psar_low'] = tmp.filter(like='PSARl').iloc[:, 0]
     df['psar_high'] = tmp.filter(like='PSARs').iloc[:, 0]
     return df
+
+def HeikinAshi(df):
+    df['HA_close'] = (df['close'].shift(1) + df['close']) / 2
+    df['HA_open'] = (df['open'].shift(1) + df['close'].shift(1)) / 2
+    df['HA_high'] = df[['high', 'HA_open', 'HA_close']].max(axis=1)
+    df['HA_low'] =  df[['low', 'HA_open', 'HA_close']].min(axis=1)
+    df['HA_side'] = np.where(df['HA_close']>df['HA_open'],1,-1)
+
+    #Analizando tipo de vela
+    df['HA_side'] = np.where(df['HA_close']>df['HA_open'],1,-1)
+    df['HA_cuerpo'] = abs(df['HA_close'] - df['HA_open'])
+    df['HA_sombra_inferior'] = df[['HA_open', 'HA_close']].min(axis=1) - df['HA_low']
+    df['HA_sombra_superior'] = df['HA_high'] - df[['HA_open', 'HA_close']].max(axis=1)
+    condicion_indecision = (
+        (df['HA_cuerpo'] <= 0.1 * (df['HA_sombra_inferior'] + df['HA_sombra_superior'])) &  # Cuerpo pequeño
+        (df['HA_sombra_inferior'] >= 2 * df['HA_cuerpo']) &  # Sombra inferior larga
+        (df['HA_sombra_superior'] >= 2 * df['HA_cuerpo'])    # Sombra superior larga
+    )
+    df['HA_vela_indecision'] = condicion_indecision
+    df['HA_side'] = np.where(df['HA_vela_indecision'],0,df['HA_side'])
+    df['HA_low_trend'] = np.where(df['HA_vela_indecision'],1,None)
+    df.drop(['HA_vela_indecision','HA_cuerpo','HA_sombra_inferior','HA_sombra_superior'], axis=1, inplace=True)
+    return df

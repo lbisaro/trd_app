@@ -227,6 +227,8 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
                 order.limit_price = kwargs['limit_price']
             if 'qty' in kwargs:
                 order.qty = kwargs['qty']
+            if 'flag' in kwargs:
+                order.flag = kwargs['flag']
             self.update_order(order)
             return order
         

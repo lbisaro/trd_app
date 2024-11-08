@@ -4,6 +4,8 @@ from scripts.functions import round_down
 from scripts.Bot_Core import Bot_Core
 from scripts.Bot_Core_utils import *
 import datetime as dt
+from scripts.indicators import HeikinAshi
+
 
 class BotHeikinAshi2(Bot_Core):
 
@@ -62,25 +64,28 @@ class BotHeikinAshi2(Bot_Core):
         
     def start(self):
 
-        df = self.klines.copy()
-        df['HA_close'] = (df['close'].shift(1) + df['close']) / 2
-        df['HA_open'] = (df['open'].shift(1) + df['close'].shift(1)) / 2
-        df['HA_high'] = df[['high', 'HA_open', 'HA_close']].max(axis=1)
-        df['HA_low'] =  df[['low', 'HA_open', 'HA_close']].min(axis=1)
-        df['HA_side'] = np.where(df['HA_close']>df['HA_open'],1,-1)
+        df = HeikinAshi(self.klines)
 
-
+        #V2 mejorada
         df['HA_sl'] =  np.where((df['HA_side']==1) & (df['HA_side'].shift(1)==1),df['HA_low'].shift(2),None)
         df['HA_tp'] =  np.where((df['HA_side']==-1) & (df['HA_side'].shift(1)==-1),df['HA_high'].shift(2),None)
         df['HA_sl'].ffill(inplace=True)
         df['HA_tp'].ffill(inplace=True)
-
         df['buy'] = np.where((df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1)),1,None)
-
         self.klines['HA_side'] = df['HA_side']
         self.klines['buy'] = df['buy']
         self.klines['stop_loss'] = df['HA_tp']
         self.klines['signal'] = np.where(self.klines['buy']==1,'COMPRA','NEUTRO')   
+
+
+        #V3 testing
+        #df['HA_sl'] =  np.where((df['HA_side']>=0)  & (df['HA_side'].shift(1)>=0),df['HA_low'].shift(2),None)
+        #df['HA_sl'] = np.where((df['HA_sl'].isnull()) & (df['close'])>df['open'],df['HA_sl'].shift(1),df['HA_sl'])
+        #df['buy'] = np.where((df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1)),1,None)
+        #self.klines['HA_side'] = df['HA_side']
+        #self.klines['buy'] = df['buy']
+        #self.klines['stop_loss'] = df['HA_tp']
+        #self.klines['signal'] = np.where(self.klines['buy']==1,'COMPRA','NEUTRO')   
 
         self.print_orders = False
         self.graph_open_orders = True
