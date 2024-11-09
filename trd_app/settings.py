@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'django_pandas',
     'user',
     'bot',
-    'trd_app',
 ]
 
 MIDDLEWARE = [
