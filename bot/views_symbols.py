@@ -28,10 +28,8 @@ def symbol(request, symbol_id):
                 max(bot_kline.datetime) as last_kline \
             FROM bot_kline \
             WHERE bot_kline.symbol_id = {symbol_id}" 
-    klines = Kline.objects.raw(qry)
     return render(request, 'symbol.html',{
         'symbol': symbol,
-        'klines': klines,
     })
 
 @login_required
