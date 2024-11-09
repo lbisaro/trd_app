@@ -74,7 +74,7 @@ class Indicator(models.Model):
         startDt = dt.datetime.now()
         #hr = startDt.strftime('%H')
         mn = startDt.strftime('%M')
-        
+        print('mn: ',mn)
         if mn[1]=='0': #Solo entra en los minutos multiplo de 10 / Representa que se ejecuta cada 10 minutos
 
             limit = self.max_periods
