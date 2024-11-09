@@ -63,15 +63,17 @@
 
         </div>
         {% if symbol.activo > 0 %}
-            {% for kline in klines  %}
-            <div class="col-3 ">    
-                Velas Almacenadas
-            </div>
-            <div class="col-3">
-                <span class="fw-bold">{{kline.first_kline}}</span> a <span class="fw-bold">{{kline.last_kline}}</span>
+            {% if klines %}
+                {% for kline in klines  %}
+                <div class="col-3 ">    
+                    Velas Almacenadas
+                </div>
+                <div class="col-3">
+                    <span class="fw-bold">{{kline.first_kline}}</span> a <span class="fw-bold">{{kline.last_kline}}</span>
 
-            </div>
-            {% endfor %}
+                </div>
+                {% endfor %}
+            {% endif %}
         {% endif %}
     </div>
     
