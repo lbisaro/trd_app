@@ -44,9 +44,7 @@ class Bot_Core_live:
             jsonRsp['execute'] = True
         
         if not just_check_orders:
-            self.log.info(f'Go next()')
             self.next()
-            self.log.info(f'OK next()')
             
 
         return jsonRsp
