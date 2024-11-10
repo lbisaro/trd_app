@@ -11,6 +11,7 @@ class BotLiveTest(Bot_Core):
     symbol = ''
     ma = 0          #Periodos para Media movil simple 
     quote_perc =  0 #% de compra inicial, para stock
+    status = {}
 
 
     last_order_id = 0
@@ -27,6 +28,7 @@ class BotLiveTest(Bot_Core):
         self.start_base = 0.0
         
         self.last_order_id = -1
+        self.status = {}
 
     
     descripcion = 'Bot de Balanceo de Billetera \n'\
@@ -65,10 +67,16 @@ class BotLiveTest(Bot_Core):
         self.print_orders = False
         self.graph_open_orders = False
         self.status['live_test_start'] = {'l': 'Live Test Start()','v': 'Probando','r':'Probando'}
-    
+
+    def get_status(self):
+        status = super().get_status()
+        
+        for k in self.status:
+            status[k] = self.status[k]
+        return status   
+        
     def next(self):
         if not 'live_test_next' in self.status:
-            print(' not live_test_next in self.status')
             self.status['live_test_next'] = {'l': 'Live Test Next()','v': '0.00','r':0.0}
         stts = self.status['live_test_next']['r'] + 1
         self.status['live_test_next']['v'] = str(stts)
