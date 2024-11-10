@@ -57,7 +57,7 @@ class Bot_Core_live:
             _orders = self._orders.copy().items()
             
             for i,order in _orders:
-                
+                print(order)
                 if i in self._orders: #Se consulta si esta o no porque puede que se ejecute mas de una orden en la misma vela
                     order  = self._orders[i]
 
