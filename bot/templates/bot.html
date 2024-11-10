@@ -7,6 +7,7 @@
 
 {% block action_bar %}
 
+<a class="btn btn-primary  btn-sm" href="{% url 'get_resultados' bot_id %}">Ver resultados</a>
 <a class="btn btn-primary  btn-sm" href="{% url 'bot_edit' bot_id %}">Editar Bot</a>
 {% if activo > 0 %}
     <a class="btn btn-danger  btn-sm" href="{% url 'bot_desactivar' bot_id 'check'%}">Desactivar</a>
