@@ -118,7 +118,7 @@ class Bot_Core_stats:
             brief.append(['operaciones', 'Operaciones positivas',    
                         f'{trades_pos} ( {ratio_trade_pos:.2f}% )'  ])    
             brief.append(['operaciones', 'Comision Exchange',    
-                        f'{self.exch_comision_perc}%'  ])    
+                        f'{Order.test_exch_comision_perc}%'  ])    
             brief.append(['operaciones', 'Maxima ganancia',    
                         f'{max_ganancia}%'])    
             brief.append(['operaciones', 'Maxima perdida',    

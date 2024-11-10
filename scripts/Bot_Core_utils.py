@@ -9,6 +9,9 @@ class BotCoreLog(Log):
         super().write(type,msg)
 
 class Order:
+    
+    live_exch_comision_perc = 0.1 # - Comision por operacion de compra o venta Live
+    test_exch_comision_perc = 0.1 # - Comision por operacion de compra o venta Backtest
 
     SIDE_BUY = 0
     SIDE_SELL = 1

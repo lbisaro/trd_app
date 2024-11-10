@@ -24,9 +24,6 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
     order_id = 1
 
     parametros = {}
-    
-    live_exch_comision_perc = 0.1 # - Comision por operacion de compra o venta Live
-    exch_comision_perc      = 0.1 # - Comision por operacion de compra o venta Backtest
 
     #Trades para gestion de resultados
     _orders = {}

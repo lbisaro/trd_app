@@ -289,7 +289,7 @@ class Bot_Core_backtest:
         execute = False
         if order.side == Order.SIDE_BUY:
             quote_to_sell = round(order.qty*order.price,self.qd_quote)
-            comision = round(quote_to_sell*(self.exch_comision_perc/100),4)
+            comision = round(quote_to_sell*(Order.test_exch_comision_perc/100),4)
             new_wallet_base = round(self.wallet_base + order.qty,self.qd_qty)
             new_wallet_quote = round(self.wallet_quote - quote_to_sell ,self.qd_quote)
             if new_wallet_base >= 0 and new_wallet_quote >= 0:
@@ -299,7 +299,7 @@ class Bot_Core_backtest:
 
         elif order.side == Order.SIDE_SELL:
             quote_to_buy = round(order.qty*order.price,self.qd_quote)
-            comision = round(quote_to_buy*(self.exch_comision_perc/100),4)
+            comision = round(quote_to_buy*(Order.test_exch_comision_perc/100),4)
             new_wallet_base = round(self.wallet_base - order.qty,self.qd_qty)
             new_wallet_quote = round(self.wallet_quote + quote_to_buy,self.qd_quote)
             if new_wallet_base >= 0 and new_wallet_quote >= 0:
@@ -332,7 +332,7 @@ class Bot_Core_backtest:
         for i in self._trades:
             order = self._trades[i]
             
-            order.comision = round((order.price*order.qty)*(self.exch_comision_perc/100),4)
+            order.comision = round((order.price*order.qty)*(Order.test_exch_comision_perc/100),4)
             self._trades[i].comision = order.comision
             
             if trade == {}: # Open Trade
@@ -388,7 +388,7 @@ class Bot_Core_backtest:
                 dif = trade['end'].to_pydatetime() - trade['start'].to_pydatetime()
                 days = dif.total_seconds() / 60 / 60 / 24
                 result_usd = trade['sell_quote'] - trade['buy_quote'] - trade['comision']
-                result_perc = round((((sell_price/buy_price)-1)*100) - ((self.exch_comision_perc) * 2) , 2)
+                result_perc = round((((sell_price/buy_price)-1)*100) - ((Order.test_exch_comision_perc) * 2) , 2)
                 trade = pd.DataFrame([[start,buy_price,qty,end,sell_price,flag,type,days,result_usd,result_perc,orders]], columns=self.df_trades_columns) 
                 self.df_trades = pd.concat([self.df_trades, trade], ignore_index=True) 
                 trade = {}
