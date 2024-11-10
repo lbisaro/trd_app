@@ -12,6 +12,8 @@ class BotLiveTest(Bot_Core):
     ma = 0          #Periodos para Media movil simple 
     quote_perc =  0 #% de compra inicial, para stock
     status = {}
+    stop_loss = 0
+    take_profit = 0
 
 
     last_order_id = 0
@@ -26,16 +28,16 @@ class BotLiveTest(Bot_Core):
         self.quote_down = 0.0
         self.start_cash = 0.0
         self.start_base = 0.0
-        
+        self.stop_loss = 0
+        self.take_profit = 0
+
         self.last_order_id = -1
         self.status = {}
 
     
     descripcion = 'Bot de Balanceo de Billetera \n'\
                   'Realiza una compra al inicio, \n'\
-                  'Sobre la MA, Vende parcial para tomar ganancias cuando el capital es mayor a la compra inicial, \n'\
-                  'Bajo la MA, Vende parcial a medida que va perdiendo capital, \n'\
-                  'Luego de cada venta recompra a un valor mas bajo.'
+                  'Si se especifica SL y TP ejecuta una compra y espera la orden para vender, sino alterna entre compra y venta'
     
     parametros = {'symbol':  {  
                         'c' :'symbol',
@@ -51,6 +53,20 @@ class BotLiveTest(Bot_Core):
                         't' :'perc',
                         'pub': True,
                         'sn':'Inicio', },
+                  'stop_loss': {
+                        'c' :'stop_loss',
+                        'd' :'Stop Loss',
+                        'v' :'2',
+                        't' :'perc',
+                        'pub': True,
+                        'sn':'SL', },                  
+                  'take_profit': {
+                        'c' :'take_profit',
+                        'd' :'Take Profit',
+                        'v' :'2',
+                        't' :'perc',
+                        'pub': True,
+                        'sn':'TP', },
                 }
 
     def valid(self):
@@ -82,9 +98,10 @@ class BotLiveTest(Bot_Core):
         self.status['live_test_next']['v'] = str(stts)
         self.status['live_test_next']['r'] = stts
 
-
-        #self.alterna_compra_venta_market()
-        self.compra_sl_tp()
+        if self.stop_loss > 0 and self.take_profit>0:
+            self.compra_sl_tp()
+        else:
+            self.alterna_compra_venta_market()
     
     def on_order_execute(self,order):
         self.cancel_orders()
@@ -98,9 +115,9 @@ class BotLiveTest(Bot_Core):
             buy_order = self._trades[self.last_order_id]
             buy_price = buy_order.price
             
-            limit_price = round(buy_price*1.02,self.qd_price)
+            limit_price = round(buy_price*(1+(self.take_profit/100)),self.qd_price)
             self.sell_limit(qty,Order.FLAG_TAKEPROFIT,limit_price)
-            limit_price = round(buy_price*0.98,self.qd_price)
+            limit_price = round(buy_price*(1+(self.stop_loss/100)),self.qd_price)
             self.sell_limit(qty,Order.FLAG_STOPLOSS,limit_price)
     
     def alterna_compra_venta_market(self):

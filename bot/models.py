@@ -118,7 +118,8 @@ class Estrategia(models.Model):
         for p in prm:
             if str != '':
                 str += ', '
-            str += prm[p]['sn']+': '+prm[p]['str']
+            if 'sn' in prm[p] and 'str' in prm[p]:
+                str += prm[p]['sn']+': '+prm[p]['str']
         return f"{str}"
 
     def get_estrategias():
