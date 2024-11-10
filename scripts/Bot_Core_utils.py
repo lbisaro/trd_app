@@ -24,8 +24,6 @@ class Order:
     STATE_COMPLETE = 1
     STATE_CANCEL = -1
 
-    live_exch_comision_perc = 0.1
-
     bot_id = 0
     completed = 0
     id = 0
