@@ -144,11 +144,9 @@ class Bot_Core_live:
                 self.wallet_quote += order_quote
             
             #Descontando comision de la wallet
-            self.log.info(f'self.wallet_quote PRE - {self.wallet_quote}')
             comision = (order.qty*order.price) * BotCoreUtilsOrder.live_exch_comision_perc/100
             self.wallet_quote -= comision
-            self.log.info(f'self.wallet_quote POST - {self.wallet_quote}')
-
+            
             self.on_order_execute(order)
             self.log.info(f'live_execute_order OK - {order}')
             return True

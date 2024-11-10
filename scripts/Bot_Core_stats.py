@@ -17,23 +17,18 @@ class Bot_Core_stats:
         self.status['price'] = {'l': 'Ultimo precio','v': f'{price}', 'r': price}
 
         wallet_base = round(self.wallet_base,self.qd_qty)
-        wallet_base_in_quote = round(self.wallet_base*self.price,self.qd_quote)
+        wallet_base_in_quote = round(self.wallet_base*self.price,self.qd_quote+3)
         v = f'{wallet_base} {self.base_asset} ({wallet_base_in_quote} {self.quote_asset})'
         self.status['wallet_base'] = {'l': 'Comprado','v': v,'r':wallet_base}
         
-        wallet_quote = round(self.wallet_quote,self.qd_quote)
-        v = f'{wallet_quote} {self.quote_asset}'
+        wallet_quote = round(self.wallet_quote,self.qd_quote+3)
+        v = f'{wallet_quote:.2f} {self.quote_asset}'
         self.status['wallet_quote'] = {'l': 'Disponible','v': v,'r':wallet_quote}
         
-        wallet_tot = round(self.wallet_quote+wallet_base_in_quote,self.qd_quote)
+        wallet_tot = round(self.wallet_quote+wallet_base_in_quote,self.qd_quote+3)
 
-        v = f'{wallet_tot} {self.quote_asset}'
+        v = f'{wallet_tot:.2f} {self.quote_asset}'
         self.status['wallet_tot'] = {'l': 'Capital actual','v': v,'r':wallet_tot}
-
-        #wallet_pnl = round(((wallet_tot/self.quote_qty)-1)*100,2)
-        #wallet_pnl_sign = '' if wallet_pnl <= 0 else '+'
-        #v = f'{wallet_pnl_sign}{wallet_pnl:.2f}%'
-        #status['wallet_pnl'] = {'l': 'PNL','v': v,'r':wallet_pnl}
 
         pos_quote = 0
         for i in self._trades:
