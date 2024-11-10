@@ -8,11 +8,13 @@ from scripts.functions import round_down
 
 from bot.models import Bot as DbBot
 
+
 class Bot_Core_live:
     
     log = BotCoreLog()
 
     def live_get_signal(self,klines):
+        self.log.info(f'Bot_Core_live::live_get_signal()')
         self.klines = klines
         self.start()
         #No devuelve la ultima vela porque recien inicia a formarse
@@ -42,7 +44,9 @@ class Bot_Core_live:
             jsonRsp['execute'] = True
         
         if not just_check_orders:
+            self.log.info(f'Go next()')
             self.next()
+            self.log.info(f'OK next()')
             
 
         return jsonRsp
@@ -52,12 +56,14 @@ class Bot_Core_live:
         executed = False
         price = self.price
        
+        self.log.info(f'live_check_orders()')
         if len(self._orders) > 0:
+            self.log.info(f'live_check_orders() len(orders) > 0')
             
             _orders = self._orders.copy().items()
             
             for i,order in _orders:
-                print(order)
+                self.log.info(order)
                 if i in self._orders: #Se consulta si esta o no porque puede que se ejecute mas de una orden en la misma vela
                     order  = self._orders[i]
 
