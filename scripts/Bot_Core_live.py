@@ -14,7 +14,7 @@ class Bot_Core_live:
     log = BotCoreLog()
 
     def live_get_signal(self,klines):
-        self.log.info(f'Bot_Core_live::live_get_signal()')
+        #self.log.info(f'Bot_Core_live::live_get_signal()')
         self.klines = klines
         self.start()
         #No devuelve la ultima vela porque recien inicia a formarse
