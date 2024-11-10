@@ -79,6 +79,7 @@ def run():
 
             if not exch.check_connection():
                 errMsg = f'crontab_bot_1m.py - Error de conexion con el exchange. - idusaurio: {bot.usuario.id}'
+                log.error(errMsg)
                 print(errMsg)
                 raise Exception(errMsg)
                 
@@ -141,9 +142,8 @@ def run():
             bot.make_operaciones()
 
             #Procesando estado actual del bot
-            if not just_check_orders:
-                status = botClass.get_status()
-                bot.update_status(status)
+            status = botClass.get_status()
+            bot.update_status(status)
             
 
         except Exception as e:

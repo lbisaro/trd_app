@@ -45,7 +45,6 @@ class Bot_Core_live:
         
         if not just_check_orders:
             self.next()
-            
 
         return jsonRsp
 
