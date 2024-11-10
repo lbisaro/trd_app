@@ -56,14 +56,10 @@ class Bot_Core_live:
         executed = False
         price = self.price
        
-        self.log.info(f'live_check_orders()')
         if len(self._orders) > 0:
-            self.log.info(f'live_check_orders() len(orders) > 0')
-            
             _orders = self._orders.copy().items()
             
             for i,order in _orders:
-                self.log.info(order)
                 if i in self._orders: #Se consulta si esta o no porque puede que se ejecute mas de una orden en la misma vela
                     order  = self._orders[i]
 
@@ -89,8 +85,8 @@ class Bot_Core_live:
     
     def live_execute_order(self,orderid):
         #self.log.info(f'live_execute_order({orderid})')
-        wallet = self.exchange_wallet
         exchange = self.exchange
+        wallet = self.exchange_wallet
         broker_wallet_base  = round_down(wallet[self.base_asset]['free'],self.qd_qty)
         broker_wallet_quote = round_down(wallet[self.quote_asset]['free'],self.qd_quote)
         symbol = self.symbol
@@ -151,8 +147,10 @@ class Bot_Core_live:
                 self.wallet_quote += order_quote
             
             #Descontando comision de la wallet
+            self.log.info(f'self.wallet_quote PRE - {self.wallet_quote}')
             comision = (order.qty*order.price) * BotCoreUtilsOrder.live_exch_comision_perc/100
             self.wallet_quote -= comision
+            self.log.info(f'self.wallet_quote POST - {self.wallet_quote}')
 
             self.on_order_execute(order)
             self.log.info(f'live_execute_order OK - {order}')
