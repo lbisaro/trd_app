@@ -21,7 +21,7 @@
                 <option value="0">Seleccionar</option>
             {% endif %}
             {% for e in estrategias %}
-                <option value="{{e.id}}" {% if estrategia_id == e.estrategia_id %} SELECTED {% endif %}>{{e.nombre}}</option>
+                <option value="{{e.id}}" {% if estrategia_id == e.id %} SELECTED {% endif %}>{{e.nombre}}</option>
             {% endfor %}
             </select>
         </div>
