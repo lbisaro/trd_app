@@ -107,9 +107,9 @@ def run():
 
             qd_qty = symbol_info['qty_decs_qty']
             qd_quote = symbol_info['qty_decs_quote']
-            botClass.wallet_quote = round(bot.quote_qty + resultados['quote_compras'] + resultados['quote_ventas'] , qd_quote)
-            botClass.wallet_base  = round(resultados['base_compras'] + resultados['base_ventas'] , qd_qty)
-            
+            botClass.wallet_quote = round(resultados['wallet_quote'] , qd_quote)
+            botClass.wallet_base  = round(resultados['wallet_base'], qd_qty)
+
             #Cargando Billetera del Exchange
             exchange_wallet = exch.get_wallet() 
 
@@ -141,9 +141,16 @@ def run():
 
             bot.make_operaciones()
 
+            #Re-Cargando Billetera del Bot
+            resultados = bot.get_wallet()
+            botClass.wallet_quote = round(resultados['wallet_quote'] , qd_quote)
+            botClass.wallet_base  = round(resultados['wallet_base'], qd_qty)
+            
             #Procesando estado actual del bot
             status = botClass.get_status()
             bot.update_status(status)
+            #for k in status:
+            #    print(status[k]['l'],status[k]['r'],status[k]['v'])
             
 
         except Exception as e:

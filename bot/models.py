@@ -209,6 +209,7 @@ class Bot(models.Model):
         start_order_id = 0
         ref_price = 0.0
         update = {}
+
         for order in orders:
             ref_price = order.price
             if order.side == BotUtilsOrder.SIDE_BUY:
@@ -230,7 +231,7 @@ class Bot(models.Model):
                 acum_qty = 0
                 buy = 0
                 sell = 0
-    
+
     def desactivar(self,texto='',close=False):
         self.bloquear(texto=texto,close=close)
     
@@ -373,6 +374,11 @@ class Bot(models.Model):
             resultados['base_compras'] = 0.0
         if not resultados['quote_compras']:
             resultados['quote_compras'] = 0.0
+
+        resultados['comisiones'] = (-resultados['quote_compras']+resultados['quote_ventas'])*(BotUtilsOrder.live_exch_comision_perc/100)
+
+        resultados['wallet_quote'] = self.quote_qty + resultados['quote_compras'] + resultados['quote_ventas'] - resultados['comisiones']
+        resultados['wallet_base'] = resultados['base_compras'] + resultados['base_ventas'] 
 
         return resultados
         
@@ -619,7 +625,7 @@ class Bot(models.Model):
         order_columns = ['datetime','symbol','side','qty','price','flag','comision']
         last_posorder_id = 0
         for o in orders:
-            comision = round(o.price * o.qty * (BotUtilsOrder.live_exch_comision_perc/100) ,4)
+            comision = round(o.price * o.qty * (BotUtilsOrder.live_exch_comision_perc/100) ,6)
             order_datetime = pd.to_datetime(o.datetime)
             order_datetime = order_datetime.floor(pandas_interval)
             
@@ -829,7 +835,7 @@ class Order(models.Model):
         return round( self.price * self.qty , self.symbol.qty_decs_quote)
     
     def comision(self):
-        return round(self.quote_qty() * (BotUtilsOrder.live_exch_comision_perc/100) , self.symbol.qty_decs_quote )
+        return round(self.quote_qty() * (BotUtilsOrder.live_exch_comision_perc/100) , self.symbol.qty_decs_quote+4 )
 
 class BotLog(models.Model):
 
