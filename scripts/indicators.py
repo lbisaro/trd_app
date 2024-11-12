@@ -472,8 +472,16 @@ def psar(df, af0=0.02, af=0.2, max_af=0.2):
     return df
 
 def HeikinAshi(df):
-    df['HA_close'] = (df['close'].shift(1) + df['close']) / 2
-    df['HA_open'] = (df['open'].shift(1) + df['close'].shift(1)) / 2
+    #original
+    #df['HA_close'] = (df['close'].shift(1) + df['close']) / 2
+    #df['HA_open'] = (df['open'].shift(1) + df['close'].shift(1)) / 2
+    
+    #chatGPT 1
+    df['HA_close'] = (df['open'] + df['high'] + df['low'] + df['close']) / 4
+    df['HA_open'] = (df['open'] + df['close']) / 2
+    for i in range(1, len(df)):
+        df.loc[i, 'HA_open'] = (df.loc[i - 1, 'HA_open'] + df.loc[i - 1, 'HA_close']) / 2
+    
     df['HA_high'] = df[['high', 'HA_open', 'HA_close']].max(axis=1)
     df['HA_low'] =  df[['low', 'HA_open', 'HA_close']].min(axis=1)
     df['HA_side'] = np.where(df['HA_close']>df['HA_open'],1,-1)
