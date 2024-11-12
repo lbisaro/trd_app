@@ -766,7 +766,7 @@ class Bot(models.Model):
         #Analizando si aplica registrar el PNL de acuerdo al timeframe del bot
         apply_intervals = fn.get_apply_intervals(timezone.now())
         if self.estrategia.interval_id in apply_intervals:
-            self.add_pnl(actual_status['wallet_tot']['r'],actual_status['price']['r'])
+            self.add_pnl(actual_status['wallet_tot']['r']-self.quote_qty,actual_status['price']['r'])
     
     def add_pnl(self,pnl,price):
         botpnl = BotPnl()
