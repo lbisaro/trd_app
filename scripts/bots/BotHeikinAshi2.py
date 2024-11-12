@@ -71,7 +71,9 @@ class BotHeikinAshi2(Bot_Core):
         df['HA_tp'] =  np.where((df['HA_side']<0) & (df['HA_side'].shift(1)<=0),df['HA_high'].shift(2),None)
         df['HA_sl'].ffill(inplace=True)
         df['HA_tp'].ffill(inplace=True)
-        df['buy'] = np.where((df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1)),1,None)
+        buy_cond = (df['HA_sl']>df['HA_sl'].shift(1)) & (df['HA_sl'].shift(2)>df['HA_sl'].shift(1))
+        #buy_cond = (df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1))
+        df['buy'] = np.where(buy_cond,1,None)
 
         self.klines['HA_side'] = df['HA_side']
         self.klines['buy'] = df['buy']
