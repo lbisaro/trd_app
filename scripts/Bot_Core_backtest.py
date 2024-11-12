@@ -38,7 +38,7 @@ class Bot_Core_backtest:
         self.sub_klines = sub_klines
 
         #Limitando el backtest a un maximo de velas
-        self.klines = self.klines[0:10000]
+        self.klines = self.klines[0:20000]
         
         #Aplicar la señal de compra/venta
         
