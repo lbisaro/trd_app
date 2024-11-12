@@ -7,7 +7,7 @@
 
 {% block action_bar %}
 
-<a class="btn btn-primary  btn-sm" href="{% url 'get_resultados' bot_id %}">Ver resultados</a>
+<a class="btn btn-secondary  btn-sm" href="{% url 'get_resultados' bot_id %}">Ver resultados</a>
 <a class="btn btn-primary  btn-sm" href="{% url 'bot_edit' bot_id %}">Editar Bot</a>
 {% if activo > 0 %}
     <a class="btn btn-danger  btn-sm" href="{% url 'bot_desactivar' bot_id 'check'%}">Desactivar</a>
@@ -49,7 +49,7 @@
 </div>
 <div class="container" >
     <div class="row pb-4">
-        <div class="col-2">Estrategia:  
+        <div >Estrategia:  
         <span class="col fw-bold">{{estrategia}}</span> 
         <i class="bi bi-info-circle text-warning" data-bs-toggle="modal" data-bs-target="#descripcion_modal"></i>
         
@@ -68,10 +68,10 @@
     {% endif %}
     <div class="row pt-2" style="font-size: 0.8em;">
         <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
-            <div class="w-25 py-1">Intervalo: <b>{{intervalo}}</b></div>
+            <div class="w-50 py-1">Intervalo:<br><b>{{intervalo}}</b></div>
             {% for k,prm in parametros.items %}
                 {% if prm.pub %}
-                    <div class="w-25 py-1">{{prm.d}}: <b>{{prm.str}}</b></div>
+                    <div class="w-50 py-1">{{prm.d}}:<br><b>{{prm.str}}</b></div>
                 {% endif %}
             {% endfor %}
         </div>
@@ -79,10 +79,10 @@
 
     <div class="row pb-2" style="font-size: 0.8em;">
         <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
-            <div class="w-25 py-1">Capital : <span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{quote_actual|stringformat:".2f"}} {{quote_asset}} / {{quote_qty|stringformat:".2f"}}</span></div>
-            <div class="w-25 py-1">PNL: <span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{pnl_perc|stringformat:".2f"}}% ({{pnl|stringformat:".2f"}} {{quote_asset}})</span></div>
-            <div class="w-25 py-1">Stop Loss General: {{stop_loss|stringformat:".2f"}} %</div>
-            <div class="w-25 py-1">Maximo DrowDawn: {{max_drawdown_reg|stringformat:".2f" }}/{{max_drawdown|stringformat:".2f" }} %</div>
+            <div class="w-50 py-1">Capital:<br><span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{quote_actual|stringformat:".2f"}} {{quote_asset}} / {{quote_qty|stringformat:".2f"}}</span></div>
+            <div class="w-50 py-1">PNL:<br><span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{pnl_perc|stringformat:".2f"}}% ({{pnl|stringformat:".2f"}} {{quote_asset}})</span></div>
+            <div class="w-50 py-1">Stop Loss General:<br>{{stop_loss|stringformat:".2f"}} %</div>
+            <div class="w-50 py-1">Maximo DrowDawn:<br>{{max_drawdown_reg|stringformat:".2f" }}/{{max_drawdown|stringformat:".2f" }} %</div>
         </div>
     </div>
     
@@ -106,9 +106,9 @@
                     <div class="d-flex flex-row flex-wrap rounded pb-1 mb-1">
                         {% for k,item in status.items %}
                             {% if item.l %}
-                                <div class="w-25 py-1">{{item.l}}: <b {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</b></div>
+                                <div class="w-50 py-1">{{item.l}}:<br><b {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</b></div>
                             {% else %}
-                                <div class="w-25 py-1">{{k}}: <b>{{item}}</b></div>
+                                <div class="w-50 py-1">{{k}}:<br><b>{{item}}</b></div>
                             
                             {% endif %}
 
