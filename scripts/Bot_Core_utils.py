@@ -10,7 +10,7 @@ class BotCoreLog(Log):
 
 class Order:
     
-    live_exch_comision_perc = 0.1 # - Comision por operacion de compra o venta Live
+    live_exch_comision_perc = 0.075 # - Comision por operacion de compra o venta Live
     test_exch_comision_perc = 0.1 # - Comision por operacion de compra o venta Backtest
 
     SIDE_BUY = 0
