@@ -87,7 +87,7 @@ class BotHeikinAshi2(Bot_Core):
 
         self.klines['HA_side'] = df['HA_side']
         self.klines['buy'] = df['buy']
-        self.klines['stop_loss'] = df['HA_tp']
+        self.klines['stop_loss'] = df['HA_sl']
         self.klines['signal'] = np.where(self.klines['buy']==1,'COMPRA','NEUTRO')   
 
         self.print_orders = False
