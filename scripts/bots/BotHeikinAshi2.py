@@ -71,7 +71,12 @@ class BotHeikinAshi2(Bot_Core):
         df['HA_tp'] =  np.where((df['HA_side']==-1) & (df['HA_side'].shift(1)==-1),df['HA_high'].shift(2),None)
         df['HA_sl'].ffill(inplace=True)
         df['HA_tp'].ffill(inplace=True)
-        df['buy'] = np.where((df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1)),1,None)
+        buy_cond = (
+                     (df['HA_low']>df['HA_tp'])
+                   #& (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) 
+                   & (df['HA_sl']!=df['HA_sl'].shift(1))
+                   )
+        df['buy'] = np.where(buy_cond,1,None)
         self.klines['HA_side'] = df['HA_side']
         self.klines['buy'] = df['buy']
         self.klines['stop_loss'] = df['HA_tp']
@@ -118,24 +123,28 @@ class BotHeikinAshi2(Bot_Core):
         price = self.price
         start_cash = round(self.quote_qty ,self.qd_quote)
         
-        if price*self.wallet_base > 10:
-            limit_price = round(self.row['stop_loss'],self.qd_price)
-            self.update_order_by_tag(tag="STOP_LOSS",limit_price=limit_price)
         
-        elif self.signal == 'COMPRA' and price*self.wallet_base < 12:
+        if self.signal == 'COMPRA': # and price*self.wallet_base < 12:
             if self.interes == 's': #Interes Simple
                 cash = start_cash if start_cash <= self.wallet_quote else self.wallet_quote
             else: #Interes Compuesto
                 cash = self.wallet_quote
 
             lot_to_buy = cash * (self.quote_perc/100)
-            if lot_to_buy <= self.wallet_quote and lot_to_buy > 10:
+            if lot_to_buy <= self.wallet_quote and lot_to_buy > 12:
                 qty = round_down(lot_to_buy/self.price,self.qd_qty)
                 buy_order_id = self.buy(qty,Order.FLAG_SIGNAL)
                 if buy_order_id:
+                    sell_order = self.get_order_by_tag(tag='STOP_LOSS')
                     limit_price = round(self.row['stop_loss'],self.qd_price)
-                    self.sell_limit(qty, Order.FLAG_STOPLOSS, limit_price = limit_price,tag="STOP_LOSS")
+                    if sell_order:
+                        self.update_order_by_tag(tag="STOP_LOSS",limit_price=limit_price,qty=self.wallet_base)
+                    else:
+                        self.sell_limit(qty, Order.FLAG_STOPLOSS, limit_price = limit_price,tag="STOP_LOSS")
                     
+        elif price*self.wallet_base > 10:
+            limit_price = round(self.row['stop_loss'],self.qd_price)
+            self.update_order_by_tag(tag="STOP_LOSS",limit_price=limit_price,qty=self.wallet_base)
         
 
             
