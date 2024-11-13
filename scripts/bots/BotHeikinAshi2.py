@@ -67,28 +67,25 @@ class BotHeikinAshi2(Bot_Core):
         df = HeikinAshi(self.klines)
 
         #V2 mejorada
-        #df['HA_sl'] =  np.where((df['HA_side']>=0) & (df['HA_side'].shift(1)>=0),df['HA_low'].shift(1),None)
-        #df['HA_tp'] =  np.where((df['HA_side']<0) & (df['HA_side'].shift(1)<=0),df['HA_high'].shift(2),None)
-        #df['HA_sl'].ffill(inplace=True)
-        #df['HA_tp'].ffill(inplace=True)
-        df['HA_sl'] =  df['HA_low'].shift(2)
-        df['HA_tp'] =  df['HA_high'].shift(2)
-        buy_cond = ( 
-                      ((df['HA_side'])>0) 
-                    & (df['HA_side'].shift(1)>0) 
-                    & (df['HA_side'].shift(2)>=0) 
-                    & (df['HA_side'].shift(3)<0) 
-                    & (df['HA_side'].shift(4)<0) 
- 
-                    )
-        #`buy_cond = (df['HA_sl']>df['HA_sl'].shift(1)) & (df['HA_sl'].shift(2)>df['HA_sl'].shift(1))
-        #buy_cond = (df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1))
-        df['buy'] = np.where(buy_cond,1,None)
-
+        df['HA_sl'] =  np.where((df['HA_side']==1) & (df['HA_side'].shift(1)==1),df['HA_low'].shift(2),None)
+        df['HA_tp'] =  np.where((df['HA_side']==-1) & (df['HA_side'].shift(1)==-1),df['HA_high'].shift(2),None)
+        df['HA_sl'].ffill(inplace=True)
+        df['HA_tp'].ffill(inplace=True)
+        df['buy'] = np.where((df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1)),1,None)
         self.klines['HA_side'] = df['HA_side']
         self.klines['buy'] = df['buy']
-        self.klines['stop_loss'] = df['HA_sl']
+        self.klines['stop_loss'] = df['HA_tp']
         self.klines['signal'] = np.where(self.klines['buy']==1,'COMPRA','NEUTRO')   
+
+
+        #V3 testing
+        #df['HA_sl'] =  np.where((df['HA_side']>=0)  & (df['HA_side'].shift(1)>=0),df['HA_low'].shift(2),None)
+        #df['HA_sl'] = np.where((df['HA_sl'].isnull()) & (df['close'])>df['open'],df['HA_sl'].shift(1),df['HA_sl'])
+        #df['buy'] = np.where((df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1)),1,None)
+        #self.klines['HA_side'] = df['HA_side']
+        #self.klines['buy'] = df['buy']
+        #self.klines['stop_loss'] = df['HA_tp']
+        #self.klines['signal'] = np.where(self.klines['buy']==1,'COMPRA','NEUTRO')   
 
         self.print_orders = False
         self.graph_open_orders = True
