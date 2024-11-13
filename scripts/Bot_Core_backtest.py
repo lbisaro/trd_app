@@ -248,23 +248,27 @@ class Bot_Core_backtest:
                         order  = self._orders[i]
                         if order.type == Order.TYPE_LIMIT:
                             if order.side == Order.SIDE_BUY and order.flag == Order.FLAG_TAKEPROFIT:
-                                if sub_row['low'] <= order.limit_price:# <= sub_row['high']:
-                                    self._orders[order.id].limit_price = sub_row['open']
+                                if sub_row['low'] <= order.limit_price:
+                                    if sub_row['high'] > order.limit_price:
+                                        self._orders[order.id].limit_price = sub_row['high']
                                     executed =  self.execute_order(order.id)
                                     
                             if order.side == Order.SIDE_BUY and order.flag == Order.FLAG_STOPLOSS:
-                                if sub_row['high'] >= order.limit_price:# >= sub_row['low']:
-                                    self._orders[order.id].limit_price = sub_row['open']
+                                if sub_row['high'] >= order.limit_price:
+                                    if sub_row['low'] < order.limit_price:
+                                        self._orders[order.id].limit_price = sub_row['low']
                                     executed =  self.execute_order(order.id)
                                     
                             if order.side == Order.SIDE_SELL and order.flag == Order.FLAG_STOPLOSS:
-                                if sub_row['low'] <= order.limit_price:# <= sub_row['high']:
-                                    self._orders[order.id].limit_price = sub_row['open']
+                                if sub_row['low'] <= order.limit_price:
+                                    if sub_row['high'] > order.limit_price:
+                                        self._orders[order.id].limit_price = sub_row['high']
                                     executed = self.execute_order(order.id)
                                     
                             if order.side == Order.SIDE_SELL and order.flag == Order.FLAG_TAKEPROFIT:
-                                if sub_row['high'] >= order.limit_price:# >= sub_row['low']:
-                                    self._orders[order.id].limit_price = sub_row['open']
+                                if sub_row['high'] >= order.limit_price:
+                                    if sub_row['low'] < order.limit_price:
+                                        self._orders[order.id].limit_price = sub_row['low']
                                     executed = self.execute_order(order.id)
 
                         #Establece la cantidad de Base y Quote bloqueadas en ordenes
