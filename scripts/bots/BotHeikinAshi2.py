@@ -76,7 +76,7 @@ class BotHeikinAshi2(Bot_Core):
         buy_cond = ( 
                       ((df['HA_side'])>0) 
                     & (df['HA_side'].shift(1)>0) 
-                    & (df['HA_side'].shift(2)<=0) 
+                    & (df['HA_side'].shift(2)>=0) 
                     & (df['HA_side'].shift(3)<0) 
                     & (df['HA_side'].shift(4)<0) 
  
