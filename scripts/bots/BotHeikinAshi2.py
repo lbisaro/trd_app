@@ -119,14 +119,15 @@ class BotHeikinAshi2(Bot_Core):
         return status    
 
     def next(self):
-        if not 'last_buy' in self.status:
-            self.status['last_buy'] = 0.0
+        last_buy = 0.0
+        if 'last_buy' in self.status:
+            last_buy = self.status['last_buy']['r']
     
         price = self.price
         start_cash = round(self.quote_qty ,self.qd_quote)
         
         
-        if self.signal == 'COMPRA' and price > self.status['last_buy']*1.01: # and price*self.wallet_base < 12:
+        if self.signal == 'COMPRA' and price > last_buy*1.01: # and price*self.wallet_base < 12:
             if self.interes == 's': #Interes Simple
                 cash = start_cash if start_cash <= self.wallet_quote else self.wallet_quote
             else: #Interes Compuesto
@@ -140,7 +141,7 @@ class BotHeikinAshi2(Bot_Core):
                     sell_order = self.get_order_by_tag(tag='STOP_LOSS')
                     limit_price = round(self.row['stop_loss'],self.qd_price)
                     buy_order = self._trades[buy_order_id]
-                    self.status['last_buy'] = buy_order.price
+                    self.status['last_buy'] = {'l': 'Ultima compra','r': buy_order.price,'v': buy_order.price}
                     if sell_order:
                         self.update_order_by_tag(tag="STOP_LOSS",limit_price=limit_price,qty=self.wallet_base)
                     else:
@@ -151,6 +152,7 @@ class BotHeikinAshi2(Bot_Core):
             self.update_order_by_tag(tag="STOP_LOSS",limit_price=limit_price,qty=self.wallet_base)
         
     def on_order_execute(self, order):
-        self.status['last_buy'] = 0.0
+        if order.side == Order.SIDE_SELL and 'last_buy' in self.status:
+            del self.status['last_buy']
             
             
