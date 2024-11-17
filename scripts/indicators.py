@@ -28,6 +28,7 @@ def resample(df,periods):
         'close': 'last',
         'volume': 'sum'
     })
+    dfx.reset_index(inplace=True,drop=True)
     return dfx
 
 def join_after_resample(df,serie,column,periods=None):
@@ -280,6 +281,14 @@ def fibonacci_levels(start, end):
 
     return prices  
 
+def polyfit_trend(df, column='close',window=7,fwd=1, prefix='pf'):
+    df[f'{prefix}_pred'] = df[column].rolling(window).apply(lambda x: predict_price(x,fwd))
+    df[f'{prefix}_change']  = ((df[f'{prefix}_pred']/df[f'{prefix}_pred'].shift(1))-1)*100
+    df[f'{prefix}_trend']   = np.where(df[f'{prefix}_change'].rolling(window=window).max() == df[f'{prefix}_change'], 1 , 0)
+    df[f'{prefix}_trend']   = np.where(df[f'{prefix}_change'].rolling(window=window).min() == df[f'{prefix}_change'], -1 , df[f'{prefix}_trend'])
+    return df
+
+
 def predict_price(window,fwd=1):
     
     x_pred = len(window) + fwd - 1
@@ -294,8 +303,8 @@ def predict_price(window,fwd=1):
 
     return pred  
 
-def zigzag(df):
-    df = psar(df)
+def zigzag(df,af=2):
+    df = psar(df,af0=af/100,af=af/10)
     df['ZigZag'] = np.where((df['psar_high']>0) & (df['psar_low'].shift(1)>0), df['psar_high'] , None)
     df['ZigZag'] = np.where((df['psar_low']>0) & (df['psar_high'].shift(1)>0), df['psar_low'] , df['ZigZag'])
         
@@ -476,15 +485,14 @@ def HeikinAshi(df):
     #Calculo segun Binance y TradingView
     df['HA_close'] = (df['open'] + df['high'] + df['low'] + df['close']) / 4
     df['HA_open'] = (df['open'] + df['close']) / 2
-    for i in range(1, len(df)):
-        df.loc[i, 'HA_open'] = (df.loc[i - 1, 'HA_open'] + df.loc[i - 1, 'HA_close']) / 2
+    df['HA_open'] = ((df['HA_open'].shift(1) + df['HA_close'].shift(1)) / 2).fillna(df['HA_open'])
     
     df['HA_high'] = df[['high', 'HA_open', 'HA_close']].max(axis=1)
     df['HA_low'] =  df[['low', 'HA_open', 'HA_close']].min(axis=1)
     df['HA_side'] = np.where(df['HA_close']>df['HA_open'],1,-1)
+    #df['HA_side'] = np.where(df['HA_close']>df['HA_open'],1,-1)
 
     #Analizando tipo de vela
-    df['HA_side'] = np.where(df['HA_close']>df['HA_open'],1,-1)
     df['HA_cuerpo'] = abs(df['HA_close'] - df['HA_open'])
     df['HA_sombra_inferior'] = df[['HA_open', 'HA_close']].min(axis=1) - df['HA_low']
     df['HA_sombra_superior'] = df['HA_high'] - df[['HA_open', 'HA_close']].max(axis=1)

@@ -30,7 +30,6 @@ def config(request,bot_class_name):
     gen_bot = GenericBotClass()
     obj = gen_bot.get_instance(bot_class_name)
     periodos = Backtest().get_periodos(interval_id='ALL',all_tendencias=True)
-        
     if request.method == 'GET':
         return render(request, 'backtesting_run.html',{
             'bot_class_name': bot_class_name,
@@ -81,18 +80,15 @@ def run(request):
         
         backtest = Backtest()
         
-        klines = backtest.get_df_from_file(backtest_file)
-        sub_klines = backtest.get_sub_df_from_file(backtest_file)
+        klines_1m = backtest.get_df_from_file(backtest_file)
         if mirror == '10' or mirror == '11':
-            klines = fn.ohlc_mirror_v(klines)
-            sub_klines = fn.ohlc_mirror_v(sub_klines)
+            klines_1m = fn.ohlc_mirror_v(klines_1m)
         if mirror == '01' or mirror == '11':
-            klines = fn.ohlc_mirror_h(klines)
-            sub_klines = fn.ohlc_mirror_h(sub_klines)
-        
-        bt = run_bot.backtest(klines,from_date,to_date,'completed',sub_klines)
-        json_rsp['bt'] = bt
+            klines_1m = fn.ohlc_mirror_h(klines_1m)
 
+        bt = run_bot.backtest(klines_1m,from_date,'complete')
+        json_rsp['bt'] = bt
+        
         if bt['error']:
             json_rsp['error'] = bt['error']
             json_rsp['ok'] = False

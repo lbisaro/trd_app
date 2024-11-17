@@ -67,7 +67,8 @@ class Order:
         return str(self)
 
     def __str__(self):
-        params = f'{self.datetime:%Y-%m-%d %Z %H:%M:%S} #{self.id} {self.str_side()}\t{self.qty}\t{self.price} {self.str_type()} {self.str_flag()} '
+        quote = self.price*self.qty
+        params = f'{self.datetime:%Y-%m-%d %Z %H:%M:%S} #{self.id} {self.str_side()}\t{self.qty}\t{self.price} \tQUOTE {quote:.2f} {self.str_type()} {self.str_flag()} '
         if self.type != self.TYPE_MARKET:
             params += f'Limit Price {self.limit_price} '
         if len(self.tag):

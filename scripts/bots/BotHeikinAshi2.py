@@ -65,7 +65,8 @@ class BotHeikinAshi2(Bot_Core):
     def start(self):
 
         df = HeikinAshi(self.klines)
-
+        df['ma_vol'] = df['volume'].rolling(window=100).mean()
+        
         #V2 mejorada
         df['HA_sl'] =  np.where((df['HA_side']==1) & (df['HA_side'].shift(1)==1),df['HA_low'].shift(2),None)
         df['HA_tp'] =  np.where((df['HA_side']==-1) & (df['HA_side'].shift(1)==-1),df['HA_high'].shift(2),None)
@@ -73,8 +74,9 @@ class BotHeikinAshi2(Bot_Core):
         df['HA_tp'].ffill(inplace=True)
         buy_cond = (
                      (df['HA_low']>df['HA_tp'])
-                   #& (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) 
+                   & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) 
                    & (df['HA_sl']!=df['HA_sl'].shift(1))
+                   #& (df['volume'] > df['ma_vol']) #Volumen por sobre la media de 100
                    )
         df['buy'] = np.where(buy_cond,1,None)
         self.klines['HA_side'] = df['HA_side']
@@ -126,8 +128,7 @@ class BotHeikinAshi2(Bot_Core):
         price = self.price
         start_cash = round(self.quote_qty ,self.qd_quote)
         
-        
-        if self.signal == 'COMPRA' and price > last_buy*1.01: # and price*self.wallet_base < 12:
+        if self.signal == 'COMPRA' and price > last_buy*1.01:
             if self.interes == 's': #Interes Simple
                 cash = start_cash if start_cash <= self.wallet_quote else self.wallet_quote
             else: #Interes Compuesto

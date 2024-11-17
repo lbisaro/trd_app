@@ -1,6 +1,7 @@
 import pandas as pd
 import pandas as pd
 import datetime as dt
+import pickle
 
 from scripts.Bot_Core_utils import *
 from scripts.Exchange import Exchange
@@ -8,7 +9,12 @@ import scripts.functions as fn
 
 class Bot_Core_backtest:
     
-    def backtest(self,klines,from_date,to_date,rsp_mode,sub_klines):
+    def backtest(self,klines_1m,from_date,rsp_mode):
+        print('Iniciando Backtest')
+        
+        klines = self.resample_klines(klines_1m,self.interval_id)
+        sub_klines = self.resample_sub_klines(klines_1m,self.interval_id)
+
         self.backtesting = True
         self.order_id = 0
         self.graph_open_orders = True
@@ -37,24 +43,33 @@ class Bot_Core_backtest:
         self.klines = klines
         self.sub_klines = sub_klines
 
-        #Limitando el backtest a un maximo de velas
-        self.klines = self.klines[0:20000]
-        
         #Aplicar la señal de compra/venta
-        
         self.start()
-        
-        
+
+        file_dump = 'backtest/results/backtest_data.DataFrame'
+        with open(file_dump, 'wb') as f:
+            pickle.dump(self.klines, f)
+
         #quitando las velas previas a la fecha de start
-        self.timeframe_length = self.klines['datetime'].iloc[1] - self.klines['datetime'].iloc[0]
-        
-        #Carga la vela anterior al inicio del ciclo
-        self.row = self.klines[self.klines['datetime'] == pd.to_datetime(from_date)-self.timeframe_length ].iloc[0]
-        
         self.klines = self.klines[self.klines['datetime'] >= pd.to_datetime(from_date)]
         self.klines = self.klines.reset_index(drop=True)
+
+        #Calculando el timeframe de las velas
+        self.timeframe_length = self.klines['datetime'].values[1] - self.klines['datetime'].values[0]
+
+        #Limitando el backtest a un maximo de velas para periodos inferiores a 1 hora
+        if int(self.timeframe_length) <= 3600000000000:  
+            self.klines = self.klines[0:10000]
+
+        #Carga la vela anterior al inicio del ciclo
+        #self.row = self.klines[self.klines['datetime'] == pd.to_datetime(from_date)-self.timeframe_length ].iloc[0]
+        first_datetime = self.klines['datetime'].min()
+        last_datetime  = self.klines['datetime'].max()
+        self.row = self.klines[self.klines['datetime'] == first_datetime].to_dict(orient='records')[0]
         
-        self.sub_klines = self.sub_klines[self.sub_klines['datetime'] >= pd.to_datetime(from_date)]
+        #Limitando el contenido de las sub_klines
+        self.sub_klines = self.sub_klines[self.sub_klines['datetime'] >= first_datetime]
+        self.sub_klines = self.sub_klines[self.sub_klines['datetime'] <= last_datetime]
         self.sub_klines = self.sub_klines.set_index('datetime')
 
         velas = int(self.klines['datetime'].count())
@@ -76,14 +91,14 @@ class Bot_Core_backtest:
         proc_start = proc_end
         #Calculando HOLD para comparar contra la operacion
         # El hold es la compra del capital a invertir al precio open al inicio + el saldo que queda en USD
-        price_to_hold = self.klines.loc[0]['open'] 
+        price_to_hold = self.klines['open'].values[0]
         quote_to_hold = round( self.quote_qty, self.qd_quote )
         qty_to_hold = round( ( quote_to_hold / price_to_hold ) , self.qd_qty ) 
         self.klines['usd_hold'] = round( self.klines['open'] * qty_to_hold , self.qd_quote )
         self.klines['unix_dt'] = (self.klines['datetime'] - dt.datetime(1970, 1, 1)).dt.total_seconds() * 1000 +  10800000
 
         #Procesando eventos de Señanes de compra/venta y ordenes
-        if False: #self.interval_id < '2d01':
+        if False and self.interval_id < '2d01':
             agg_funcs = {
                     "unix_dt": "first",
                     "open": "first",
@@ -112,7 +127,7 @@ class Bot_Core_backtest:
         if rsp_mode=='ind':
             return self.get_resultados()
         
-        elif rsp_mode=='completed':
+        elif rsp_mode=='complete':
 
             res = {'ok': True,
                 'error': False,
@@ -227,11 +242,11 @@ class Bot_Core_backtest:
     def backtest_check_orders(self):
         
         executed = False
-        start_d = self.datetime + self.timeframe_length
-        end_d = self.datetime + self.timeframe_length * 2
+        start_d = self.datetime #+ self.timeframe_length
+        end_d = self.datetime + self.timeframe_length #* 2
+
         
         if len(self._orders) > 0:
-            
             _orders = self._orders.copy().items()
 
             self.wallet_base_block = 0.0
@@ -249,35 +264,37 @@ class Bot_Core_backtest:
                         if order.type == Order.TYPE_LIMIT:
                             if order.side == Order.SIDE_BUY and order.flag == Order.FLAG_TAKEPROFIT:
                                 if sub_row['low'] <= order.limit_price:
-                                    if sub_row['high'] > order.limit_price:
-                                        self._orders[order.id].limit_price = sub_row['high']
+                                    if order.limit_price > sub_row['high']:
+                                        self._orders[order.id].limit_price = sub_row['open']
                                     executed =  self.execute_order(order.id)
                                     
                             if order.side == Order.SIDE_BUY and order.flag == Order.FLAG_STOPLOSS:
                                 if sub_row['high'] >= order.limit_price:
-                                    if sub_row['low'] < order.limit_price:
-                                        self._orders[order.id].limit_price = sub_row['low']
+                                    if order.limit_price < sub_row['low']:
+                                        self._orders[order.id].limit_price = sub_row['open']
                                     executed =  self.execute_order(order.id)
-                                    
-                            if order.side == Order.SIDE_SELL and order.flag == Order.FLAG_STOPLOSS:
-                                if sub_row['low'] <= order.limit_price:
-                                    if sub_row['high'] > order.limit_price:
-                                        self._orders[order.id].limit_price = sub_row['high']
-                                    executed = self.execute_order(order.id)
                                     
                             if order.side == Order.SIDE_SELL and order.flag == Order.FLAG_TAKEPROFIT:
                                 if sub_row['high'] >= order.limit_price:
-                                    if sub_row['low'] < order.limit_price:
-                                        self._orders[order.id].limit_price = sub_row['low']
+                                    if order.limit_price < sub_row['low']:
+                                        #print('Change Limit Price',order.limit_price,' -> ',sub_row['open'],' [',self.datetime,' ',self.row['high'],'-',self.row['low'],'] - [',sub_i,' ',sub_row['high'],'-',sub_row['low'],']')
+                                        self._orders[order.id].limit_price = sub_row['open']
                                     executed = self.execute_order(order.id)
 
+                            if order.side == Order.SIDE_SELL and order.flag == Order.FLAG_STOPLOSS:
+                                if sub_row['low'] <= order.limit_price:
+                                    if order.limit_price > sub_row['high']:
+                                        #print('Change Limit Price',order.limit_price,' -> ',sub_row['open'],' [',self.datetime,' ',self.row['high'],'-',self.row['low'],'] - [',sub_i,' ',sub_row['high'],'-',sub_row['low'],']')
+                                        self._orders[order.id].limit_price = sub_row['open']
+                                    executed = self.execute_order(order.id)
+                                    
                         #Establece la cantidad de Base y Quote bloqueadas en ordenes
                         if i in self._orders: #La orden no fue ejecutada
                             if order.side == Order.SIDE_BUY:
                                 self.wallet_quote_block += round(order.qty*order.limit_price,self.qd_quote)
                             if order.side == Order.SIDE_SELL:
                                 self.wallet_base_block += round(order.qty,self.qd_qty)
-            
+
         return executed
         
     def backtest_execute_order(self,orderid):
@@ -400,3 +417,46 @@ class Bot_Core_backtest:
                 trade = pd.DataFrame([[start,buy_price,qty,end,sell_price,flag,type,days,result_usd,result_perc,orders]], columns=self.df_trades_columns) 
                 self.df_trades = pd.concat([self.df_trades, trade], ignore_index=True) 
                 trade = {}
+
+    def resample_klines(self,klines,interval_id):
+        resample_minutes = fn.get_intervals(interval_id,'minutes')
+        print('resample_klines() - minutes: ',resample_minutes)
+        rsmpl_klines = self.resample_df(klines,resample_minutes)
+        return rsmpl_klines
+
+    def resample_sub_klines(self,klines,interval_id):
+        resample_minutes = fn.get_intervals(interval_id,'sub_klines_minutes')
+        print('resample_sub_klines() - sub_klines_minutes: ',resample_minutes)
+        rsmpl_klines = self.resample_df(klines,resample_minutes)
+        return rsmpl_klines
+
+
+
+    def resample_df(self,df,periods):
+        """
+        Genera un dataframe resampleado de acuerdo a la cantidad de periodos establecidos
+        Ej.: Si df es tiene un timeframe de 15m, y periods = 4, el resample se hace en 1h
+
+        Ejemplo de uso de resample y join_after_resample:
+
+        dfx4 = resample(df,4)
+        rsi_x4 = ta.rsi(dfx4['close'], length=21)
+        df = join_after_resample(df,rsi_x4,'rsi')
+        df['rsi_sma'] = df['rsi'].rolling(14).mean()
+
+        """
+
+        timeframe = df['datetime'].iloc[1]-df['datetime'].iloc[0]
+        resample = timeframe * periods
+
+        # Resamplear el dataframe a 1 dia
+        dfx = df.resample(resample, on="datetime").agg({
+            'datetime': 'first',
+            'open': 'first',
+            'high': 'max',
+            'low': 'min',
+            'close': 'last',
+            'volume': 'sum'
+        })
+        dfx.reset_index(inplace=True,drop=True)
+        return dfx

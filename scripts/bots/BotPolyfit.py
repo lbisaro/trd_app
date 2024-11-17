@@ -16,7 +16,7 @@ class BotPolyfit(Bot_Core):
     quote_perc =  0 #% de compra inicial, para stock
     periods = 0      #Periodo de analisis
     gap = 0         #Rango +/- de porcentaje en el que no se determina la tendencia
-    resample = 0
+    resample_periods = 0
 
     last_order_id = 0
     
@@ -27,7 +27,7 @@ class BotPolyfit(Bot_Core):
         self.take_profit = 0.0
         self.periods = 0
         self.gap = 0.5
-        self.resample = 0
+        self.resample_periods = 0
         
     
     descripcion = 'Bot Polyfit, basado en prediccion de precio por diferencia de cuadrados. \n'\
@@ -118,8 +118,8 @@ class BotPolyfit(Bot_Core):
     def start(self):
 
         df = self.klines.copy()
-        if self.resample > 1:
-            dfr = resample(df,self.resample)
+        if self.resample_periods > 1:
+            dfr = resample(df,self.resample_periods)
             dfr = psar(dfr)
             dfr['psar'] = np.where(dfr['psar_high']>0,dfr['psar_high'],dfr['psar_low'])
             df = join_after_resample(df,dfr,'psar')

@@ -60,8 +60,6 @@ class BotPSAR(Bot_Core):
             err.append("Se debe especificar el Par")
         if self.quote_perc <= 0:
             err.append("El Porcentaje de capital por operacion debe ser mayor a 0")
-
-
         
         if len(err):
             raise Exception("\n".join(err))
@@ -76,7 +74,7 @@ class BotPSAR(Bot_Core):
                                          #& (self.klines['st_low']>0)
                                          ,'COMPRA','NEUTRO')
               
-        self.print_orders = True
+        self.print_orders = False
         self.graph_open_orders = True
         self.graph_signals = True
 
@@ -89,11 +87,11 @@ class BotPSAR(Bot_Core):
             #self.buy_limit(qty=qty,limit_price = self.row['ema'],flag=Order.FLAG_TAKEPROFIT,tag='BUY')
             self.buy(qty=qty,flag=Order.FLAG_SIGNAL,tag='BUY')
 
-        if open_orders >= 2:
-            if self.row['psar_low']>0:
-                self.update_order_by_tag('STOP_LOSS',limit_price=self.row['psar_low'])
-            #if self.row['psar_high']>0:
-            #    self.update_order_by_tag('TAKE_PROFIT',limit_price=self.row['psar_high'])
+        #if open_orders >= 2:
+        #    if self.row['psar_low']>0:
+        #        self.update_order_by_tag('STOP_LOSS',limit_price=self.row['psar_low'])
+        #    #if self.row['psar_high']>0:
+        #    #    self.update_order_by_tag('TAKE_PROFIT',limit_price=self.row['psar_high'])
 
         #if open_orders == 1 and self.row['psar_high']>0:
         #    self.update_order_by_tag('BUY',limit_price=self.row['psar_high'])
@@ -103,7 +101,7 @@ class BotPSAR(Bot_Core):
         if order.tag == 'BUY':
             qty = order.qty
             #sl_price = round(order.price*(1-self.stop_loss/100) , self.qd_price)
-            sl_price = round(self.row['psar_low'] , self.qd_price)
+            sl_price = round(order.price*(1-self.stop_loss/100) , self.qd_price)
             tp_price = round(order.price*(1+self.take_profit/100) , self.qd_price)
             self.sell_limit(qty=qty,flag=Order.FLAG_STOPLOSS,limit_price=sl_price,tag='STOP_LOSS')
             self.sell_limit(qty=qty,flag=Order.FLAG_TAKEPROFIT,limit_price=tp_price,tag='TAKE_PROFIT')

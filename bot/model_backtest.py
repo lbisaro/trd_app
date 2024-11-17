@@ -298,46 +298,48 @@ class Backtest(models.Model):
         return file
 
     def get_periodos(self,interval_id,all_tendencias=False):
-        
+        intrvls = fn.get_intervals()
         periodos = [] 
-        folders = glob.glob(self.klines_folder+os.sep+'*')
+        folders = glob.glob(self.klines_folder+os.sep+'0m01')
         for fld in folders:
             folder = fld
             folder = folder.replace(self.klines_folder+os.sep, '')
             interval = fn.get_intervals(folder,'binance')
             if interval:
-                if interval_id == 'ALL' or folder == interval_id:
-                    mask = os.path.join(self.klines_folder,folder,'*.DataFrame*')
-                    files = glob.glob(mask)
+            
+                mask = os.path.join(self.klines_folder,folder,'*.DataFrame*')
+                files = glob.glob(mask)
+                
+                for f in files:
                     
-                    for f in files:
-                        
-                        file = f
-                        f = f.replace('.DataFrame', '')
-                        f = f.replace(fld, '')
-                        f = f.replace(os.sep, '')
-                        parts = f.split('_')
-                        tendencia = parts[0]
-                        symbol = parts[1]
-                        tendencia = parts[0]
-                        start = parts[3]
-                        end = parts[4]
-                        key = len(periodos)
-                        if all_tendencias or tendencia in self.tendencias:
-                            periodos.append({
-                                        'key': key,
-                                        'tendencia':tendencia,
-                                        'interval':interval,
-                                        'interval_id': folder,
-                                        'start': start,
-                                        'end': end,
-                                        'symbol': symbol,
-                                        'str': f'{symbol} {interval} {tendencia} desde el {start} al {end}',
-                                        'file': file,
-                                        'procesado': 'NO',
-                                        }
-                                    )
-                                   
+                    file = f
+                    f = f.replace('.DataFrame', '')
+                    f = f.replace(fld, '')
+                    f = f.replace(os.sep, '')
+                    parts = f.split('_')
+                    tendencia = parts[0]
+                    symbol = parts[1]
+                    tendencia = parts[0]
+                    start = parts[3]
+                    end = parts[4]
+                    key = len(periodos)
+                    if all_tendencias or tendencia in self.tendencias:
+                        for intrvl in intrvls.itertuples(index=False):
+                            if interval_id == 'ALL' or intrvl.interval_id == interval_id:
+                                periodos.append({
+                                            'key': key,
+                                            'tendencia':tendencia,
+                                            'interval':intrvl.binance,
+                                            'interval_id': intrvl.interval_id,
+                                            'start': start,
+                                            'end': end,
+                                            'symbol': symbol,
+                                            'file': file,
+                                            'str': f'{symbol} {intrvl.binance} {tendencia} desde el {start} al {end}',
+                                            'procesado': 'NO',
+                                            }
+                                        )
+
         return periodos
     
     def parse_parametros(self):
@@ -392,26 +394,3 @@ class Backtest(models.Model):
             df = pickle.load(f)
         return df
     
-    def get_sub_df_from_file(self,file):
-        aux = file.split('_')
-        timeframe = aux[-3]
-        if timeframe == '0m01':
-            file = file.replace(timeframe, '0m01')
-        elif timeframe == '0m05':
-            file = file.replace(timeframe, '0m01')
-        elif timeframe == '0m15':
-            file = file.replace(timeframe, '0m01')
-        elif timeframe == '0m30':
-            file = file.replace(timeframe, '0m05')
-        elif timeframe == '1h01':
-            file = file.replace(timeframe, '0m15')
-        elif timeframe == '1h04':
-            file = file.replace(timeframe, '0m15')
-        elif timeframe == '2d01':
-            file = file.replace(timeframe, '1h01')
-        else:
-            raise Exception(f'\n{self.__class__.__name__} No se ha encontrado un time frame valido para las sub_velas')
-
-        with open(file, 'rb') as f:
-            df = pickle.load(f)
-        return df

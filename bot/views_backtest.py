@@ -30,7 +30,7 @@ def backtest(request):
 @login_required
 def config(request,bot_class_name,backtest_id_to_clone=0):
 
-    intervals = bt_config.intervals.to_dict('records')
+    intervals = fn.get_intervals().to_dict('records')
 
     if backtest_id_to_clone==0:
         gen_bot = GenericBotClass()
@@ -222,10 +222,8 @@ def execute(request,backtest_id):
 
         try:
             run_bot.valid()
-            
-            klines = backtest.get_df_from_file(periodo['file'])
-            sub_klines = backtest.get_sub_df_from_file(periodo['file'])
-            bt = run_bot.backtest(klines,periodo['start'],periodo['end'],'ind',sub_klines)
+            klines_1m = backtest.get_df_from_file(periodo['file'])
+            bt = run_bot.backtest(klines_1m,periodo['start'],'ind')
             json_rsp['bt'] = bt
             json_rsp['ok'] = True
                     

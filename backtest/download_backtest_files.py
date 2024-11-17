@@ -47,8 +47,8 @@ for index, row in intervals.iterrows():
 
     interval_id = index
     interval = row['binance']
-    minutes_back = row['minutes'] * 210  #Se agregan 210 velas previas para preparar los indicadores
-    days_back = minutes_back/24/60
+    days_back = 210 #Se agregan 210 velas diarias previas para preparar los indicadores
+    hours_back = days_back * 24 
 
     folder = f'./backtest/klines/{interval_id}/'
     if not os.path.exists(folder):
@@ -58,7 +58,7 @@ for index, row in intervals.iterrows():
         tipo = p['tipo']
         start = p['start']
         end = p['end']
-        real_start = (dt.datetime.strptime(start, "%Y-%m-%d") - dt.timedelta(minutes=minutes_back)).strftime("%Y-%m-%d")
+        real_start = (dt.datetime.strptime(start, "%Y-%m-%d") - dt.timedelta(hours=hours_back)).strftime("%Y-%m-%d")
         real_end = (dt.datetime.strptime(end, "%Y-%m-%d") ).strftime("%Y-%m-%d")
         utc_start = real_start+' 00:00:00'
         utc_end = real_end+' 23:59:59'

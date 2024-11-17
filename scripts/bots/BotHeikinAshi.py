@@ -3,27 +3,27 @@ import pandas as pd
 from scripts.functions import round_down
 from scripts.Bot_Core import Bot_Core
 from scripts.Bot_Core_utils import *
-from scripts.indicators import psar, resample, join_after_resample
 import datetime as dt
+from scripts.indicators import HeikinAshi
+
 
 class BotHeikinAshi(Bot_Core):
 
-    short_name = 'HAPL'
+    short_name = 'HAL'
     symbol = ''
     quote_perc =  0 
     quote_perc_down = 0 
     interes = 's'
-    resample = 0
 
 
     def __init__(self):
         self.symbol = ''
         self.quote_perc = 0.0
         self.interes = 's'
-        self.resample = 0
+
 
     
-    descripcion = 'Bot basado en velas Heikin Ashi y Parabolic SAR\n'\
+    descripcion = 'Bot basado en velas Heikin Ashi\n'\
                   'Genera señales de compra con los cambios de tendencia\n'\
                   'Cierra la operación por Stop Loss dinamico'
     
@@ -41,13 +41,6 @@ class BotHeikinAshi(Bot_Core):
                         't' :'perc',
                         'pub': True,
                         'sn':'Compra', },
-                'resample': {
-                        'c' :'resample',
-                        'd' :'PSAR Resample',
-                        'v' :'4',
-                        't' :'int',
-                        'pub': True,
-                        'sn':'rsmpl', },
                 'interes': {
                         'c' :'interes',
                         'd' :'Tipo de interes',
@@ -63,8 +56,6 @@ class BotHeikinAshi(Bot_Core):
             err.append("Se debe especificar el Par")
         if self.quote_perc <= 0:
             err.append("El Porcentaje de Lote Compra debe ser mayor a 0")
-        if self.resample < 0:
-            err.append("El resample debe ser mayor a 0")
 
 
         
@@ -73,39 +64,43 @@ class BotHeikinAshi(Bot_Core):
         
     def start(self):
 
-        df = self.klines.copy()
-        if self.resample > 1:
-            dfr = resample(df,self.resample)
-            dfr = psar(dfr)
-            dfr['psar'] = np.where(dfr['psar_high']>0,dfr['psar_high'],dfr['psar_low'])
-            df = join_after_resample(df,dfr,'psar')
-            df['psar'].ffill(inplace=True)
-            df['psar_low'] = np.where(df['psar']<df['close'],df['psar'],None)
-            df['psar_high'] = np.where(df['psar']>df['close'],df['psar'],None)
-            df.drop('datetime', axis=1, inplace=True)
-            df.reset_index(inplace=True)
-        else:
-            df = psar(df)
+        df = HeikinAshi(self.klines)
+
+        df['ma_vol'] = df['volume'].rolling(window=100).mean()
+        #V2 mejorada
+        #df['HA_sl'] =  np.where((df['HA_side']>=0) & (df['HA_side'].shift(1)>=0),df['HA_low'].shift(1),None)
+        #df['HA_tp'] =  np.where((df['HA_side']<0) & (df['HA_side'].shift(1)<=0),df['HA_high'].shift(2),None)
+        #df['HA_sl'].ffill(inplace=True)
+        #df['HA_tp'].ffill(inplace=True)
+        df['HA_sl'] =  df['HA_low'].shift(2)
+        df['HA_tp'] =  df['HA_high'].shift(2)
         
-        df['HA_close'] = (df['close'].shift(1) + df['close']) / 2
-        df['HA_open'] = (df['open'].shift(1) + df['close'].shift(1)) / 2
-        df['HA_high'] = df[['high', 'HA_open', 'HA_close']].max(axis=1)
-        df['HA_low'] =  df[['low', 'HA_open', 'HA_close']].min(axis=1)
-        df['HA_side'] = np.where(df['HA_close']>df['HA_open'],1,-1)
+        #buy_cond = ( 
+        #              ((df['HA_side'])>0)           #Verde
+        #            & (df['HA_side'].shift(1)>0)    #Verde
+        #            & (df['HA_side'].shift(2)>=0)   #Indesicion o verde
+        #            & (df['HA_side'].shift(3)<0)    #Roja
+        #            & (df['HA_side'].shift(4)<0)    #Roja
+        #            #& (df['volume'] > df['ma_vol']) #Volumen por sobre la media de 100
+        #            )
+    
+        buy_cond = ( 
+                      ((df['HA_side'])>=0)           #Verde
+                    & (df['HA_side'].shift(2)<0)    #Roja
+                    & (df['HA_side'].shift(3)<0)    #Roja
+                    & (df['HA_side'].shift(4)<0)    #Roja
+                    & (df['volume'] > df['ma_vol']) #Volumen por sobre la media de 100
+                    )
+        #buy_cond = (df['HA_sl']>df['HA_sl'].shift(1)) & (df['HA_sl'].shift(2)>df['HA_sl'].shift(1))
+        #buy_cond = (df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1))
+        df['buy'] = np.where(buy_cond,1,None)
 
-
-        df['HA_sl'] =  np.where((df['HA_side']==1) & (df['HA_side'].shift(1)==1),df['HA_low'].shift(2),None)
-        df['HA_tp'] =  np.where((df['HA_side']==-1) & (df['HA_side'].shift(1)==-1),df['HA_high'].shift(2),None)
-        df['HA_sl'].ffill(inplace=True)
-        df['HA_tp'].ffill(inplace=True)
-
-        df['buy'] = np.where((df['psar_low']>0) & (df['HA_sl']>df['HA_tp']) & (df['HA_sl'].shift(1)<df['HA_tp'].shift(1)) & (df['HA_sl']!=df['HA_sl'].shift(1)),1,None)
-
+        self.klines['HA_side'] = df['HA_side']
         self.klines['buy'] = df['buy']
-        self.klines['stop_loss'] = df['HA_tp']
+        self.klines['stop_loss'] = df['HA_sl']
         self.klines['signal'] = np.where(self.klines['buy']==1,'COMPRA','NEUTRO')   
 
-        self.print_orders = False
+        self.print_orders = True
         self.graph_open_orders = True
         self.graph_signals = False
         
