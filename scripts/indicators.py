@@ -2,7 +2,7 @@ import pandas as pd
 import pandas_ta
 import numpy as np
 
-def resample(df,periods):
+def resample(df,periods,reset_index=True):
     """
     Genera un dataframe resampleado de acuerdo a la cantidad de periodos establecidos
     Ej.: Si df es tiene un timeframe de 15m, y periods = 4, el resample se hace en 1h
@@ -18,17 +18,35 @@ def resample(df,periods):
 
     timeframe = df['datetime'].iloc[1]-df['datetime'].iloc[0]
     resample = timeframe * periods
+    df['base_index'] = df.index
 
-    # Resamplear el dataframe a 1 dia
-    dfx = df.resample(resample, on="datetime").agg({
-        'datetime': 'first',
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'volume': 'sum'
-    })
-    dfx.reset_index(inplace=True,drop=True)
+    if reset_index:
+        agg_func = {
+            'datetime': 'first',
+            'open': 'first',
+            'high': 'max',
+            'low': 'min',
+            'close': 'last',
+            'volume': 'sum',
+        }
+    else:
+        agg_func = {
+            'datetime': 'first',
+            'open': 'first',
+            'high': 'max',
+            'low': 'min',
+            'close': 'last',
+            'volume': 'sum',
+            'base_index': 'first'
+        }        
+  
+    # Resamplear el dataframe 
+    dfx = df.resample(resample, on="datetime").agg(agg_func)
+    if reset_index:
+        dfx.reset_index(inplace=True,drop=True)
+    else:
+        dfx.set_index('base_index',inplace=True,drop=True)
+        dfx.rename_axis(None, inplace=True)
     return dfx
 
 def join_after_resample(df,serie,column,periods=None):
@@ -281,6 +299,35 @@ def fibonacci_levels(start, end):
 
     return prices  
 
+def fibonacci_retroceso(fb_a,fb_b,level):
+    #Los puntos a y b se ingresan en el orden que aparecen en funcion del tiempo
+    # a: Primer punto (inicio de la tendencia).
+    # b: Segundo punto (final del primer movimiento).
+
+    base = abs(fb_a - fb_b) 
+    if fb_b>fb_a:
+        price = fb_b - base*level
+        return price
+    elif fb_b<fb_a:
+        price = fb_b + base*level
+        return price
+    return None
+
+def fibonacci_extension(fb_a, fb_b, fb_c, level):
+    #Los puntos a, b y c se ingresan en el orden que aparecen en funcion del tiempo
+    # a: Primer punto (inicio de la tendencia).
+    # b: Segundo punto (final del primer movimiento).
+    # c: Tercer punto (retroceso dentro de la tendencia).
+
+    base = abs(fb_b - fb_a)  
+    if fb_a < fb_b:  #Alcista
+        price = fb_c + base * level
+    elif fb_a > fb_b:  #Bajista
+        price = fb_c - base * level
+    else:
+        return None  
+    return price
+
 def polyfit_trend(df, column='close',window=7,fwd=1, prefix='pf'):
     df[f'{prefix}_pred'] = df[column].rolling(window).apply(lambda x: predict_price(x,fwd))
     df[f'{prefix}_change']  = ((df[f'{prefix}_pred']/df[f'{prefix}_pred'].shift(1))-1)*100
@@ -303,10 +350,25 @@ def predict_price(window,fwd=1):
 
     return pred  
 
-def zigzag(df,af=2):
-    df = psar(df,af0=af/100,af=af/10)
-    df['ZigZag'] = np.where((df['psar_high']>0) & (df['psar_low'].shift(1)>0), df['psar_high'] , None)
-    df['ZigZag'] = np.where((df['psar_low']>0) & (df['psar_high'].shift(1)>0), df['psar_low'] , df['ZigZag'])
+def zigzag(df,af=2, resample_periods=1):
+
+    if resample_periods > 1:
+        df_r = resample(df, periods=resample_periods, reset_index = False)
+        df_r = psar(df_r,af0=af/100,af=af/10) 
+        df_r['ZigZag'] = np.where((df_r['psar_high']>0) & (df_r['psar_low'].shift(1)>0), df_r['psar_high'] , None)
+        df_r['ZigZag'] = np.where((df_r['psar_low']>0) & (df_r['psar_high'].shift(1)>0), df_r['psar_low'] , df_r['ZigZag'])
+        df_r = df_r[df_r['ZigZag']>0]
+        df['ZigZag'] = None
+        for i,row in df_r.iterrows():
+            df.at[i,'ZigZag'] = row['ZigZag']
+    
+    else:
+        df = psar(df,af0=af/100,af=af/10) 
+        df['ZigZag'] = np.where((df['psar_high']>0) & (df['psar_low'].shift(1)>0), df['psar_high'] , None)
+        df['ZigZag'] = np.where((df['psar_low']>0) & (df['psar_high'].shift(1)>0), df['psar_low'] , df['ZigZag'])
+        df.drop(columns=['psar_high','psar_low'],inplace=True)
+    
+
         
     return df
 
