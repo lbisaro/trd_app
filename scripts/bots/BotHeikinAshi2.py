@@ -9,7 +9,7 @@ from scripts.indicators import HeikinAshi
 
 class BotHeikinAshi2(Bot_Core):
 
-    short_name = 'HAL'
+    short_name = 'HA2'
     symbol = ''
     quote_perc =  0 
     quote_perc_down = 0 
@@ -127,7 +127,7 @@ class BotHeikinAshi2(Bot_Core):
     
         price = self.price
         start_cash = round(self.quote_qty ,self.qd_quote)
-        
+
         if self.signal == 'COMPRA' and price > last_buy*1.01:
             if self.interes == 's': #Interes Simple
                 cash = start_cash if start_cash <= self.wallet_quote else self.wallet_quote
@@ -151,7 +151,12 @@ class BotHeikinAshi2(Bot_Core):
         elif price*self.wallet_base > 10:
             limit_price = round(self.row['stop_loss'],self.qd_price)
             self.update_order_by_tag(tag="STOP_LOSS",limit_price=limit_price,qty=self.wallet_base)
-        
+
+        mddpos = 4
+        if 'pos___pnl' in self.status and self.status['pos___pnl_max']['r']> mddpos:
+            if self.status['pos___pnl_max']['r']-self.status['pos___pnl']['r'] > mddpos:
+                self.close(flag=Order.FLAG_TAKEPROFIT)
+            
     def on_order_execute(self, order):
         if order.side == Order.SIDE_SELL and 'last_buy' in self.status:
             del self.status['last_buy']

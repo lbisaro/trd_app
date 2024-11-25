@@ -159,6 +159,11 @@ class BotPolyfit(Bot_Core):
         #if self.signal == 'VENTA':
         #    self.sell(qty=self.wallet_base,flag=Order.FLAG_SIGNAL)
 
+        mddpos = 4
+        if 'pos___pnl' in self.status and self.status['pos___pnl_max']['r']> 3:
+            if self.status['pos___pnl_max']['r']-self.status['pos___pnl']['r'] > 1:
+                self.close(flag=Order.FLAG_TAKEPROFIT)
+                print(self.datetime,'---------------------> close')
     
     def on_order_execute(self,order):
         if order.side == Order.SIDE_BUY:

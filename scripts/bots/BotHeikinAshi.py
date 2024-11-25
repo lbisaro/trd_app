@@ -9,7 +9,7 @@ from scripts.indicators import HeikinAshi
 
 class BotHeikinAshi(Bot_Core):
 
-    short_name = 'HAL'
+    short_name = 'HA'
     symbol = ''
     quote_perc =  0 
     quote_perc_down = 0 

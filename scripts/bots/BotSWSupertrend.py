@@ -41,14 +41,14 @@ class BotSWSupertrend(Bot_Core):
                 'quote_perc': {
                         'c' :'quote_perc',
                         'd' :'Compra inicial',
-                        'v' :'75',
+                        'v' :'95',
                         't' :'perc',
                         'pub': True,
                         'sn':'Inicio', },
                 'lot_to_safe': {
                         'c' :'lot_to_safe',
                         'd' :'Resguardo si supera la compra inicial',
-                        'v' :'2',
+                        'v' :'4',
                         't' :'perc',
                         'pub': True,
                         'sn':'Resguardo', },
@@ -62,14 +62,14 @@ class BotSWSupertrend(Bot_Core):
                 'stop_loss': {
                         'c' :'stop_loss',
                         'd' :'Stop Loss',
-                        'v' :'3',
+                        'v' :'5',
                         't' :'perc',
                         'pub': True,
                         'sn':'SL', },
                 'interes': {
                         'c' :'interes',
                         'd' :'Tipo de interes',
-                        'v' :'s',
+                        'v' :'c',
                         't' :'t_int',
                         'pub': True,
                         'sn':'Int', },

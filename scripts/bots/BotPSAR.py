@@ -87,14 +87,14 @@ class BotPSAR(Bot_Core):
             #self.buy_limit(qty=qty,limit_price = self.row['ema'],flag=Order.FLAG_TAKEPROFIT,tag='BUY')
             self.buy(qty=qty,flag=Order.FLAG_SIGNAL,tag='BUY')
 
-        #if open_orders >= 2:
-        #    if self.row['psar_low']>0:
-        #        self.update_order_by_tag('STOP_LOSS',limit_price=self.row['psar_low'])
-        #    #if self.row['psar_high']>0:
-        #    #    self.update_order_by_tag('TAKE_PROFIT',limit_price=self.row['psar_high'])
-
-        #if open_orders == 1 and self.row['psar_high']>0:
-        #    self.update_order_by_tag('BUY',limit_price=self.row['psar_high'])
+        mddpos = 4
+        if 'pos___pnl_max' in self.status:
+            if self.status['pos___pnl_max']['r'] > mddpos:
+                mddpos = self.status['pos___pnl_max']['r']/4
+        if 'pos___pnl' in self.status and self.status['pos___pnl_max']['r']> mddpos:
+            if self.status['pos___pnl_max']['r']-self.status['pos___pnl']['r'] > mddpos:
+                self.close(flag=Order.FLAG_TAKEPROFIT)
+                self.cancel_orders()
 
 
     def on_order_execute(self,order):
