@@ -83,7 +83,10 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
 
 
     def set(self, parametros):
-        for v in parametros:
+        for v in parametros:       
+            if parametros[v]['t'] == 'int' and not float(parametros[v]['v']).is_integer():
+                prm_d = parametros[v]['d']
+                raise Exception(f'El parametro {prm_d} debe ser un numero entero.')
             self.__setattr__(parametros[v]['c'], parametros[v]['v'])
     
     def __setattr__(self, prm, val):

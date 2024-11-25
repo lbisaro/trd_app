@@ -51,6 +51,12 @@ def run(request):
         prmPost = eval(request.POST['parametros'])
         for dict in prmPost:
             for k,v in dict.items():
+                if k in run_bot.parametros:
+                    if run_bot.parametros[k]['t'] == 'int' and not float(v).is_integer():
+                        prm_d = run_bot.parametros[k]['d']
+                        json_rsp['ok'] = False
+                        json_rsp['error'] = f'El parametro {prm_d} debe ser un numero entero.'
+                        return JsonResponse(json_rsp)
                 run_bot.__setattr__(k, v)
 
         run_bot.quote_qty = float(request.POST['quote_qty'])
@@ -64,6 +70,7 @@ def run(request):
 
         mirror = request.POST['mirror']
 
+        
         atributos = run_bot.__dict__
         json_rsp['parametros'] = {}
         for attr in atributos:

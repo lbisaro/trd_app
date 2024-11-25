@@ -95,50 +95,54 @@ def create(request):
         bt.usuario=request.user
         bt.parametros=parametros
 
-        run_bot = bt.get_instance()
-        run_bot.quote_qty = 1000
-        run_bot.interval_id = interval_id
-        prmPost = eval(request.POST['parametros'])
-        for dict in prmPost:
-            for k,v in dict.items():
-                run_bot.__setattr__(k, v)
-
-        atributos = run_bot.__dict__
-
-        json_rsp['parametros'] = {}
-        run_botValid = False
-        for attr in atributos:
-            val = atributos[attr]
-            if attr != '_strategy':
-                json_rsp['parametros'][attr] = val
-
         try:
-            run_bot.valid()
-            run_botValid = True
-        
+            run_bot = bt.get_instance()
+            run_bot.quote_qty = 1000
+            run_bot.interval_id = interval_id
+            prmPost = eval(request.POST['parametros'])
+            for dict in prmPost:
+                for k,v in dict.items():
+                    run_bot.__setattr__(k, v)
+
+            atributos = run_bot.__dict__
+
+            json_rsp['parametros'] = {}
+            run_botValid = False
+            for attr in atributos:
+                val = atributos[attr]
+                if attr != '_strategy':
+                    json_rsp['parametros'][attr] = val
+
+            try:
+                run_bot.valid()
+                run_botValid = True
+            
+            except Exception as e:
+                json_rsp['ok'] = False
+                json_rsp['error'] = str(e)
+
+            if run_botValid:
+                try:
+                    bt.save()
+                    bt.iniciar()
+
+                    json_rsp['ok'] = True
+                    json_rsp['id'] = bt.id
+
+                except ValidationError as e:
+                    strError = ''
+                    for err in e:
+                        if err[0] != '__all__':
+                            strError += '<br/><b>'+err[0]+'</b> '
+                        for desc in err[1]:
+                            strError += desc+" "
+                    json_rsp['ok'] = False
+                    json_rsp['error'] = strError
         except Exception as e:
             json_rsp['ok'] = False
             json_rsp['error'] = str(e)
-
-        if run_botValid:
-            try:
-                bt.save()
-                bt.iniciar()
-
-                json_rsp['ok'] = True
-                json_rsp['id'] = bt.id
-
-            except ValidationError as e:
-                strError = ''
-                for err in e:
-                    if err[0] != '__all__':
-                        strError += '<br/><b>'+err[0]+'</b> '
-                    for desc in err[1]:
-                        strError += desc+" "
-                json_rsp['ok'] = False
-                json_rsp['error'] = strError
+        
         return JsonResponse(json_rsp)
-
 
 @login_required
 def view(request,backtest_id):
