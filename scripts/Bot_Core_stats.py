@@ -30,11 +30,57 @@ class Bot_Core_stats:
         v = f'{wallet_tot:.2f} {self.quote_asset}'
         self.status['wallet_tot'] = {'l': 'Capital actual','v': v,'r':wallet_tot}
 
+        #self.make_trades()
+        pos___base_qty = 0
+        pos___quote_qty = 0
+        pos___orders_qty = 0
+
         pos_quote = 0
+        pos_order_ids = []
+        last_order_id = 0
         for i in self._trades:
             order = self._trades[i]
             sign = -1 if order.side == Order.SIDE_BUY else 1
             pos_quote += order.price * order.qty * sign
+
+
+            if order.pos_order_id == 0:
+                pos_order_ids.append(order.id)
+                if order.side == Order.SIDE_BUY:
+                    pos___base_qty += order.qty
+                    pos___quote_qty += order.qty*order.price
+                else:
+                    pos___base_qty -= order.qty
+                    pos___quote_qty -= order.qty*order.price
+                pos___orders_qty += 1
+                last_order_id = order.id
+        
+        if pos___base_qty*self.price <= 2:
+            if len(pos_order_ids)>0:
+                for oid in pos_order_ids:
+                    self._trades[oid].pos_order_id = last_order_id
+                    pos_order_ids = []
+                    pos___avg_price = 0
+                    if 'pos___base_qty' in self.status:
+                        keys_to_remove = [key for key in self.status if key.startswith('pos__')]
+                        for key in keys_to_remove:
+                            del self.status[key]
+        else:
+            pos___avg_price = pos___quote_qty/pos___base_qty
+            pos___pnl = ((self.price/pos___avg_price)-1)*100
+            if 'pos___pnl_max' in self.status:
+                pos___pnl_max = pos___pnl if pos___pnl > self.status['pos___pnl_max']['r'] else self.status['pos___pnl_max']['r']
+            else:
+                pos___pnl_max = pos___pnl
+                
+            self.status['pos___base_qty']   = {'l':'Pos. Base', 'v': round(pos___base_qty,self.qd_qty), 'r': pos___base_qty}
+            self.status['pos___quote_qty']  = {'l':'Pos. Quote', 'v': round(pos___quote_qty,self.qd_quote), 'r': pos___quote_qty}
+            self.status['pos___orders_qty'] = {'l':'Pos. Ordenes', 'v': pos___orders_qty, 'r': pos___orders_qty}
+            self.status['pos___avg_price']  = {'l':'Pos. Precio Promedio', 'v': round(pos___avg_price,self.qd_price), 'r': pos___avg_price}
+            self.status['pos___pnl']        = {'l':'Pos. PNL ',     'v': f'{pos___pnl:.2f} %', 'r': pos___pnl}
+            self.status['pos___pnl_max']    = {'l':'Pos. PNL Max.', 'v': f'{pos___pnl_max:.2f} %', 'r': pos___pnl_max}
+        
+            
         pos_quote += wallet_base_in_quote
         pos_quote_sign = '' if pos_quote <= 0 else '+'
         v = f'{pos_quote_sign}{pos_quote:.2f}  {self.quote_asset}'

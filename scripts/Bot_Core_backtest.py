@@ -237,6 +237,7 @@ class Bot_Core_backtest:
         usd_strat = round( self.price * self.wallet_base + self.wallet_quote, self.qd_quote )
         
         self.row = row
+        self.get_status()
         return usd_strat
 
     def backtest_check_orders(self):
@@ -356,7 +357,6 @@ class Bot_Core_backtest:
         self.df_trades = pd.DataFrame(columns=self.df_trades_columns)
         for i in self._trades:
             order = self._trades[i]
-            
             order.comision = round((order.price*order.qty)*(Order.test_exch_comision_perc/100),4)
             self._trades[i].comision = order.comision
             
