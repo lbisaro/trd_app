@@ -108,13 +108,6 @@ class BotHeikinAshi(Bot_Core):
         status_datetime = dt.datetime.now()
         status = super().get_status()
         
-        if self.signal != 'NEUTRO':
-            if self.signal == 'COMPRA':
-                cls = 'text-success'
-            else: 
-                cls = 'text-danger'
-            status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
-        
         if 'HA_side' in self.row:
             if self.row['HA_side'] > 0:
                 cls = 'text-success'

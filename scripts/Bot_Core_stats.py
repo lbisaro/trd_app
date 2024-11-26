@@ -10,6 +10,15 @@ class Bot_Core_stats:
 
     def get_status(self):
 
+        status_datetime = dt.datetime.now()
+        if self.signal == 'COMPRA':
+            cls = 'text-success'
+            self.status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
+        elif self.signal == 'VENTA': 
+            cls = 'text-danger'
+            self.status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
+
+
         last_exec = dt.datetime.now()
         self.status['last_exec'] = {'l': 'Ultima ejecucion','v': last_exec.strftime('%d-%m-%Y %H:%M'), 'r': last_exec.strftime('%d-%m-%Y %H:%M')}
         

@@ -105,12 +105,6 @@ class BotSWSupertrend(Bot_Core):
                 cls = 'text-secondary'
             status['trend'] = {'l': 'Tendencia','v': tendencia, 'r': self.row['st_trend'], 'cls': cls}
 
-        if self.signal != 'NEUTRO':
-            if self.signal == 'COMPRA':
-                cls = 'text-success'
-            else: 
-                cls = 'text-danger'
-            status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
         return status
         
         

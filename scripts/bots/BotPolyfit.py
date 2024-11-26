@@ -103,18 +103,6 @@ class BotPolyfit(Bot_Core):
         if len(err):
             raise Exception("\n".join(err))
         
-    def get_status(self):
-        status_datetime = dt.datetime.now()
-        status = super().get_status()
-        
-        if self.signal != 'NEUTRO':
-            if self.signal == 'COMPRA':
-                cls = 'text-success'
-            else: 
-                cls = 'text-danger'
-            status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
-        return status
-        
     def start(self):
 
         df = self.klines.copy()

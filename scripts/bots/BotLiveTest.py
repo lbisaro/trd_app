@@ -83,13 +83,6 @@ class BotLiveTest(Bot_Core):
         self.print_orders = False
         self.graph_open_orders = False
         self.status['live_test_start'] = {'l': 'Live Test Start()','v': 'Probando','r':'Probando'}
-
-    def get_status(self):
-        status = super().get_status()
-        
-        for k in self.status:
-            status[k] = self.status[k]
-        return status   
         
     def next(self):
         if not 'live_test_next' in self.status:
