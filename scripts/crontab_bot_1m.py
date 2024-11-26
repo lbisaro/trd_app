@@ -46,7 +46,7 @@ def run():
     ### Buscar Señales
     for estr in estrategias:
         botClass = estr.get_instance()
-        klines = exchInfo.get_klines(botClass.symbol, estr.interval_id, limit=201)
+        klines = exchInfo.get_klines(botClass.symbol, estr.interval_id, limit=490)
         signal_row = botClass.live_get_signal(klines)
         signal = signal_row['signal']
         if signal_row['signal'] != 'NEUTRO':
