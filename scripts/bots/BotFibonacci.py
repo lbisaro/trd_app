@@ -1,5 +1,6 @@
 from bot.model_kline import *
 import numpy as np
+import datetime as dt
 from scripts.Bot_Core import Bot_Core
 from scripts.indicators import zigzag, fibonacci_extension
 from scripts.functions import round_down
@@ -11,6 +12,8 @@ class BotFibonacci(Bot_Core):
     symbol = ''
     quote_perc = 0.0
     interes = ''
+    rsmpl = 0
+    trail = 0
     fb_levels = [0.0,        
                  0.236,      
                  0.382, 
@@ -30,6 +33,8 @@ class BotFibonacci(Bot_Core):
         self.stop_loss = 0.0
         self.take_profit = 0.0
         self.interes = 's'  
+        self.rsmpl = 0
+        self.trail = 0
 
 
     descripcion = 'Bot Core v2 \n'\
@@ -50,13 +55,27 @@ class BotFibonacci(Bot_Core):
                         't' :'perc',
                         'pub': True,
                         'sn':'Quote', },
-                'interes': {
+                 'interes': {
                         'c' :'interes',
                         'd' :'Tipo de interes',
                         'v' :'s',
                         't' :'t_int',
                         'pub': True,
                         'sn':'Int', },
+                 'rsmpl': {
+                        'c' :'rsmpl',
+                        'd' :'Resample para Pivots',
+                        'v' : 8,
+                        't' :'int',
+                        'pub': True,
+                        'sn':'Rsmp', },
+                 'trail': {
+                        'c' :'trail',
+                        'd' :'Trail para posicion',
+                        'v' : '4',
+                        't' :'perc',
+                        'pub': True,
+                        'sn':'TRL', },
                 }
 
     def valid(self):
@@ -65,13 +84,16 @@ class BotFibonacci(Bot_Core):
             err.append("Se debe especificar el Par")
         if self.quote_perc <= 0 or self.quote_perc > 100:
             err.append("El Porcentaje de capital por operacion debe ser un valor entre 0.01 y 100")
-
+        if self.rsmpl < 1:
+            err.append("Se debe especificar el Resample >= 1")
+        if self.trail < 1:
+            err.append("Se debe especificar el Trail >= 1")
         if len(err):
             raise Exception("\n".join(err))
         
     def start(self):
         
-        self.klines = zigzag(self.klines, resample_periods=8)
+        self.klines = zigzag(self.klines, resample_periods=self.rsmpl)
  
         #Detectando pivots para analisis de fibonacci
         pivots = self.klines[self.klines['ZigZag']>0].copy()
@@ -114,7 +136,54 @@ class BotFibonacci(Bot_Core):
         self.print_orders = False
         self.graph_open_orders = True
 
+    def get_status(self):
+        status_datetime = dt.datetime.now()
+        status = super().get_status()
+        
+        if self.signal != 'NEUTRO':
+            if self.signal == 'COMPRA':
+                cls = 'text-success'
+            else: 
+                cls = 'text-danger'
+            status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
+        
+        if 'trend' in self.row:
+            if self.row['trend'] >= 2:
+                cls = 'text-success'
+                trend = 'Alza+'
+            elif self.row['trend'] == 1:
+                cls = 'text-success'
+                trend = 'Alza'
+            elif self.row['trend'] == -1:
+                cls = 'text-danger'
+                trend = 'Baja'
+            elif self.row['trend'] <= -2:
+                cls = 'text-danger'
+                trend = 'Baja+'
+            else: 
+                cls = ''
+                trend = 'Neutral'
+            status['trend'] = {'l': 'Tendencia','v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.row['trend'], 'cls': cls}
 
+        if 'long_fbe_0' in self.row or 'long_fbe_1' in self.row or 'long_fbe_2' in self.row:
+            pivots = ''
+            if 'long_fbe_0' in self.row:
+                pvt = self.row['long_fbe_0']
+                pivots += f'[0: {pvt}] '
+
+            if 'long_fbe_1' in self.row:
+                pvt = self.row['long_fbe_1']
+                pivots += f'[1: {pvt}] '
+
+            if 'long_fbe_2' in self.row:
+                pvt = self.row['long_fbe_2']
+                pivots += f'[2: {pvt}] '
+
+            status['pivots'] = {'l': 'Pivots','v': pivots, 'r': self.row['long_fbe_0']}
+
+        print(status)
+        return status    
+    
     def next(self):
         signal = self.signal
         price = self.price
@@ -184,7 +253,7 @@ class BotFibonacci(Bot_Core):
             self.cancel_orders()
             self.position = False
 
-        mddpos = 4
+        mddpos = self.trail
         if 'pos___pnl_max' in self.status:
             if self.status['pos___pnl_max']['r'] > mddpos*4:
                 mddpos = self.status['pos___pnl_max']['r']/4
