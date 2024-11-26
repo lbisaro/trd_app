@@ -158,23 +158,22 @@ class BotFibonacci(Bot_Core):
                 trend = 'Neutral'
             status['trend'] = {'l': 'Tendencia','v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.row['trend'], 'cls': cls}
 
-        if 'long_fbe_0' in self.row or 'long_fbe_1' in self.row or 'long_fbe_2' in self.row:
+        if 'fb_0' in self.row or 'fb_1' in self.row or 'fb_2' in self.row:
             pivots = ''
-            if 'long_fbe_0' in self.row:
-                pvt = self.row['long_fbe_0']
+            if 'fb_0' in self.row:
+                pvt = self.row['fb_0']
                 pivots += f'[0: {pvt}] '
 
-            if 'long_fbe_1' in self.row:
-                pvt = self.row['long_fbe_1']
+            if 'fb_1' in self.row:
+                pvt = self.row['fb_1']
                 pivots += f'[1: {pvt}] '
 
-            if 'long_fbe_2' in self.row:
-                pvt = self.row['long_fbe_2']
+            if 'fb_2' in self.row:
+                pvt = self.row['fb_2']
                 pivots += f'[2: {pvt}] '
 
-            status['pivots'] = {'l': 'Pivots','v': pivots, 'r': self.row['long_fbe_0']}
+            status['pivots'] = {'l': 'Pivots','v': pivots, 'r': self.row['fb_0']}
 
-        print(status)
         return status    
     
     def next(self):
