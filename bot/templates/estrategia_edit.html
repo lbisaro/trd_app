@@ -145,9 +145,10 @@
         else if (type == 't_int')
         {
             html += '<td><div class="input-group ">'+
-                    '<select class="form-control value" id="'+parametro+'_v">'+
-                    '<option value="" >Seleccionar</option>'+
-                    '<option value="c" '+(value=='c'?'SELECTED':'')+' >Compuesto</option>'+
+                    '<select class="form-control value" id="'+parametro+'_v">';
+            if ($('#estrategia_id').val() < 1)        
+                html += '<option value="" >Seleccionar</option>';
+            html += '<option value="c" '+(value=='c'?'SELECTED':'')+' >Compuesto</option>'+
                     '<option value="s" '+(value=='s'?'SELECTED':'')+' >Simple</option>'+
                     '</select>'+
                     '</div></td>';
