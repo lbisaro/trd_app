@@ -137,19 +137,10 @@
             html += '<td><select class="form-control value" id="'+parametro+'_v" >';
             if ($('#estrategia_id').val() < 1)
                 html += '<option value="">Seleccionar</option>';
-            //{% for symbol in symbols %}
-            //{% if symbol.activo > 0  %}
-                html += '<option value="{{symbol.symbol}}" >{{symbol.symbol}}</option>';
-            //{% endif %}
-            //{% endfor %}
+            {% for symbol in symbols %}
+            html += '<option value="{{symbol.symbol}}" >{{symbol.symbol}}</option>';
+            {% endfor %}
             html += '</select></td>';
-            if ($('#estrategia_id').val() > 0)
-            {
-                setTimeout(function() {
-                    $('#'+parametro+'_v option[value='+value+']').attr('selected','selected');
-                },200)
-            }
-            
         }
         else if (type == 't_int')
         {

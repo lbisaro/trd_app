@@ -124,8 +124,9 @@ def estrategia_edit(request,estrategia_id):
     gen_bot = GenericBotClass()
     clases = gen_bot.get_clases()
     qtyBots = len(bots)
-    symbols = Symbol.objects.order_by('symbol')
     intervals = fn.get_intervals().to_dict('records')
+    parametros = estrategia.parse_parametros()
+    symbols = Symbol.objects.filter(symbol=parametros['symbol']['v'])
     if request.method == 'GET':
         return render(request, 'estrategia_edit.html',{
             'title': 'Editar estrategia '+estrategia.nombre,
@@ -140,7 +141,7 @@ def estrategia_edit(request,estrategia_id):
             'activo': estrategia.activo,
             'qtyBots': qtyBots,
             'symbols': symbols,
-            'parametros': estrategia.parse_parametros(),
+            'parametros': parametros,
         })
     else:
 
