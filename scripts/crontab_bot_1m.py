@@ -5,9 +5,13 @@ from user.models import UserProfile
 import scripts.functions as fn
 
 from scripts.app_log import app_log as Log
-
+import time
 
 def run():
+
+    #Delay de 3 segundos
+    time.sleep(3)
+
     log = Log()
     json_rsp = {}
     startDt = datetime.now()
@@ -50,7 +54,7 @@ def run():
         klines = exchInfo.get_klines(botClass.symbol, estr.interval_id, limit=990)
         signal_row = botClass.live_get_signal(klines)
         signal = signal_row['signal']
-        #print('crontab_bot_1m.py -> ',signal_row['datetime'],signal_row['signal'])
+        #print('crontab_bot_1m.py -> ',signal_row['datetime'],signal_row['signal'], end=' -> ')
         if signal_row['signal'] != 'NEUTRO':
             log.info(f'{estr} {signal}')
             print(estr, signal_row['datetime'], signal_row['signal'])
