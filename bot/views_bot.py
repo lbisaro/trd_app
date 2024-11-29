@@ -73,7 +73,7 @@ def bot(request, bot_id):
 
     #Obtenniendo Log Klines
     log_klines_file = bot.get_klines_file()
-    file_result = log_klines_file
+    file_result = os.getcwd()+' '+log_klines_file
     if os.path.isfile(log_klines_file):
         with open(log_klines_file, 'rb') as file:
             klines = pickle.load(file)
