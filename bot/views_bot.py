@@ -61,21 +61,32 @@ def bot(request, bot_id):
     pnl = quote_actual-bot.quote_qty
     pnl_perc = (pnl/bot.quote_qty)*100
     
+    #Obteniendo datos de PNL y Price registrado por el Bot
+    pnl = bot.get_pnl()
+    pnl_start = pnl.loc[0]['datetime']
 
-    klines = bot.get_pnl()
     max_drawdown_reg = 0
-    if len(klines)>0:
-        max_drawdown_reg = botClass.ind_maximo_drawdown(klines,'pnl')
+    if len(pnl)>0:
+        max_drawdown_reg = botClass.ind_maximo_drawdown(pnl,'pnl')
 
+    #Obtenniendo Log Klines
+    log_klines_file = bot.get_klines_file()
+    with open(log_klines_file, 'rb') as file:
+        klines = pickle.load(file)
+        klines = klines[klines['datetime']>=pnl_start]
+        klines_start = klines.loc[0]['datetime']
+
+    pnl = pnl[pnl['datetime']>=klines_start]
+    klines = pd.merge_asof(klines, pnl[['datetime', 'pnl']], on='datetime', direction='backward')
     if not klines.empty:
-        klines.drop(columns=['id', 'bot_id'],inplace=True)
-        ultimo_registro = klines.iloc[-1,:]
+        
+        ultimo_registro = pnl.iloc[-1,:]
         nuevo_registro = pd.DataFrame({
             "datetime": [datetime.now()],
             "price": [ultimo_registro["price"]],
             "pnl": [ultimo_registro["pnl"]]
         })
-        klines = pd.concat([klines, nuevo_registro], ignore_index=True)
+        pnl = pd.concat([pnl, nuevo_registro], ignore_index=True)
 
         #Ordenes 
         db_orders = bot.get_orders()
@@ -91,8 +102,8 @@ def bot(request, bot_id):
             df_orders['buy_sl']  = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
             df_orders['sell_sl'] = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
             
-            #Ordenes Abiertas
             
+            #Ordenes Abiertas
             for i in df_orders[df_orders['completed']<1].index:
                 row = df_orders.iloc[i]
                 key = 'OPEN_'+str(row['id'])
@@ -104,7 +115,7 @@ def bot(request, bot_id):
             'pos_order_id', 'symbol_id', 'side', 'flag', 'type', 'limit_price',
             'tag'],inplace=True)
 
-        
+            df_orders = df_orders[df_orders['datetime']>klines_start]
             if df_orders['buy'].count() > 0:
                 events.append({'df':df_orders,'col':'buy'    ,'name': 'BUY' ,    'color': 'green','symbol': 'circle' })
             if df_orders['sell'].count() > 0:
@@ -118,7 +129,12 @@ def bot(request, bot_id):
             if df_orders['sell_sl'].count() > 0:
                 events.append({'df':df_orders,'col':'sell_sl','name': 'SELL-SL', 'color': 'red',  'symbol': 'triangle-down' })
         
-        fig = ohlc_chart(klines, open_orders=open_orders, events=events)
+        #klines.rename({'price':'log_price',},axis=1,inplace=True)
+        #print(klines)
+        #indicators = [
+        #    {'col': 'log_price','name': 'Price','color': 'yellow','row': 1, 'mode':'lines',},
+        #]
+        fig = ohlc_chart(klines, open_orders=open_orders, events=events) #indicators=indicators, 
         chart = fig.to_html(config = {'scrollZoom': True, }) 
     else:
         chart = ''
