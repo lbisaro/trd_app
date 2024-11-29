@@ -17,6 +17,7 @@ class BotFibonacci(Bot_Core):
 
     indicadores = [
             {'col': 'ZigZag', 'name': 'ZigZag', 'color': 'white', 'row': 1,  'mode':'lines',},             
+            {'col': 'long_fbe_0', 'name': 'Fibonacci StopLoss', 'color': 'orange', 'row': 1,  'mode':'markers',},             
             ]
     
     fb_levels = [0.0,        
@@ -190,10 +191,10 @@ class BotFibonacci(Bot_Core):
         if 'pos___base_qty' in self.status:
             if self.status['pos___base_qty']['r'] > 0:
                 self.position = True
-            
+        print('BotFibonacci.py -> position: ',self.position)
         if not self.position:
             if signal == 'COMPRA':
-
+                print('BotFibonacci.py -> Entro en COMPRA')
                 take_profit_price = 0
                 stop_loss_price = 0
                 pre_level = -1.0
@@ -210,7 +211,7 @@ class BotFibonacci(Bot_Core):
                             #stop_loss_price = pre_level_price
                             stop_loss_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level=0.0)
                     pre_level = level
-
+                print(f'BotFibonacci.py -> take_profit_price {take_profit_price} stop_loss_price {stop_loss_price}')
                 if take_profit_price>0 and stop_loss_price>0:
 
                     #PENDIENTE - Analisis del riesgo a tomar
@@ -239,12 +240,12 @@ class BotFibonacci(Bot_Core):
                         #self.orderid_tp = self.sell_limit(buyed_qty,Order.FLAG_TAKEPROFIT,take_profit_price) 
                     
                         if self.orderid_sl == 0:
-                            print('\033[31mERROR\033[0m',self.row['datetime'],'STOP-LOSS',buyed_qty,' ',quote_to_sell,self.wallet_quote)  
+                            print('BotFibonacci.py -> \033[31mERROR\033[0m',self.row['datetime'],'STOP-LOSS',buyed_qty,' ',quote_to_sell,self.wallet_quote)  
                         #if self.orderid_tp == 0:
                         #    print('\033[31mERROR\033[0m',self.row['datetime'],'TAKE-PROFIT',buyed_qty,' ',quote_to_sell,self.wallet_quote) 
                     
                     else:
-                        print('\033[31mERROR\033[0m',self.row['datetime'],'BUY price',self.price,'USD',quote_to_sell,self.wallet_quote)
+                        print('BotFibonacci.py -> \033[31mERROR\033[0m',self.row['datetime'],'BUY price',self.price,'USD',quote_to_sell,self.wallet_quote)
 
         if self.position and signal == 'VENTA':
             self.close(Order.FLAG_SIGNAL)
