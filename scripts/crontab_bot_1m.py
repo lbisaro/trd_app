@@ -41,6 +41,7 @@ def run():
     
     ### Si hay estrategias activas
     signal_rows = {}
+    estrategia_klines = {}
     
         
     ### Buscar Señales
@@ -53,6 +54,7 @@ def run():
             log.info(f'{estr} {signal}')
             print(estr, signal_row['datetime'], signal_row['signal'])
         signal_rows[estr.id] = signal_row
+        estrategia_klines[estr.id] = botClass.klines
     
     ### - Obtener lista de bots activos ordenados por usuario_id
     bots = Bot.get_bots_activos()
@@ -136,6 +138,7 @@ def run():
             botClass.price = price
             botClass.exchange_wallet = exchange_wallet
             execRes = botClass.live_execute(just_check_orders)
+
             #if len(execRes) > 0:
             #    log.info(f'Execute: {execRes}')
 
@@ -149,8 +152,8 @@ def run():
             #Procesando estado actual del bot
             status = botClass.get_status()
             bot.update_status(status)
-            #for k in status:
-            #    print(status[k]['l'],status[k]['r'],status[k]['v'])
+
+            bot.log_klines(estrategia_klines[bot.estrategia_id],bot.get_klines_file())
             
 
         except Exception as e:

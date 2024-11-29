@@ -45,6 +45,7 @@ class BotFibonacci_old(Bot_Core):
                         'c' :'quote_perc',
                         'd' :'Operacion sobre capital',
                         'v' :'95',
+                        'l' :'[10,100]',
                         't' :'perc',
                         'pub': True,
                         'sn':'Quote', },

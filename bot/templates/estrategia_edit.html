@@ -115,21 +115,23 @@
                 }
             }); 
         }
+        setTimeout(set_estr_prm,200);
     } 
 
-    function addParametro(parametro,descripcion,value,type,public)
+    function addParametro(parametro,descripcion,value,type,public,limit)
     {
         var qty = $('#parametros tbody tr').length
         if (public == 'False')
             descripcion += ' <i class="bi bi-shield-lock text-danger"></i>';
 
         html = '<tr>';
-        html += '<td>'+descripcion+'<input type="hidden" class="parametro" id="'+parametro+'_v" value="'+parametro+'"></td>';
+        html += '<td>'+descripcion+'<input type="hidden" class="parametro" value="'+parametro+'"></td>';
         if (type == 'perc')
         {
-            html += '<td><div class="input-group ">'+
+            html += '<td><div class="input-group">'+
                     '<span class="input-group-text" >%</span>'+
-                    '<input class="form-control value" value="'+parseFloat(value).toFixed(2)+'">'+
+                    '<input class="form-control value estr_prm" id="'+parametro+'_v" value="'+parseFloat(value).toFixed(2)+'" '+
+                        ' data-limit="'+limit+'" data-type="'+type+'" data-descripcion="'+descripcion+'" />'+
                     '</div></td>';
         }
         else if (type == 'symbol')
@@ -155,7 +157,8 @@
         }
         else
         {
-            html += '<td><input class="form-control value " value="'+value+'" id="'+parametro+'_v"></td>';
+            html += '<td><input class="form-control value estr_prm" value="'+value+'" id="'+parametro+'_v" '+
+                        ' data-limit="'+limit+'" data-type="'+type+'" data-descripcion="'+descripcion+'" /></td>';
         }
         html += '</tr>';
         var qty = $('#parametros tbody').append(html);
@@ -209,9 +212,9 @@
     }
 
     $(document).ready(function () {
-        //{% for k,prm in parametros.items %}
-        addParametro('{{prm.c}}', '{{prm.d}}', '{{prm.v}}', '{{prm.t}}', '{{prm.pub}}');
-        //{% endfor %} 
+        {% for k,prm in parametros.items %}
+        addParametro('{{prm.c}}', '{{prm.d}}', '{{prm.v}}', '{{prm.t}}', '{{prm.pub}}', '{{prm.l}}');
+        {% endfor %} 
         setTimeout(function () { 
             $('#nombre').focus(); 
 

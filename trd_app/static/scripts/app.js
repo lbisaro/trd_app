@@ -4,8 +4,8 @@ $(document).ready(function() {
             e.preventDefault();
         })
     })
-    
-    bootstrapFormat()
+    bootstrapFormat();
+    setTimeout(set_estr_prm,200);
 
 })
 
@@ -90,7 +90,86 @@ window.alert = function(msg,el,isError) {
     if (isError)
         var cls = 'text-danger';
     html_alert('Alerta!',msg,cls);
-    console.log(msg);
     return;
 }
 
+function set_estr_prm()
+{
+    $('.estr_prm').each( function () {
+        var type = $(this).attr('data-type');
+        var id = $(this).attr('id')
+        
+        if (type=='int')
+        {
+            $(this).attr('type','number');
+            $(this).attr('step','1');
+            $(this).attr('onkeypress','return event.charCode >= 48 && event.charCode <= 57');
+        }
+        if (type=='dec' || type== 'perc')
+        {
+            $(this).attr('type','number');
+        }
+
+        $(this).on('input',function () {
+
+            estrategia_prm_valid(id);
+        });
+    })
+}
+
+function estrategia_prm_valid(id)
+{
+    var input = $('#'+id);
+    value = input.val();
+    type = input.attr('data-type');
+    limit = input.attr('data-limit');
+    descripcion = input.attr('data-descripcion');
+    if (value && limit)
+    {
+        if (!validarNIntervalo(value,limit))
+        {
+            if (type == 'int')
+            {
+                alert('En el campo '+descripcion+' se debe ingresar un numero entero con los siguientes limites '+limit);
+                input.focus();
+            }
+            if (type == 'dec' || type== 'perc')
+            {
+                alert('En el campo '+descripcion+' se debe ingresar un numero con los siguientes limites '+limit);
+                input.val('');
+                input.focus();
+            }
+            return false;
+        }
+    }
+    return true;
+}
+
+function validarNIntervalo(valor, intervalo) {
+    // Expresión regular para detectar los límites del intervalo
+    const regex = /^([\(\[])(-?\d+\.?\d*),(-?\d+\.?\d*)([\)\]])$/;
+    const match = intervalo.match(regex);
+
+    if (!match) {
+        console.log("Intervalo mal formado. "+intervalo);
+        return false;
+    }
+
+    const [, inicioTipo, inicio, fin, finTipo] = match;
+
+    // Convertir los límites a números
+    const inicioNum = parseFloat(inicio);
+    const finNum = parseFloat(fin);
+    const numero = parseFloat(valor);
+
+    if (isNaN(numero)) {
+        return false; // El valor no es un número
+    }
+
+    // Validar según el tipo de intervalo
+    const esValido =
+        (inicioTipo === "[" ? numero >= inicioNum : numero > inicioNum) &&
+        (finTipo === "]" ? numero <= finNum : numero < finNum);
+
+    return esValido;
+}

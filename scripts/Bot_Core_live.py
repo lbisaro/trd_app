@@ -12,6 +12,7 @@ from bot.models import Bot as DbBot
 class Bot_Core_live:
     
     log = BotCoreLog()
+    klines = pd.DataFrame()
 
     def live_get_signal(self,klines):
         #self.log.info(f'Bot_Core_live::live_get_signal()')
@@ -150,10 +151,7 @@ class Bot_Core_live:
         
         print('Exec. Order ERROR ',exch_order['status'],str(order))
         return False 
-    
 
     def bloquear_bot(self,texto):
         bot = DbBot.objects.get(pk=self.bot_id) 
         bot.bloquear(texto)       
-
-

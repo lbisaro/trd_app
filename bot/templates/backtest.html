@@ -109,13 +109,13 @@ $(document).ready(function () {
         slct_bot = '<select id="slct_bot" class="form-control" onchange="filter_bots();">';
         for (i in bots)
             slct_bot += '<option value = "'+i+'">'+bots[i]+'</option>'; 
-        slct_bot += '<select>'; 
+        slct_bot += '</select>'; 
         $('#th_bot').html(slct_bot);
 
         slct_int = '<select id="slct_int" class="form-control" onchange="filter_bots();">';
         for (i in intervalos)
             slct_int += '<option value = "'+i+'">'+intervalos[i]+'</option>'; 
-        slct_int += '<select>'; 
+        slct_int += '</select>'; 
         $('#th_intervalo').html(slct_int);        
     }
 })

@@ -38,6 +38,7 @@ class BotHeikinAshi2(Bot_Core):
                         'c' :'quote_perc',
                         'd' :'Lote de compras (%)',
                         'v' :'50',
+                        'l' :'[10,100]',
                         't' :'perc',
                         'pub': True,
                         'sn':'Compra', },

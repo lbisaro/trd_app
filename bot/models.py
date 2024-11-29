@@ -8,6 +8,7 @@ from django.db.models import Sum, F, Case, When, Value, FloatField
 import scripts.functions as fn
 import os, fnmatch
 import importlib
+import pickle
 from scripts.Exchange import Exchange
 from bot.model_kline import Kline, Symbol
 import pandas as pd
@@ -149,6 +150,7 @@ class Estrategia(models.Model):
 
 
 class Bot(models.Model):
+
     estrategia = models.ForeignKey(Estrategia, on_delete = models.CASCADE)
     usuario = models.ForeignKey(User, on_delete = models.CASCADE)
     creado = models.DateField(default=timezone.now)
@@ -768,6 +770,11 @@ class Bot(models.Model):
         if self.estrategia.interval_id in apply_intervals:
             self.add_pnl(actual_status['wallet_tot']['r']-self.quote_qty,actual_status['price']['r'])
     
+    def log_klines(self,klines, kline_file):
+        #print(f'Log bot_{self.bot_id}: {kline_file}')
+        with open(kline_file, 'wb') as f:
+            pickle.dump(klines, f)
+
     def add_pnl(self,pnl,price):
         botpnl = BotPnl()
         botpnl.bot = self
@@ -780,6 +787,10 @@ class Bot(models.Model):
         pnl_df = pd.DataFrame.from_records(pnl.values())
         return pnl_df
 
+    def get_klines_file(self):
+        return f'log/bot_klines_{self.id}.DataFrame'
+        
+        
 class Order(models.Model):
     bot = models.ForeignKey(Bot, on_delete = models.CASCADE)
     datetime = models.DateTimeField(default=timezone.now)

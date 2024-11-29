@@ -62,15 +62,14 @@
 <script>
 
     $(document).ready(function () {
-        //{% for k,prm in parametros.items %}
-            addParametro('{{prm.c}}', '{{prm.d}}', '{{prm.v}}', '{{prm.t}}');
-        //{% endfor %} 
+        {% for k,prm in parametros.items %}
+            addParametro('{{prm.c}}', '{{prm.d}}', '{{prm.v}}', '{{prm.t}}', '{{prm.l}}');
+        {% endfor %} 
         interval_id = "{% if interval_id %}{{interval_id}}{% else %}2d01{% endif %}";
-        console.log(interval_id);
         $('#interval_id').val(interval_id).change()
     })
 
-    function addParametro(parametro,descripcion,value,type)
+    function addParametro(parametro,descripcion,value,type,limit)
     {
         html = '<div class="col-6">';
         html += '<div class="pt-1 form-group prm">'
@@ -82,8 +81,9 @@
         if (type == 'perc')
         {
             html += '<div class="input-group">'+
-                    '<span class="input-group-text" >%</span>'+
-                    '<input class="form-control value" id="'+parametro+'_v" value="'+parseFloat(value).toFixed(2)+'">'+
+                    '<span class="input-group-text " >%</span>'+
+                    '<input class="form-control value estr_prm" id="'+parametro+'_v" value="'+parseFloat(value).toFixed(2)+'" '+
+                        ' data-limit="'+limit+'" data-type="'+type+'" data-descripcion="'+descripcion+'" />'+
                     '</div>';
         }
         else if (type == 'symbol')
@@ -111,7 +111,8 @@
         }
         else
         {
-            html += '<input class="form-control value " id="'+parametro+'_v"  value="'+value+'">';
+            html += '<input class="form-control value estr_prm" id="'+parametro+'_v"  value="'+value+'" '+
+                        ' data-limit="'+limit+'" data-type="'+type+'" data-descripcion="'+descripcion+'">';
         }
         html += '<input type="hidden" id="'+parametro+'_c" class="parametro"  value="'+parametro+'">';
         html += '<input type="hidden" id="'+parametro+'_t" class="type"  value="'+type+'">';

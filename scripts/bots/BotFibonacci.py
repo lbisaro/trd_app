@@ -52,6 +52,7 @@ class BotFibonacci(Bot_Core):
                         'c' :'quote_perc',
                         'd' :'Operacion sobre capital',
                         'v' :'95',
+                        'l' :'[10,100]',
                         't' :'perc',
                         'pub': True,
                         'sn':'Quote', },
@@ -65,7 +66,8 @@ class BotFibonacci(Bot_Core):
                  'rsmpl': {
                         'c' :'rsmpl',
                         'd' :'Resample para Pivots',
-                        'v' : 8,
+                        'v' : '4',
+                        'l' :'[1,100]',
                         't' :'int',
                         'pub': True,
                         'sn':'Rsmp', },
@@ -73,6 +75,7 @@ class BotFibonacci(Bot_Core):
                         'c' :'trail',
                         'd' :'Trail para posicion',
                         'v' : '4',
+                        'l' :'(0,100]',
                         't' :'perc',
                         'pub': True,
                         'sn':'TRL', },
@@ -120,7 +123,7 @@ class BotFibonacci(Bot_Core):
                 if not col in df_cols:
                     self.klines.at[index,col] = row[col]
 
-        self.klines['signal'] = np.where(self.klines['trend']==2, 'COMPRA' , 'NEUTRO')
+        self.klines['signal'] = np.where(self.klines['trend']== 2, 'COMPRA' , 'NEUTRO')
         self.klines['signal'] = np.where(self.klines['trend']==-2, 'VENTA' , self.klines['signal'])
 
         self.klines['trend'].ffill(inplace=True)
@@ -131,7 +134,6 @@ class BotFibonacci(Bot_Core):
         self.klines['long_fbe_0'] = np.where(self.klines['trend']==2, self.klines['fb_0'] , None)
         self.klines['long_fbe_1'] = np.where(self.klines['trend']==2, self.klines['fb_1'] , None)
         self.klines['long_fbe_2'] = np.where(self.klines['trend']==2, self.klines['fb_2'] , None)
-
 
         self.print_orders = False
         self.graph_open_orders = True

@@ -12,6 +12,7 @@ from scripts.functions import round_down
 import time
 
 from bot.models import Order as DbOrder
+from bot.models import Bot as DbBot
 from bot.model_kline import Symbol
 
 class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
@@ -95,6 +96,8 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
         if prm in self.parametros:
             type = self.parametros[prm]['t']
             if type == 'perc' or type == 'float':
+                self.__dict__[prm] = float(val)
+            elif type == 'dec' or type == 'float':
                 self.__dict__[prm] = float(val)
             elif type == 'int':
                 self.__dict__[prm] = int(val)
@@ -302,3 +305,4 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
             order.datetime = timezone.now()
             order.save()
         return order
+
