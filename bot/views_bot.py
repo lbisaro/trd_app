@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.template import RequestContext
 import numpy as np
-from pathlib import Path
+import os
 
 from bot.models import *
 from bot.model_kline import *
@@ -73,19 +73,19 @@ def bot(request, bot_id):
 
     #Obtenniendo Log Klines
     log_klines_file = bot.get_klines_file()
-    archivo = Path(log_klines_file)
-    if archivo.is_file():
+    file_result = log_klines_file
+    if os.path.isfile(log_klines_file):
         with open(log_klines_file, 'rb') as file:
             klines = pickle.load(file)
         klines = klines[klines['datetime']>=pnl_start]
         klines_start = klines.loc[0]['datetime']
         pnl = pnl[pnl['datetime']>=klines_start]
         klines = pd.merge_asof(klines, pnl[['datetime', 'pnl']], on='datetime', direction='backward')
-        file_result = ' Encontro'
+        file_result += ' Encontro'
     else:
         klines_start = pnl_start
         klines = pnl.copy()
-        file_result = ' No Encontro'
+        file_result += ' No Encontro'
 
     
     if not klines.empty:
