@@ -367,9 +367,7 @@ def zigzag(df,af=2, resample_periods=1):
         df['ZigZag'] = np.where((df['psar_high']>0) & (df['psar_low'].shift(1)>0), df['psar_high'] , None)
         df['ZigZag'] = np.where((df['psar_low']>0) & (df['psar_high'].shift(1)>0), df['psar_low'] , df['ZigZag'])
         df.drop(columns=['psar_high','psar_low'],inplace=True)
-    
-
-        
+            
     return df
 
 class Fibonacci:

@@ -35,7 +35,8 @@ class BotFibonacci(Bot_Core):
         self.interes = 's'  
         self.rsmpl = 0
         self.trail = 0
-
+        
+        self.add_indicador(col='ZigZag', name='ZIGZAG', color='gray')
 
     descripcion = 'Bot Core v2 \n'\
                   'Ejecuta la compra al recibir una señal de Compra por Extension de Fibonacci, con stoploss en nivel 0.0 , '\
@@ -123,8 +124,8 @@ class BotFibonacci(Bot_Core):
                 if not col in df_cols:
                     self.klines.at[index,col] = row[col]
 
-        self.klines['signal'] = np.where(self.klines['trend']== 2, 'COMPRA' , 'NEUTRO')
-        self.klines['signal'] = np.where(self.klines['trend']==-2, 'VENTA' , self.klines['signal'])
+        self.klines['signal'] = np.where(self.klines['trend'] ==  2, 'COMPRA' , 'NEUTRO')
+        self.klines['signal'] = np.where(self.klines['trend'] == -2, 'VENTA' , self.klines['signal'])
 
         self.klines['trend'].ffill(inplace=True)
         self.klines['fb_0'].ffill(inplace=True)

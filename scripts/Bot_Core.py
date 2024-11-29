@@ -25,6 +25,7 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
     order_id = 1
 
     parametros = {}
+    indicadores = []
 
     #Trades para gestion de resultados
     _orders = {}
@@ -82,6 +83,7 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
 
         self.row = pd.DataFrame()
 
+        indicadores = []
 
     def set(self, parametros):
         for v in parametros:       
@@ -306,3 +308,11 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
             order.save()
         return order
 
+    def add_indicador(self, col, name, color, row=1, mode='lines'):
+        self.indicadores.append(
+            {'col': col,
+             'name': name,
+             'color': color,
+             'row': row, 
+             'mode':mode,
+             },)
