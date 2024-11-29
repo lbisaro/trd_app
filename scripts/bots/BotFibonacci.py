@@ -191,10 +191,10 @@ class BotFibonacci(Bot_Core):
         if 'pos___base_qty' in self.status:
             if self.status['pos___base_qty']['r'] > 0:
                 self.position = True
-        print('BotFibonacci.py -> position: ',self.position)
+        #print('BotFibonacci.py -> position: ',self.position)
         if not self.position:
             if signal == 'COMPRA':
-                print('BotFibonacci.py -> Entro en COMPRA')
+                #print('BotFibonacci.py -> Entro en COMPRA')
                 take_profit_price = 0
                 stop_loss_price = 0
                 pre_level = -1.0
@@ -211,7 +211,7 @@ class BotFibonacci(Bot_Core):
                             #stop_loss_price = pre_level_price
                             stop_loss_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level=0.0)
                     pre_level = level
-                print(f'BotFibonacci.py -> take_profit_price {take_profit_price} stop_loss_price {stop_loss_price}')
+                #print(f'BotFibonacci.py -> take_profit_price {take_profit_price} stop_loss_price {stop_loss_price}')
                 if take_profit_price>0 and stop_loss_price>0:
 
                     #PENDIENTE - Analisis del riesgo a tomar
