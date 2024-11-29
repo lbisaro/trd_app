@@ -141,7 +141,6 @@ def bot(request, bot_id):
         if len(botClass.indicadores)>0:
             for indicador in botClass.indicadores:
                 indicators.append(indicador)
-        print(len(botClass.indicadores))
         fig = ohlc_chart(klines, indicators=indicators, open_orders=open_orders, events=events)  
         chart = fig.to_html(config = {'scrollZoom': True, }) 
     else:
