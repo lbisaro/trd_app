@@ -154,7 +154,8 @@ def run():
         status = botClass.get_status()
         bot.update_status(status)
 
-        bot.log_klines(estrategia_klines[bot.estrategia_id],bot.get_klines_file())
+        if bot.estrategia_id in estrategia_klines: 
+            bot.log_klines(estrategia_klines[bot.estrategia_id],bot.get_klines_file())
         
 
         #except Exception as e:
