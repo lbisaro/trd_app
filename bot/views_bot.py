@@ -75,7 +75,6 @@ def bot(request, bot_id):
     #Obtenniendo Log Klines
     log_klines_file = bot.get_klines_file()
     log_klines_file = f'{settings.BASE_DIR}/{log_klines_file}'
-    file_result = log_klines_file
     if os.path.isfile(log_klines_file):
         with open(log_klines_file, 'rb') as file:
             klines = pickle.load(file)
@@ -83,22 +82,19 @@ def bot(request, bot_id):
         klines_start = klines.loc[0]['datetime']
         pnl = pnl[pnl['datetime']>=klines_start]
         klines = pd.merge_asof(klines, pnl[['datetime', 'pnl']], on='datetime', direction='backward')
-        file_result += ' Encontro'
     else:
         klines_start = pnl_start
         klines = pnl.copy()
-        file_result += ' No Encontro'
 
-    
     if not klines.empty:
         
-        ultimo_registro = pnl.iloc[-1,:]
-        nuevo_registro = pd.DataFrame({
-            "datetime": [datetime.now()],
-            "price": [ultimo_registro["price"]],
-            "pnl": [ultimo_registro["pnl"]]
-        })
-        klines = pd.concat([klines, nuevo_registro], ignore_index=True)
+        #ultimo_registro = klines.iloc[-1,:]
+        #nuevo_registro = pd.DataFrame({
+        #    "datetime": [datetime.now()],
+        #    "price": [ultimo_registro["price"]],
+        #    "pnl": [ultimo_registro["pnl"]]
+        #})
+        #klines = pd.concat([klines, nuevo_registro], ignore_index=True)
 
         #Ordenes 
         db_orders = bot.get_orders()
@@ -156,7 +152,7 @@ def bot(request, bot_id):
         'title': str(bot),
         'nav_title': str(bot),
         'bot_id': bot.id,
-        'estrategia': f'{bot.estrategia.nombre} --{file_result}--',
+        'estrategia': bot.estrategia.nombre,
         'descripcion': bot.estrategia.descripcion,
         'estrategia_activo': bot.estrategia.activo,
         'intervalo': intervalo,
