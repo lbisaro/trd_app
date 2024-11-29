@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.template import RequestContext
 import numpy as np
+from pathlib import Path
 
 from bot.models import *
 from bot.model_kline import *
@@ -63,6 +64,7 @@ def bot(request, bot_id):
     
     #Obteniendo datos de PNL y Price registrado por el Bot
     pnl = bot.get_pnl()
+    pnl['datetime'] = pnl['datetime'].dt.floor('T')
     pnl_start = pnl.loc[0]['datetime']
 
     max_drawdown_reg = 0
@@ -70,18 +72,20 @@ def bot(request, bot_id):
         max_drawdown_reg = botClass.ind_maximo_drawdown(pnl,'pnl')
 
     #Obtenniendo Log Klines
-    try:
-        log_klines_file = bot.get_klines_file()
+    log_klines_file = bot.get_klines_file()
+    archivo = Path(log_klines_file)
+    if archivo.is_file():
         with open(log_klines_file, 'rb') as file:
             klines = pickle.load(file)
-            klines = klines[klines['datetime']>=pnl_start]
-            klines_start = klines.loc[0]['datetime']
+        klines = klines[klines['datetime']>=pnl_start]
+        klines_start = klines.loc[0]['datetime']
         pnl = pnl[pnl['datetime']>=klines_start]
         klines = pd.merge_asof(klines, pnl[['datetime', 'pnl']], on='datetime', direction='backward')
-    except:
+    else:
         klines_start = pnl_start
         klines = pnl.copy()
 
+    print(klines)
     if not klines.empty:
         
         ultimo_registro = pnl.iloc[-1,:]
