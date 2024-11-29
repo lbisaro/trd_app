@@ -81,11 +81,13 @@ def bot(request, bot_id):
         klines_start = klines.loc[0]['datetime']
         pnl = pnl[pnl['datetime']>=klines_start]
         klines = pd.merge_asof(klines, pnl[['datetime', 'pnl']], on='datetime', direction='backward')
+        file_result = ' Encontro'
     else:
         klines_start = pnl_start
         klines = pnl.copy()
+        file_result = ' No Encontro'
 
-    print(klines)
+    
     if not klines.empty:
         
         ultimo_registro = pnl.iloc[-1,:]
@@ -152,7 +154,7 @@ def bot(request, bot_id):
         'title': str(bot),
         'nav_title': str(bot),
         'bot_id': bot.id,
-        'estrategia': bot.estrategia.nombre,
+        'estrategia': f'{bot.estrategia.nombre} --{file_result}--',
         'descripcion': bot.estrategia.descripcion,
         'estrategia_activo': bot.estrategia.activo,
         'intervalo': intervalo,
