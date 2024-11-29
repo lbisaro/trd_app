@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.template import RequestContext
 import numpy as np
 import os
+from django.conf import settings
 
 from bot.models import *
 from bot.model_kline import *
@@ -73,7 +74,8 @@ def bot(request, bot_id):
 
     #Obtenniendo Log Klines
     log_klines_file = bot.get_klines_file()
-    file_result = os.getcwd()+' '+log_klines_file
+    log_klines_file = f'{settings.BASE_DIR}/{log_klines_file}'
+    file_result = log_klines_file
     if os.path.isfile(log_klines_file):
         with open(log_klines_file, 'rb') as file:
             klines = pickle.load(file)
