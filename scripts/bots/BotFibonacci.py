@@ -14,6 +14,11 @@ class BotFibonacci(Bot_Core):
     interes = ''
     rsmpl = 0
     trail = 0
+
+    indicadores = [
+            {'col': 'ZigZag', 'name': 'ZigZag', 'color': 'white', 'row': 1,  'mode':'lines',},             
+            ]
+    
     fb_levels = [0.0,        
                  0.236,      
                  0.382, 
@@ -35,8 +40,6 @@ class BotFibonacci(Bot_Core):
         self.interes = 's'  
         self.rsmpl = 0
         self.trail = 0
-        
-        self.add_indicador(col='ZigZag', name='ZIGZAG', color='gray')
 
     descripcion = 'Bot Core v2 \n'\
                   'Ejecuta la compra al recibir una señal de Compra por Extension de Fibonacci, con stoploss en nivel 0.0 , '\

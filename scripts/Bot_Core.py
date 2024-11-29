@@ -308,11 +308,3 @@ class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
             order.save()
         return order
 
-    def add_indicador(self, col, name, color, row=1, mode='lines'):
-        self.indicadores.append(
-            {'col': col,
-             'name': name,
-             'color': color,
-             'row': row, 
-             'mode':mode,
-             },)
