@@ -70,14 +70,18 @@ def bot(request, bot_id):
         max_drawdown_reg = botClass.ind_maximo_drawdown(pnl,'pnl')
 
     #Obtenniendo Log Klines
-    log_klines_file = bot.get_klines_file()
-    with open(log_klines_file, 'rb') as file:
-        klines = pickle.load(file)
-        klines = klines[klines['datetime']>=pnl_start]
-        klines_start = klines.loc[0]['datetime']
+    try:
+        log_klines_file = bot.get_klines_file()
+        with open(log_klines_file, 'rb') as file:
+            klines = pickle.load(file)
+            klines = klines[klines['datetime']>=pnl_start]
+            klines_start = klines.loc[0]['datetime']
+        pnl = pnl[pnl['datetime']>=klines_start]
+        klines = pd.merge_asof(klines, pnl[['datetime', 'pnl']], on='datetime', direction='backward')
+    except:
+        klines_start = pnl_start
+        klines = pnl.copy()
 
-    pnl = pnl[pnl['datetime']>=klines_start]
-    klines = pd.merge_asof(klines, pnl[['datetime', 'pnl']], on='datetime', direction='backward')
     if not klines.empty:
         
         ultimo_registro = pnl.iloc[-1,:]
@@ -86,7 +90,7 @@ def bot(request, bot_id):
             "price": [ultimo_registro["price"]],
             "pnl": [ultimo_registro["pnl"]]
         })
-        pnl = pd.concat([pnl, nuevo_registro], ignore_index=True)
+        klines = pd.concat([klines, nuevo_registro], ignore_index=True)
 
         #Ordenes 
         db_orders = bot.get_orders()
