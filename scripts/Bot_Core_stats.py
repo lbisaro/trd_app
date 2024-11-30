@@ -73,8 +73,7 @@ class Bot_Core_stats:
             if 'pos___base_qty' in self.status:
                 keys_to_reset = [key for key in self.status if key.startswith('pos__')]
                 for key in keys_to_reset:
-                    self.status[key]['r'] = 0.0
-                    self.status[key]['v'] = 0.0
+                    self.status[key] = None
         else:
             pos___avg_price = pos___quote_qty/pos___base_qty
             pos___pnl = ((self.price/pos___avg_price)-1)*100
