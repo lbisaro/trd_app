@@ -70,10 +70,10 @@ class Bot_Core_stats:
                     self._trades[oid].pos_order_id = last_order_id
                     pos_order_ids = []
                     pos___avg_price = 0
-                    if 'pos___base_qty' in self.status:
-                        keys_to_remove = [key for key in self.status if key.startswith('pos__')]
-                        for key in keys_to_remove:
-                            del self.status[key]
+            if 'pos___base_qty' in self.status:
+                keys_to_remove = [key for key in self.status if key.startswith('pos__')]
+                for key in keys_to_remove:
+                    del self.status[key]
         else:
             pos___avg_price = pos___quote_qty/pos___base_qty
             pos___pnl = ((self.price/pos___avg_price)-1)*100
