@@ -165,22 +165,6 @@ class BotFibonacci(Bot_Core):
                 trend = 'Neutral'
             status['trend'] = {'l': 'Tendencia','v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.row['trend'], 'cls': cls}
 
-        if 'fb_0' in self.row or 'fb_1' in self.row or 'fb_2' in self.row:
-            pivots = ''
-            if 'fb_0' in self.row:
-                pvt = self.row['fb_0']
-                pivots += f'[0: {pvt}] '
-
-            if 'fb_1' in self.row:
-                pvt = self.row['fb_1']
-                pivots += f'[1: {pvt}] '
-
-            if 'fb_2' in self.row:
-                pvt = self.row['fb_2']
-                pivots += f'[2: {pvt}] '
-
-            status['pivots'] = {'l': 'Pivots','v': pivots, 'r': self.row['fb_0']}
-
         return status    
     
     def next(self):
@@ -191,35 +175,25 @@ class BotFibonacci(Bot_Core):
         if 'pos___base_qty' in self.status:
             if self.status['pos___base_qty']['r'] > 0:
                 self.position = True
-        #print('BotFibonacci.py -> position: ',self.position)
         if not self.position:
             if signal == 'COMPRA':
-                #print('BotFibonacci.py -> Entro en COMPRA')
-                take_profit_price = 0
                 stop_loss_price = 0
                 pre_level = -1.0
-                max_i = len(self.fb_levels)-1
+                final_level = -1
                 for i, level in enumerate(self.fb_levels):
                     if level > 0:
                         level_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level)
                         pre_level_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],pre_level)
                         if level_price > self.price > pre_level_price:
-                            if i<max_i:
-                                take_profit_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],self.fb_levels[i+1])
-                            else:
-                                take_profit_price = level_price
-                            #stop_loss_price = pre_level_price
                             stop_loss_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level=0.0)
+                            final_level = level
                     pre_level = level
-                #print(f'BotFibonacci.py -> take_profit_price {take_profit_price} stop_loss_price {stop_loss_price}')
-                if take_profit_price>0 and stop_loss_price>0:
+                print('stop_loss_price: ',stop_loss_price,' final_level: ',final_level)
+                if stop_loss_price>0:
 
                     #PENDIENTE - Analisis del riesgo a tomar
                     stop_loss_price = round_down(stop_loss_price , self.qd_price)
                     self.stop_loss = round((1-(stop_loss_price/self.price))*100,2)
-
-                    take_profit_price = round(take_profit_price , self.qd_price)
-                    self.take_profit = round(((take_profit_price/self.price)-1)*100,2)
                     
                     if self.interes == 's': #Interes Simple
                         quote_qty = self.quote_qty if self.wallet_quote >= self.quote_qty else self.wallet_quote
@@ -236,16 +210,30 @@ class BotFibonacci(Bot_Core):
                         buyed_qty = self._trades[orderid_buy].qty
                         
                         self.position = True
-                        self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price)
-                        #self.orderid_tp = self.sell_limit(buyed_qty,Order.FLAG_TAKEPROFIT,take_profit_price) 
-                    
+                        self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price,tag="STOP_LOSS")
+                        
                         if self.orderid_sl == 0:
                             print('BotFibonacci.py -> \033[31mERROR\033[0m',self.row['datetime'],'STOP-LOSS',buyed_qty,' ',quote_to_sell,self.wallet_quote)  
-                        #if self.orderid_tp == 0:
-                        #    print('\033[31mERROR\033[0m',self.row['datetime'],'TAKE-PROFIT',buyed_qty,' ',quote_to_sell,self.wallet_quote) 
                     
                     else:
                         print('BotFibonacci.py -> \033[31mERROR\033[0m',self.row['datetime'],'BUY price',self.price,'USD',quote_to_sell,self.wallet_quote)
+        #else:
+        #    if signal == 'COMPRA':
+        #        stop_loss_price = 0
+        #        pre_level = -1.0
+        #        for i, level in enumerate(self.fb_levels):
+        #            if level > 0:
+        #                level_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level)
+        #                pre_level_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],pre_level)
+        #                if level_price > self.price > pre_level_price:
+        #                    stop_loss_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level=0.0)
+        #            pre_level = level
+        #        if stop_loss_price>0:
+        #            sl_order = self.get_order_by_tag(tag='STOP_LOSS')
+        #            if sl_order.limit_price<self.row['long_fbe_0']:
+        #                self.update_order_by_tag('STOP_LOSS',limit_price=stop_loss_price)
+        #            print(sl_order.limit_price,' < ',self.row['long_fbe_0'])
+
 
         if self.position and signal == 'VENTA':
             self.close(Order.FLAG_SIGNAL)
