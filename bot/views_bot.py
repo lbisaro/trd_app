@@ -65,84 +65,89 @@ def bot(request, bot_id):
     
     #Obteniendo datos de PNL y Price registrado por el Bot
     pnl_log = bot.get_pnl()
+    max_drawdown_reg = 0
     if not pnl_log.empty:
         pnl_log['datetime'] = pnl_log['datetime'].dt.floor('T')
-        pnl_start = pnl_log.loc[0]['datetime']
-    else:
-        pnl_start = datetime.now()
+        chart_start = pnl_log.loc[0]['datetime']
         
-    max_drawdown_reg = 0
-    if len(pnl_log)>0:
-        max_drawdown_reg = botClass.ind_maximo_drawdown(pnl_log,'pnl')
+        if len(pnl_log)>0:
+            max_drawdown_reg = botClass.ind_maximo_drawdown(pnl_log,'pnl')
 
-    #Obtenniendo Log Klines
-    log_klines_file = bot.get_klines_file()
-    log_klines_file = f'{settings.BASE_DIR}/{log_klines_file}'
-    if os.path.isfile(log_klines_file):
-        with open(log_klines_file, 'rb') as file:
-            klines = pickle.load(file)
-        if pnl_log['pnl'].count() > 500:
-            klines = klines[klines['datetime']>=pnl_start]
-            klines.reset_index(inplace=True)
-        if klines['datetime'].count() > 0:
-            klines_start = klines.iloc[0]['datetime']
+        #Obtenniendo Log Klines
+        log_klines_file = bot.get_klines_file()
+        log_klines_file = f'{settings.BASE_DIR}/{log_klines_file}'
+        if os.path.isfile(log_klines_file):
+            with open(log_klines_file, 'rb') as file:
+                klines = pickle.load(file)
+                chart_start = klines.iloc[0]['datetime']
+            klines = pd.merge_asof(klines, pnl_log[['datetime', 'pnl']], on='datetime', direction='backward')
         else:
-            klines_start = datetime.now()
-        pnl_log = pnl_log[pnl_log['datetime']>=klines_start]
-        klines = pd.merge_asof(klines, pnl_log[['datetime', 'pnl']], on='datetime', direction='backward')
-    else:
-        klines_start = pnl_start
-        klines = pnl_log.copy()
+            klines = pnl_log.copy()
 
-    if not klines.empty:
-        
-        #Ordenes 
-        db_orders = bot.get_orders()
-        df_orders = pd.DataFrame.from_records(db_orders.values())
-        open_orders = []
-        events = []
-        if db_orders.count() > 0:
-            #Ordenes Ejecutadas
-            df_orders['buy']     = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_SIGNAL)]['price']
-            df_orders['sell']    = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_SIGNAL)]['price']
-            df_orders['buy_tp']  = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_TAKEPROFIT)]['price']
-            df_orders['sell_tp'] = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_TAKEPROFIT)]['price']
-            df_orders['buy_sl']  = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
-            df_orders['sell_sl'] = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
+        if not klines.empty:
             
-            
-            #Ordenes Abiertas
-            for i in df_orders[df_orders['completed']<1].index:
-                row = df_orders.iloc[i]
-                key = 'OPEN_'+str(row['id'])
-                color = 'red' if row['side'] == ord_u.SIDE_SELL else 'green'
-                klines[key] = np.where(klines['datetime']>=row['datetime'],row['limit_price'],None)
-                open_orders.append({'col': key,'color': color,})
+            #Ordenes 
+            db_orders = bot.get_orders()
+            df_orders = pd.DataFrame.from_records(db_orders.values())
+            open_orders = []
+            events = []
+            if db_orders.count() > 0:
+                #Ordenes Ejecutadas
+                df_orders['buy']     = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_SIGNAL)]['price']
+                df_orders['sell']    = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_SIGNAL)]['price']
+                df_orders['buy_tp']  = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_TAKEPROFIT)]['price']
+                df_orders['sell_tp'] = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_TAKEPROFIT)]['price']
+                df_orders['buy_sl']  = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
+                df_orders['sell_sl'] = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
                 
-            df_orders.drop(columns=['id', 'bot_id', 'completed', 'qty', 'price', 'orderid',
-            'pos_order_id', 'symbol_id', 'side', 'flag', 'type', 'limit_price',
-            'tag'],inplace=True)
+                
+                #Ordenes Abiertas
+                open_pos = False
+                for i in df_orders[df_orders['completed']<1].index:
+                    open_pos = True
+                    row = df_orders.iloc[i]
+                    key = 'OPEN_'+str(row['id'])
+                    color = 'red' if row['side'] == ord_u.SIDE_SELL else 'green'
+                    klines[key] = np.where(klines['datetime']>=row['datetime'],row['limit_price'],None)
+                    open_orders.append({'col': key,'color': color,})
+                    if chart_start > row['datetime']:
+                        chart_start = row['datetime']
+                    
+                df_orders.drop(columns=['id', 'bot_id', 'completed', 'qty', 'price', 'orderid',
+                'pos_order_id', 'symbol_id', 'side', 'flag', 'type', 'limit_price',
+                'tag'],inplace=True)
 
-            df_orders = df_orders[df_orders['datetime']>klines_start]
-            if df_orders['buy'].count() > 0:
-                events.append({'df':df_orders,'col':'buy'    ,'name': 'BUY' ,    'color': 'green','symbol': 'circle' })
-            if df_orders['sell'].count() > 0:
-                events.append({'df':df_orders,'col':'sell'   ,'name': 'SELL',    'color': 'red',  'symbol': 'circle' })
-            if df_orders['buy_tp'].count() > 0:
-                events.append({'df':df_orders,'col':'buy_tp' ,'name': 'BUY-TP' , 'color': 'green','symbol': 'triangle-up' })
-            if df_orders['sell_tp'].count() > 0:
-                events.append({'df':df_orders,'col':'sell_tp','name': 'SELL-TP', 'color': 'red',  'symbol': 'triangle-up' })
-            if df_orders['buy_sl'].count() > 0:
-                events.append({'df':df_orders,'col':'buy_sl' ,'name': 'BUY-SL' , 'color': 'green','symbol': 'triangle-down' })
-            if df_orders['sell_sl'].count() > 0:
-                events.append({'df':df_orders,'col':'sell_sl','name': 'SELL-SL', 'color': 'red',  'symbol': 'triangle-down' })
-        
-        indicators = []
-        if len(botClass.indicadores)>0:
-            for indicador in botClass.indicadores:
-                indicators.append(indicador)
-        fig = ohlc_chart(klines, indicators=indicators, open_orders=open_orders, events=events)  
-        chart = fig.to_html(config = {'scrollZoom': True, }) 
+                df_orders = df_orders[df_orders['datetime']>=chart_start]
+                if df_orders['buy'].count() > 0:
+                    events.append({'df':df_orders,'col':'buy'    ,'name': 'BUY' ,    'color': 'green','symbol': 'circle' })
+                if df_orders['sell'].count() > 0:
+                    events.append({'df':df_orders,'col':'sell'   ,'name': 'SELL',    'color': 'red',  'symbol': 'circle' })
+                if df_orders['buy_tp'].count() > 0:
+                    events.append({'df':df_orders,'col':'buy_tp' ,'name': 'BUY-TP' , 'color': 'green','symbol': 'triangle-up' })
+                if df_orders['sell_tp'].count() > 0:
+                    events.append({'df':df_orders,'col':'sell_tp','name': 'SELL-TP', 'color': 'red',  'symbol': 'triangle-up' })
+                if df_orders['buy_sl'].count() > 0:
+                    events.append({'df':df_orders,'col':'buy_sl' ,'name': 'BUY-SL' , 'color': 'green','symbol': 'triangle-down' })
+                if df_orders['sell_sl'].count() > 0:
+                    events.append({'df':df_orders,'col':'sell_sl','name': 'SELL-SL', 'color': 'red',  'symbol': 'triangle-down' })
+            
+            klines = klines[klines['datetime']>=chart_start]
+            indicators = []
+            if len(botClass.indicadores)>0:
+                for indicador in botClass.indicadores:
+                    if indicador['col'] in klines:
+                        indicators.append(indicador)
+            if not open_pos:
+                klines['price'] = klines['close']
+
+            if 'signal' in klines:
+                klines['signal_buy'] = np.where(klines['signal']=='COMPRA', klines['close'], None)
+                klines['signal_sell'] = np.where(klines['signal']=='VENTA', klines['close'], None)
+                events.append({'df':klines,'col':'signal_buy','name': 'BUY Sig', 'color': 'yellow',  'symbol': 'triangle-up' })
+                events.append({'df':klines,'col':'signal_sell','name': 'SELL Sig', 'color': 'yellow',  'symbol': 'triangle-down' })
+
+            fig = ohlc_chart(klines, indicators=indicators, open_orders=open_orders, events=events)  
+            chart = fig.to_html(config = {'scrollZoom': True, }) 
     else:
         chart = ''
 

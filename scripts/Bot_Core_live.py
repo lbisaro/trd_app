@@ -1,5 +1,6 @@
 import pandas as pd
 import datetime as dt
+from datetime import timedelta
 
 from django.utils import timezone
 
@@ -14,16 +15,26 @@ class Bot_Core_live:
     log = BotCoreLog()
     klines = pd.DataFrame()
 
-    def live_get_signal(self,klines):
-        #self.log.info(f'Bot_Core_live::live_get_signal()')
+    def live_get_signal(self,klines,timeframe_minutes,ref_dt):
+        timeframe_minutes = int(timeframe_minutes)
+        if timeframe_minutes<(60*24):
+            strftime_format = '%Y-%m-%d %H:%M'
+        else:
+            strftime_format = '%Y-%m-%d'
+        
+        signal_key = (ref_dt - timedelta(minutes=timeframe_minutes)).strftime(strftime_format)
+        
         self.klines = klines
         self.start()
-        #No devuelve la ultima vela porque recien inicia a formarse
-        #Es por eso que se devuelve la ante-ultima
-        return self.klines.iloc[-2]
+
+        for i in range(len(self.klines) - 1, -1, -1):
+            row_signal = self.klines.iloc[i]
+            if row_signal['datetime'].strftime(strftime_format) == signal_key:
+                return row_signal
+        
+        return pd.DataFrame()
     
     def live_execute(self,just_check_orders=False):
-        #self.log.info('live_execute()')
         self.backtesting = False
         self.live = True
 
@@ -50,7 +61,6 @@ class Bot_Core_live:
         return jsonRsp
 
     def live_check_orders(self):
-        #self.log.info('live_check_orders()')
         executed = False
         price = self.price
        
@@ -82,7 +92,6 @@ class Bot_Core_live:
         return executed
     
     def live_execute_order(self,orderid):
-        #self.log.info(f'live_execute_order({orderid})')
         exchange = self.exchange
         wallet = self.exchange_wallet
         broker_wallet_base  = round_down(wallet[self.base_asset]['free'],self.qd_qty)

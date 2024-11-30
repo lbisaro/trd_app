@@ -760,9 +760,18 @@ class Bot(models.Model):
     
     def update_status(self,new_status):
         actual_status = eval(self.status) if len(self.status) > 0 else {}
+
         for k in new_status:
             actual_status[k] = new_status[k]
         self.status = str(actual_status)
+        
+        if 'pos___base_qty' in self.status:
+            if self.status['pos___base_qty']['r']*self.status['pos___avg_price']['r']<=2.0:
+                keys_to_remove = [key for key in self.status if key.startswith('pos__')]
+                print(keys_to_remove)
+                for key in keys_to_remove:
+                    del self.status[key]
+        
         self.save()
 
         #Analizando si aplica registrar el PNL de acuerdo al timeframe del bot

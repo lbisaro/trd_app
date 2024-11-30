@@ -9,8 +9,8 @@ import time
 
 def run():
 
-    #Delay de 3 segundos
-    time.sleep(3)
+    #Delay para obtener la vela correcta
+    time.sleep(5)
 
     log = Log()
     json_rsp = {}
@@ -51,10 +51,11 @@ def run():
     ### Buscar Señales
     for estr in estrategias:
         botClass = estr.get_instance()
+        timeframe_minutes = fn.get_intervals(botClass.interval_id,'minutes')
         klines = exchInfo.get_klines(botClass.symbol, estr.interval_id, limit=990)
-        signal_row = botClass.live_get_signal(klines)
+        signal_row = botClass.live_get_signal(klines, timeframe_minutes, startDt)
         signal = signal_row['signal']
-        #print('crontab_bot_1m.py -> ',signal_row['datetime'],signal_row['signal'], end=' -> ')
+        #print('crontab_bot_1m.py -> ',signal_row['datetime'],signal_row['signal'])
         if signal_row['signal'] != 'NEUTRO':
             log.info(f'{estr} {signal}')
             print(estr, signal_row['datetime'], signal_row['signal'])
