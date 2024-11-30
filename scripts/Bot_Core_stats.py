@@ -97,7 +97,7 @@ class Bot_Core_stats:
         if wallet_base>0:
             self.status['pos_pnl'] = {'l': 'PNL','v': v,'r':pos_quote, 'cls': cls}
         elif 'pos_pnl' in self.status:
-            del self.status['pos_pnl'] 
+            self.status['pos_pnl'] = None 
         return self.status
 
     def get_brief(self):
