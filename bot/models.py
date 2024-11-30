@@ -768,7 +768,6 @@ class Bot(models.Model):
         if 'pos___base_qty' in self.status:
             if self.status['pos___base_qty']['r']*self.status['pos___avg_price']['r']<=2.0:
                 keys_to_remove = [key for key in self.status if key.startswith('pos__')]
-                print(keys_to_remove)
                 for key in keys_to_remove:
                     del self.status[key]
         
