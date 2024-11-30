@@ -173,9 +173,8 @@ class BotFibonacci(Bot_Core):
         price = self.price
 
         self.position = False
-        if 'pos___base_qty' in self.status:
-            if self.status['pos___base_qty']['r'] > 0:
-                self.position = True
+        if self.wallet_base*self.price >= 2:
+            self.position = True
         if not self.position:
             if signal == 'COMPRA':
                 stop_loss_price = 0
