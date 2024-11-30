@@ -765,7 +765,6 @@ class Bot(models.Model):
         for k in new_status:
             if isinstance(new_status[k], dict):
                 actual_status[k] = new_status[k]
-                print(' OK ',end=', ')
             else:
                 del actual_status[k]
         self.status = str(actual_status)
