@@ -95,8 +95,8 @@ def bot(request, bot_id):
             if 'signal' in klines:
                 klines['signal_buy'] = np.where(klines['signal']=='COMPRA', klines['close'], None)
                 klines['signal_sell'] = np.where(klines['signal']=='VENTA', klines['close'], None)
-                events.append({'df':klines,'col':'signal_buy','name': 'BUY Sig', 'color': '#fd7e14',  'symbol': 'triangle-up' })
-                events.append({'df':klines,'col':'signal_sell','name': 'SELL Sig', 'color': '#fd7e14',  'symbol': 'triangle-down' })
+                events.append({'df':klines,'col':'signal_buy','name': 'BUY Sig', 'color': '#fd7e14',  'symbol': 'triangle-up-open' })
+                events.append({'df':klines,'col':'signal_sell','name': 'SELL Sig', 'color': '#fd7e14',  'symbol': 'triangle-down-open' })
 
             if db_orders.count() > 0:
                 #Ordenes Ejecutadas
