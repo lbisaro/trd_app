@@ -16,10 +16,10 @@ class BotFibonacci(Bot_Core):
     trail = 0
 
     indicadores = [
-            {'col': 'ZigZag', 'name': 'ZigZag', 'color': 'white', 'row': 1,  'mode':'lines',},             
-            {'col': 'long_fbe_0', 'name': 'Fibonacci Signal', 'color': 'white', 'row': 1,  'mode':'markers',},             
-            {'col': 'long_fbe_1', 'name': 'Fibonacci TakeProfit', 'color': 'green', 'row': 1,  'mode':'markers',},             
-            {'col': 'long_fbe_2', 'name': 'Fibonacci StopLoss', 'color': 'red', 'row': 1,  'mode':'markers',},             
+            {'col': 'ZigZag', 'name': 'ZigZag', 'color': 'gray', 'row': 1,  'mode':'lines',},             
+            {'col': 'long_fbe_0', 'name': 'Fibonacci Signal', 'color': 'gray', 'row': 1,  'mode':'markers','symbol':'circle-dot',},             
+            #{'col': 'long_fbe_1', 'name': 'Fibonacci TakeProfit', 'color': 'green', 'row': 1,  'mode':'markers','symbol':'circle-dot',},             
+            #{'col': 'long_fbe_2', 'name': 'Fibonacci StopLoss', 'color': 'red', 'row': 1,  'mode':'markers','symbol':'circle-dot',},             
             ]
     
     fb_levels = [0.0,        
