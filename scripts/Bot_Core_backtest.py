@@ -46,10 +46,6 @@ class Bot_Core_backtest:
         #Aplicar la señal de compra/venta
         self.start()
 
-        file_dump = 'backtest/results/backtest_data.DataFrame'
-        with open(file_dump, 'wb') as f:
-            pickle.dump(self.klines, f)
-
         #quitando las velas previas a la fecha de start
         self.klines = self.klines[self.klines['datetime'] >= pd.to_datetime(from_date)]
         self.klines = self.klines.reset_index(drop=True)
@@ -204,6 +200,16 @@ class Bot_Core_backtest:
             proc_end = dt.datetime.now()
             proc_diff = proc_end-proc_start
             print('Duracion 2: ',f"Proceso demoro {proc_diff.total_seconds():.4f} segundos.")
+
+            #Unificando operaciones con data de klines
+            self.klines['datetime'] = pd.to_datetime(self.klines['datetime'])
+            self.df_trades['start'] = pd.to_datetime(self.df_trades['start'])
+            df_full = pd.merge(self.klines, self.df_trades, left_on='datetime', right_on='start', how='left')
+
+            file_dump = f'backtest/results/bt_bot_{self.__class__.__name__}_{self.interval_id}.DataFrame'
+            with open(file_dump, 'wb') as f:
+                pickle.dump(df_full, f)
+
             return res
     
     def _next(self,row):
