@@ -77,7 +77,7 @@ class Bot_Core_stats:
         else:
             pos___avg_price = pos___quote_qty/pos___base_qty
             pos___pnl = ((self.price/pos___avg_price)-1)*100
-            if 'pos___pnl_max' in self.status:
+            if 'pos___pnl_max' in self.status and isinstance(self.status['pos___pnl_max'], dict):
                 pos___pnl_max = pos___pnl if pos___pnl > self.status['pos___pnl_max']['r'] else self.status['pos___pnl_max']['r']
             else:
                 pos___pnl_max = pos___pnl
