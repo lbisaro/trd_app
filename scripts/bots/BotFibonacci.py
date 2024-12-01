@@ -177,6 +177,8 @@ class BotFibonacci(Bot_Core):
             self.position = True
         if not self.position:
             if signal == 'COMPRA':
+
+                #Buscando el stop-loss en el nivel de fibonacci anterior al precio de compra
                 stop_loss_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level=0.0)
                 pre_level = -1.0
                 for i, level in enumerate(self.fb_levels):
@@ -188,34 +190,32 @@ class BotFibonacci(Bot_Core):
                             print('StopLoss en level: ',pre_level,' -> ',stop_loss_price)
                     pre_level = level
 
-                if stop_loss_price>0:
-
-                    #PENDIENTE - Analisis del riesgo a tomar
-                    stop_loss_price = round_down(stop_loss_price , self.qd_price)
-                    self.stop_loss = round((1-(stop_loss_price/self.price))*100,2)
-                    
-                    if self.interes == 's': #Interes Simple
-                        quote_qty = self.quote_qty if self.wallet_quote >= self.quote_qty else self.wallet_quote
-                        quote_to_sell = round_down(quote_qty*(self.quote_perc/100) , self.qd_quote )
-                    elif self.interes == 'c': #Interes Compuesto
-                        quote_to_sell = round_down(self.wallet_quote*(self.quote_perc/100) , self.qd_quote ) 
-                    
-                    quote_to_sell = round_down(quote_to_sell , self.qd_quote ) 
-                    base_to_buy = round_down((quote_to_sell/price) , self.qd_qty) 
+                #PENDIENTE - Analisis del riesgo a tomar
+                stop_loss_price = round_down(stop_loss_price , self.qd_price)
+                self.stop_loss = round((1-(stop_loss_price/self.price))*100,2)
                 
-                    orderid_buy = self.buy(base_to_buy,Order.FLAG_SIGNAL)
-                    if orderid_buy > 0:
+                if self.interes == 's': #Interes Simple
+                    quote_qty = self.quote_qty if self.wallet_quote >= self.quote_qty else self.wallet_quote
+                    quote_to_sell = round_down(quote_qty*(self.quote_perc/100) , self.qd_quote )
+                elif self.interes == 'c': #Interes Compuesto
+                    quote_to_sell = round_down(self.wallet_quote*(self.quote_perc/100) , self.qd_quote ) 
+                
+                quote_to_sell = round_down(quote_to_sell , self.qd_quote ) 
+                base_to_buy = round_down((quote_to_sell/price) , self.qd_qty) 
+            
+                orderid_buy = self.buy(base_to_buy,Order.FLAG_SIGNAL)
+                if orderid_buy > 0:
 
-                        buyed_qty = self._trades[orderid_buy].qty
-                        
-                        self.position = True
-                        self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price,tag="STOP_LOSS")
-                        
-                        if self.orderid_sl == 0:
-                            print('BotFibonacci.py -> \033[31mERROR\033[0m',self.row['datetime'],'STOP-LOSS',buyed_qty,' ',quote_to_sell,self.wallet_quote)  
+                    buyed_qty = self._trades[orderid_buy].qty
                     
-                    else:
-                        print('BotFibonacci.py -> \033[31mERROR\033[0m',self.row['datetime'],'BUY price',self.price,'USD',quote_to_sell,self.wallet_quote)
+                    self.position = True
+                    self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price,tag="STOP_LOSS")
+                    
+                    if self.orderid_sl == 0:
+                        print('BotFibonacci.py -> \033[31mERROR\033[0m',self.row['datetime'],'STOP-LOSS',buyed_qty,' ',quote_to_sell,self.wallet_quote)  
+                
+                else:
+                    print('BotFibonacci.py -> \033[31mERROR\033[0m',self.row['datetime'],'BUY price',self.price,'USD',quote_to_sell,self.wallet_quote)
         #else:
         #    if signal == 'COMPRA':
         #        stop_loss_price = 0
