@@ -81,7 +81,7 @@ class BotFibonacci(Bot_Core):
                  'trail': {
                         'c' :'trail',
                         'd' :'Trail para posicion',
-                        'v' : '4',
+                        'v' : '2',
                         'l' :'(0,100]',
                         't' :'perc',
                         'pub': True,
