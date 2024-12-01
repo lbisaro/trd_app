@@ -91,6 +91,13 @@ def bot(request, bot_id):
             df_orders = pd.DataFrame.from_records(db_orders.values())
             open_orders = []
             events = []
+
+            if 'signal' in klines:
+                klines['signal_buy'] = np.where(klines['signal']=='COMPRA', klines['close'], None)
+                klines['signal_sell'] = np.where(klines['signal']=='VENTA', klines['close'], None)
+                events.append({'df':klines,'col':'signal_buy','name': 'BUY Sig', 'color': '#fd7e14',  'symbol': 'triangle-up' })
+                events.append({'df':klines,'col':'signal_sell','name': 'SELL Sig', 'color': '#fd7e14',  'symbol': 'triangle-down' })
+
             if db_orders.count() > 0:
                 #Ordenes Ejecutadas
                 df_orders['buy']     = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_SIGNAL)]['price']
@@ -139,12 +146,6 @@ def bot(request, bot_id):
                         indicators.append(indicador)
             if not open_pos:
                 klines['price'] = klines['close']
-
-            if 'signal' in klines:
-                klines['signal_buy'] = np.where(klines['signal']=='COMPRA', klines['close'], None)
-                klines['signal_sell'] = np.where(klines['signal']=='VENTA', klines['close'], None)
-                events.append({'df':klines,'col':'signal_buy','name': 'BUY Sig', 'color': 'yellow',  'symbol': 'triangle-up' })
-                events.append({'df':klines,'col':'signal_sell','name': 'SELL Sig', 'color': 'yellow',  'symbol': 'triangle-down' })
 
             fig = ohlc_chart(klines, indicators=indicators, open_orders=open_orders, events=events)  
             chart = fig.to_html(config = {'scrollZoom': True, }) 
