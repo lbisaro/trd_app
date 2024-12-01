@@ -42,6 +42,11 @@ def run():
             raise ValidationError(err)
     
     exchInfo = Exchange(type='info',exchange='bnc',prms=None)
+    exchTime = exchInfo.get_exchange_time()
+    serverTime = datetime.now()
+    diffTime = serverTime-exchTime
+    print('Exchange Time:',exchTime,' - Server Time:',serverTime,' diffTime: ',diffTime)
+
     
     ### Si hay estrategias activas
     signal_rows = {}
