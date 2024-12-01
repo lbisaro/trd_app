@@ -177,20 +177,17 @@ class BotFibonacci(Bot_Core):
             self.position = True
         if not self.position:
             if signal == 'COMPRA':
-                stop_loss_price = 0
+                stop_loss_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level=0.0)
                 pre_level = -1.0
-                final_level = -1
                 for i, level in enumerate(self.fb_levels):
-                    if level > 0:
+                    if level >= 0:
                         level_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level)
                         pre_level_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],pre_level)
                         if level_price > self.price > pre_level_price:
-                            stop_loss_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level=0.0)
-                            final_level = level
-                        print(f'level: {level}    level_price: {level_price}    >    self.price: {self.price}    >    pre_level_price: {pre_level_price}','stop_loss_price: ',stop_loss_price,' final_level: ',final_level)
+                            stop_loss_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],pre_level)
+                            print('StopLoss en level: ',pre_level,' -> ',stop_loss_price)
                     pre_level = level
 
-                print('-------------------------------->')
                 if stop_loss_price>0:
 
                     #PENDIENTE - Analisis del riesgo a tomar
