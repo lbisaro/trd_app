@@ -187,7 +187,6 @@ class BotFibonacci(Bot_Core):
                         pre_level_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],pre_level)
                         if level_price > self.price > pre_level_price:
                             stop_loss_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],pre_level)
-                            print('StopLoss en level: ',pre_level,' -> ',stop_loss_price)
                     pre_level = level
 
                 #PENDIENTE - Analisis del riesgo a tomar
