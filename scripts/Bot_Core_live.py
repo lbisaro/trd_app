@@ -30,8 +30,10 @@ class Bot_Core_live:
         for i in range(len(self.klines) - 1, -1, -1):
             row_signal = self.klines.iloc[i]
             if row_signal['datetime'].strftime(strftime_format) == signal_key:
+                print('Bot_Core_live.py - row_signal: ',row_signal['datetime'])
                 return row_signal
         
+        self.log.error('Bot_Core_live::live_get_signal() - No fue posible obtener row_signals')
         return pd.DataFrame()
     
     def live_execute(self,just_check_orders=False):
