@@ -5,7 +5,11 @@ class BotCoreLog(Log):
     username = ''
 
     def write(self,type,msg):
-        msg = f'{self.username} Bot#{self.bot_id} {msg}'
+        if self.bot_id>0:
+            bot_ref = f'Bot#{self.bot_id}'
+        else:
+            bot_ref = 'Strat'
+        msg = f'{self.username} {bot_ref} {msg}'
         super().write(type,msg)
 
 class Order:
