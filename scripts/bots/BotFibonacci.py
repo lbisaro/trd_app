@@ -130,8 +130,9 @@ class BotFibonacci(Bot_Core):
                 if not col in df_cols:
                     self.klines.at[index,col] = row[col]
 
-        self.klines['signal'] = np.where(self.klines['trend'] ==  2, 'COMPRA' , 'NEUTRO')
-        self.klines['signal'] = np.where(self.klines['trend'] == -2, 'VENTA' , self.klines['signal'])
+        self.klines['signal'] = 'NEUTRO'
+        #self.klines['signal'] = np.where(self.klines['trend'] ==  2, 'COMPRA' , 'NEUTRO')
+        #self.klines['signal'] = np.where(self.klines['trend'] == -2, 'VENTA' , self.klines['signal'])
 
         self.klines['trend'].ffill(inplace=True)
         self.klines['fb_0'].ffill(inplace=True)
@@ -171,14 +172,13 @@ class BotFibonacci(Bot_Core):
         return status    
     
     def next(self):
-        signal = self.signal
         price = self.price
 
         self.position = False
         if self.wallet_base*self.price >= 2:
             self.position = True
         if not self.position:
-            if signal == 'COMPRA':
+            if self.row['trend'] == 2:
 
                 #Buscando el stop-loss en el nivel de fibonacci anterior al precio de compra
                 stop_loss_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level=0.0)
@@ -235,7 +235,7 @@ class BotFibonacci(Bot_Core):
         #            print(sl_order.limit_price,' < ',self.row['long_fbe_0'])
 
 
-        if self.position and signal == 'VENTA':
+        if self.position and self.row['trend'] == -2:
             self.close(Order.FLAG_SIGNAL)
             self.cancel_orders()
             self.position = False
