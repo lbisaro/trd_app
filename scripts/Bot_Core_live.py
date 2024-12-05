@@ -27,13 +27,9 @@ class Bot_Core_live:
         self.klines = klines
         self.start()
 
-        info = f'{self.short_name} {self.symbol} {timeframe_minutes} live_get_signal '+ref_dt.strftime(strftime_format)
-        info += f' - signal_key: {signal_key}'
         for i in range(len(self.klines) - 1, -1, -1):
             row_signal = self.klines.iloc[i]
-            info += ' -> '+row_signal['datetime'].strftime(strftime_format)+' '+row_signal['signal']
             if row_signal['datetime'].strftime(strftime_format) == signal_key:
-                self.log.info(info)
                 return row_signal
         
         self.log.error('Bot_Core_live::live_get_signal() - No fue posible obtener row_signals')
