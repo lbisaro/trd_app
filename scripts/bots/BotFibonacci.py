@@ -189,9 +189,12 @@ class BotFibonacci(Bot_Core):
                         level_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],level)
                         pre_level_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],pre_level)
                         if level_price > self.price > pre_level_price:
-                            stop_loss_price = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],pre_level)
+                            slprice = fibonacci_extension(self.row['long_fbe_0'],self.row['long_fbe_1'],self.row['long_fbe_2'],pre_level)
+                            slperc = round(((self.price/slprice)-1)*100,2)
+                            if slperc > 1:
+                                stop_loss_price = slprice
                     pre_level = level
-
+                
                 #PENDIENTE - Analisis del riesgo a tomar
                 stop_loss_price = round_down(stop_loss_price , self.qd_price)
                 self.stop_loss = round((1-(stop_loss_price/self.price))*100,2)
