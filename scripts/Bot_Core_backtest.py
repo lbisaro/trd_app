@@ -455,7 +455,7 @@ class Bot_Core_backtest:
         timeframe = df['datetime'].iloc[1]-df['datetime'].iloc[0]
         resample = timeframe * periods
 
-        # Resamplear el dataframe a 1 dia
+        # Resamplear el dataframe
         dfx = df.resample(resample, on="datetime").agg({
             'datetime': 'first',
             'open': 'first',
