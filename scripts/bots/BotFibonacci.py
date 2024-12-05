@@ -235,10 +235,10 @@ class BotFibonacci(Bot_Core):
         #            print(sl_order.limit_price,' < ',self.row['long_fbe_0'])
 
 
-        if self.position and self.row['trend'] == -2:
-            self.close(Order.FLAG_SIGNAL)
-            self.cancel_orders()
-            self.position = False
+        #if self.position and self.row['trend'] == -2:
+        #    self.close(Order.FLAG_SIGNAL)
+        #    self.cancel_orders()
+        #    self.position = False
 
         if self.position:
             mddpos = self.trail
