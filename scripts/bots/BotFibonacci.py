@@ -132,7 +132,8 @@ class BotFibonacci(Bot_Core):
 
         self.klines['signal'] = np.where(self.klines['trend'] ==  2, 'COMPRA' , None)
         self.klines['signal'] = np.where(self.klines['trend'] == -2, 'VENTA' , self.klines['signal'])
-        self.klines['signal'] = self.klines['signal'].fillna(method='ffill', limit=4)
+        if self.rsmpl>1:
+            self.klines['signal'] = self.klines['signal'].fillna(method='ffill', limit=(self.rsmpl-1))
         self.klines['signal'] = self.klines['signal'].fillna('NEUTRO')
 
         self.klines['trend'].ffill(inplace=True)
