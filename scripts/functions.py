@@ -6,6 +6,10 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly
 import json
+import requests
+from local__config import LOC_TLGRM_CHATID, LOC_TLGRM_TK
+
+
 
 def get_intervals(i='ALL',c='ALL'):
     columns=['id','interval_id','name','binance','pandas_resample'          ,'minutes'     ,'sub_klines_minutes']
@@ -423,3 +427,13 @@ def plotly_to_json(fig):
     fig_json = json.dumps(serialized_fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     return fig_json
+
+def telegram_send(MESSAGE):
+    url = f"https://api.telegram.org/bot{LOC_TLGRM_TK}/sendMessage"
+    payload = {
+        'chat_id': LOC_TLGRM_CHATID,
+        'text': MESSAGE
+    }
+    response = requests.post(url, data=payload)
+    return response
+

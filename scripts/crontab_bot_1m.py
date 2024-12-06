@@ -4,6 +4,7 @@ from bot.model_kline import *
 from user.models import UserProfile
 import scripts.functions as fn
 
+
 from scripts.app_log import app_log as Log
 import time
 
@@ -11,13 +12,13 @@ def run():
 
     #Delay para obtener la vela correcta
     time.sleep(5)
-
+    
     log = Log()
     json_rsp = {}
     startDt = datetime.now()
     #log.info(f'START {startDt}')
     #print(f'START {startDt}')
-
+    print('Entro')
     json_rsp['error'] = []
 
     ### Establecer hora y minutos de start para definir que estrategias ejecutar de acuerdo al intervalo

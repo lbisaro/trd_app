@@ -2,6 +2,7 @@
 import os
 from datetime import datetime
 from django.conf import settings
+import scripts.functions as fn
 
 class app_log:
     filename = os.path.join(settings.BASE_DIR,'log/bot')
@@ -13,6 +14,8 @@ class app_log:
         filename_add = dt.strftime('%Y%m%d%H')
         with open(self.filename+'_'+filename_add+'.log', 'a') as file:
             file.write(line + '\n')
+        
+        fn.telegram_send(f'Log - {line}') 
 
     def info(self,msg):
        self.write(type='INFO',msg=msg)
