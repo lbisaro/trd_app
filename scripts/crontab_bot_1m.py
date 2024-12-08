@@ -18,7 +18,6 @@ def run():
     startDt = datetime.now()
     #log.info(f'START {startDt}')
     #print(f'START {startDt}')
-    print('Entro')
     json_rsp['error'] = []
 
     ### Establecer hora y minutos de start para definir que estrategias ejecutar de acuerdo al intervalo
