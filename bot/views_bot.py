@@ -91,6 +91,8 @@ def bot(request, bot_id):
             df_orders = pd.DataFrame.from_records(db_orders.values())
             open_orders = []
             events = []
+            
+            open_pos = False
 
             if 'signal' in klines:
                 klines['signal_buy'] = np.where(klines['signal']=='COMPRA', klines['close'], None)
@@ -109,7 +111,6 @@ def bot(request, bot_id):
                 
                 
                 #Ordenes Abiertas
-                open_pos = False
                 for i in df_orders[df_orders['completed']<1].index:
                     open_pos = True
                     row = df_orders.iloc[i]
