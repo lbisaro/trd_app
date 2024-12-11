@@ -18,6 +18,8 @@ from bot.model_kline import Symbol
 class Bot_Core(Bot_Core_stats,Bot_Core_backtest,Bot_Core_live):
 
     short_name = ''
+
+    klines_lot = 250
         
     DIAS_X_MES = 30.4375 #Resulta de tomar 3 años de 365 dias + 1 de 366 / 4 años / 12 meses
 

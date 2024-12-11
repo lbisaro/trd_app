@@ -182,11 +182,12 @@ class BotFibonacci_old(Bot_Core):
             self.cancel_orders()
             self.position = False
 
-        mddpos = 4
-        if 'pos___pnl_max' in self.status:
-            if self.status['pos___pnl_max']['r'] > mddpos*4:
-                mddpos = self.status['pos___pnl_max']['r']/4
-        if 'pos___pnl' in self.status and self.status['pos___pnl_max']['r']> mddpos:
-            if self.status['pos___pnl_max']['r']-self.status['pos___pnl']['r'] > mddpos:
-                self.close(flag=Order.FLAG_TAKEPROFIT)
-                self.cancel_orders()
+        if self.position:
+            mddpos = 2
+            if 'pos___pnl_max' in self.status and isinstance(self.status['pos___pnl_max'], dict):
+                if self.status['pos___pnl_max']['r'] > mddpos*4:
+                    mddpos = self.status['pos___pnl_max']['r']/4
+                if 'pos___pnl' in self.status and self.status['pos___pnl_max']['r']> mddpos:
+                    if self.status['pos___pnl_max']['r']-self.status['pos___pnl']['r'] > mddpos:
+                        self.close(flag=Order.FLAG_TAKEPROFIT)
+                        self.cancel_orders()

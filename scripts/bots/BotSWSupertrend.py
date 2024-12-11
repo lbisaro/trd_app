@@ -19,7 +19,12 @@ class BotSWSupertrend(Bot_Core):
     re_buy_perc = 0 #% para recompra luego de una venta
     interes = '' 
 
-    
+
+    indicadores = [
+            {'col': 'st_low', 'name': 'st_low', 'color': 'green', 'row': 1,  'mode':'markers',},             
+            {'col': 'st_high', 'name': 'st_high', 'color': 'red', 'row': 1,  'mode':'markers',},             
+            ]
+        
     def __init__(self):
         self.symbol = ''
         self.quote_perc = 0.0
