@@ -9,6 +9,8 @@ class app_log:
     date_format = '%Y-%m-%d %H:%M:%S'
 
     def __init__(self,filename='bot'):
+       if not filename.strip():
+          filename = 'bot'
        self.filename = os.path.join(settings.BASE_DIR,f'log/{filename}')
 
     def write(self,type,msg):
@@ -17,11 +19,14 @@ class app_log:
         filename_add = dt.strftime('%Y%m%d')
         with open(self.filename+'_'+filename_add+'.log', 'a') as file:
             file.write(line + '\n')
-        
-        fn.telegram_send(f'Log - {line}') 
+        if type=='ALERT':
+            fn.telegram_send(f'Log - {line}') 
 
     def info(self,msg):
        self.write(type='INFO',msg=msg)
+
+    def alert(self,msg):
+       self.write(type='ALERT',msg=msg)
 
     def warning(self,msg):
        self.write(type='WARNING',msg=msg)
