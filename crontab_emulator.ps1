@@ -15,6 +15,9 @@ Write-Host "Inicia el bucle"
 
 # Bucle infinito para ejecutar el archivo bat cada minuto
 while ($true) {
+    # Limpiar la pantalla
+    Clear-Host
+
     # Ejecutar el archivo bat
     Start-Process -FilePath $archivoBat -NoNewWindow
     
