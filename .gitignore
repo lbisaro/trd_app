@@ -8,3 +8,4 @@ bot/migrations/*.py
 backtest/results/*.json
 *.sqlite3
 *.pkl
+*.csv
