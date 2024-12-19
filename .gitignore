@@ -7,3 +7,4 @@ bot/migrations/*.py
 *.DataFrame
 backtest/results/*.json
 *.sqlite3
+*.pkl
