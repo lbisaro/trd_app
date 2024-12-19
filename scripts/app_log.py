@@ -5,13 +5,16 @@ from django.conf import settings
 import scripts.functions as fn
 
 class app_log:
-    filename = os.path.join(settings.BASE_DIR,'log/bot')
+    filename = ''
     date_format = '%Y-%m-%d %H:%M:%S'
+
+    def __init__(self,filename='bot'):
+       self.filename = os.path.join(settings.BASE_DIR,f'log/{filename}')
 
     def write(self,type,msg):
         dt = datetime.now()
         line = dt.strftime(self.date_format)+' - '+type+' - '+msg
-        filename_add = dt.strftime('%Y%m%d%H')
+        filename_add = dt.strftime('%Y%m%d')
         with open(self.filename+'_'+filename_add+'.log', 'a') as file:
             file.write(line + '\n')
         
