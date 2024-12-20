@@ -40,9 +40,10 @@ def run():
     # Obtener prices actuales
     actual_prices = {}
     tickers = exch.client.get_ticker()
-    print(tickers)
+    
     if len(tickers) > 0:
         for ticker in tickers:
+            print(tickers,end="\n\n")
             symbol = ticker['symbol']
             close_time = datetime.fromtimestamp(ticker['closeTime']/1000).date()
             check_proc_date = datetime.strptime(proc_date, '%Y-%m-%d').date()
