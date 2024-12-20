@@ -147,7 +147,10 @@ def run():
             else:
                 if symbol in data['alerts']:
                     del data['alerts'][symbol]
-
+        else:
+            if symbol in data['alerts']:
+                del data['alerts'][symbol]
+                
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
 
