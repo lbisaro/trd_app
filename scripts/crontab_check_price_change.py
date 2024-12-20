@@ -52,7 +52,7 @@ def run():
 
     # Cargar data previos
     data = load_data_file(DATA_FILE)
-
+    print('actual_prices:',len(actual_prices))
     # Actualizar data de prices
     klines_downloaded = 0
     for symbol, price in actual_prices.items():
