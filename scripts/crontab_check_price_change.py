@@ -43,16 +43,13 @@ def run():
     
 
     for ticker in tickers:
-        if 'symbol' in ticker:
-            symbol = ticker['symbol']
-            print(symbol,end=" ")
-            close_time = datetime.fromtimestamp(ticker['closeTime']/1000).date()
-            check_proc_date = datetime.strptime(proc_date, '%Y-%m-%d').date()
-            diff_days = abs((check_proc_date - close_time).days)
-            if symbol.endswith(USDT_PAIR) and diff_days==0:
-                actual_prices[symbol] = float(ticker['lastPrice'])
-        else:
-            print(ticker,end="\n\n")
+        symbol = ticker['symbol']
+        close_time = datetime.fromtimestamp(ticker['closeTime']/1000).date()
+        check_proc_date = datetime.strptime(proc_date, '%Y-%m-%d').date()
+        diff_days = abs((check_proc_date - close_time).days)
+        if symbol.endswith(USDT_PAIR) and diff_days==0:
+            actual_prices[symbol] = float(ticker['lastPrice'])
+
     # Cargar data previos
     data = load_data_file(DATA_FILE)
 
@@ -62,6 +59,7 @@ def run():
         if symbol not in data:
             klines = exch.get_klines(symbol,'2d01',DIAS_HL)
             klines_downloaded += 1
+            print(f'Descargando... {symbol}')
             hl_data = klines[['datetime','high','low']]
             hl_data.rename(columns={'datetime': 'date'}, inplace=True)
             hl_data['date'] = hl_data['date'].dt.strftime('%Y-%m-%d')
