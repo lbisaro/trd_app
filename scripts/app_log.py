@@ -20,7 +20,7 @@ class app_log:
         with open(self.filename+'_'+filename_add+'.log', 'a') as file:
             file.write(line + '\n')
         if type=='ALERT':
-            fn.telegram_send(f'Log - {line}') 
+            fn.telegram_send(msg) 
 
     def info(self,msg):
        self.write(type='INFO',msg=msg)
