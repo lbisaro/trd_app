@@ -136,7 +136,7 @@ def run():
             hl_data_high = hl_data['high'].max()
             hl_data_low = hl_data['low'].min()
             hl_data_band = hl_data_high-hl_data_low
-            hl_data_umbral = hl_data_high+hl_data_band/2
+            hl_data_umbral = hl_data_high+hl_data_band/10
 
             if high > hl_data_umbral:
                 if symbol not in data['alerts']:
@@ -147,7 +147,7 @@ def run():
             else:
                 if symbol in data['alerts']:
                     del data['alerts'][symbol]
-                    
+
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
 
