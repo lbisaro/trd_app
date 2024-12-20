@@ -24,9 +24,6 @@ def home(request):
         updated = data['updated']
         proc_duration = data['proc_duration']
         alerts = data['alerts']
-        alerts = {}
-        alerts['jose']='pepe'
-        alerts['juan']='juancito'
         
         return render(request, 'home.html',{
             'DATA_FILE': DATA_FILE ,
