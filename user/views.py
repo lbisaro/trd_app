@@ -18,8 +18,12 @@ def home(request):
 
 
     from scripts.crontab_check_price_change import DATA_FILE,load_data_file
-    data = load_data_file(DATA_FILE)
-    qty_symbols = len(data)
+    try:
+        data = load_data_file(DATA_FILE)
+        qty_symbols = len(data)
+    except:
+        data = 'No es posible leer el archivo'
+        qty_symbols = 'Sin especificar'
     return render(request, 'home.html',{
             'DATA_FILE': DATA_FILE ,
             'qty_symbols': qty_symbols ,
