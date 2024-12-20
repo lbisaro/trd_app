@@ -34,6 +34,7 @@ def run():
     log = Log('pchange')
     
     proc_date = (datetime.now() + timedelta(hours=3)).strftime('%Y-%m-%d')
+    proc_start = datetime.now()
     # Inicializar cliente
     exch = Exchange(type='info', exchange='bnc', prms=None)
 
@@ -54,11 +55,15 @@ def run():
 
     # Cargar data previos
     data = load_data_file(DATA_FILE)
+
+    if 'symbols' not in data:
+        data['symbols'] = {} 
     
+
     # Actualizar data de prices
     klines_downloaded = 0
     for symbol, price in actual_prices.items():
-        if symbol not in data:
+        if symbol not in data['symbols']:
             klines = exch.get_klines(symbol,'2d01',DIAS_HL)
             klines_downloaded += 1
             hl_data = klines[['datetime','high','low']].copy()
@@ -75,7 +80,7 @@ def run():
             symbol_info = {'date':proc_date,'price':price,'high':high,'low':low,'hl_data':hl_data}
             print('Descargando...',symbol)
         else:
-            symbol_info = data[symbol]
+            symbol_info = data['symbols'][symbol]
             symbol_info['price'] = price
             hl_data = symbol_info['hl_data']
 
@@ -84,7 +89,7 @@ def run():
             check_proc_date = datetime.strptime(proc_date, '%Y-%m-%d').date()
             diff_days = abs((check_proc_date - check_hl_data).days)
             if diff_days>1:
-                del data[symbol]
+                del data['symbols'][symbol]
                 print('ERROR en fechas',symbol,check_hl_data,check_proc_date)
                 continue
 
@@ -110,7 +115,7 @@ def run():
             
             symbol_info['date'] = proc_date
         
-        data[symbol] = symbol_info
+        data['symbols'][symbol] = symbol_info
 
         if klines_downloaded > 5: #Limita la cantidad de symbols que se descargan por ciclo
             break
@@ -118,14 +123,11 @@ def run():
     # Guardar data actualizados en binario
     save_data_file(DATA_FILE, data)
 
-    print("Cantidad de symbols:",len(data))
+    print("Cantidad de symbols:",len(data['symbols']))
     print('proc_date:',proc_date)
     
-
-
-
     #Analisis de los datos
-    for symbol, symbol_info in data.items():
+    for symbol, symbol_info in data['symbols'].items():
         hl_data = symbol_info['hl_data']
         price = symbol_info['price']
         high = symbol_info['high']
@@ -140,4 +142,5 @@ def run():
                 log.alert(f'Price Change {symbol} price: {price} umbral: {hl_data_umbral}')
                 print(symbol,'price:',price,'umbral:',hl_data_umbral)
 
-
+    data['updated'] = datetime.now().strftime('%Y-%m-%d %H:%M')
+    data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
