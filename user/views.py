@@ -20,14 +20,17 @@ def home(request):
     from scripts.crontab_check_price_change import DATA_FILE,load_data_file
     try:
         data = load_data_file(DATA_FILE)
-        qty_symbols = len(data)
-    except:
-        data = 'No es posible leer el archivo'
-        qty_symbols = 'Sin especificar'
-    return render(request, 'home.html',{
+        qty_symbols = len(data['symbols'])
+        updated = len(data['updated'])
+        proc_duration = len(data['proc_duration'])
+        return render(request, 'home.html',{
             'DATA_FILE': DATA_FILE ,
             'qty_symbols': qty_symbols ,
+            'updated': updated ,
+            'proc_duration': proc_duration ,
         })
+    except:
+        return render(request, 'home.html')
 
 def signup(request):
     json_rsp = {}
