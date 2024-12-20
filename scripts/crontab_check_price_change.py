@@ -41,16 +41,17 @@ def run():
     actual_prices = {}
     tickers = exch.client.get_ticker()
     
-    if len(tickers) > 0:
-        for ticker in tickers:
-            print(tickers,end="\n\n")
+
+    for ticker in tickers:
+        if 'symbol' in ticker:
             symbol = ticker['symbol']
             close_time = datetime.fromtimestamp(ticker['closeTime']/1000).date()
             check_proc_date = datetime.strptime(proc_date, '%Y-%m-%d').date()
             diff_days = abs((check_proc_date - close_time).days)
             if symbol.endswith(USDT_PAIR) and diff_days==0:
                 actual_prices[symbol] = float(ticker['lastPrice'])
-
+        else:
+            print(ticker,end="\n\n")
     # Cargar data previos
     data = load_data_file(DATA_FILE)
 
