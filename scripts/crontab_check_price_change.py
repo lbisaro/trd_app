@@ -62,10 +62,9 @@ def run():
         if symbol not in data:
             klines = exch.get_klines(symbol,'2d01',DIAS_HL)
             klines_downloaded += 1
-            print(f'Descargando... {symbol}')
             hl_data = klines[['datetime','high','low']]
-            hl_data.rename(columns={'datetime': 'date'}, inplace=True)
-            hl_data['date'] = hl_data['date'].dt.strftime('%Y-%m-%d')
+            hl_data['date'] = hl_data['datetime'].dt.strftime('%Y-%m-%d')
+            hl_data.drop('datetime', axis=1, inplace=True)
 
             #Obtener el high y Low del registro actual
             high = hl_data.iloc[-1]['high']
