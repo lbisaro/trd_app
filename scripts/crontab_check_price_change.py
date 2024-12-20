@@ -120,9 +120,6 @@ def run():
         if klines_downloaded > 5: #Limita la cantidad de symbols que se descargan por ciclo
             break
 
-    # Guardar data actualizados en binario
-    save_data_file(DATA_FILE, data)
-
     print("Cantidad de symbols:",len(data['symbols']))
     print('proc_date:',proc_date)
     
@@ -142,5 +139,8 @@ def run():
                 log.alert(f'Price Change {symbol} price: {price} umbral: {hl_data_umbral}')
                 print(symbol,'price:',price,'umbral:',hl_data_umbral)
 
-    data['updated'] = datetime.now().strftime('%Y-%m-%d %H:%M')
+    data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
+
+    # Guardar data actualizados en binario
+    save_data_file(DATA_FILE, data)
