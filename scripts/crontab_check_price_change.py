@@ -49,7 +49,6 @@ def run():
         check_proc_date = datetime.strptime(proc_date, '%Y-%m-%d').date()
 
         diff_days = abs((check_proc_date - close_time).days)
-        print(check_proc_date,close_time,diff_days)
         if symbol.endswith(USDT_PAIR) and diff_days==0:
             actual_prices[symbol] = float(ticker['lastPrice'])
 
