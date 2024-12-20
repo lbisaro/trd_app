@@ -138,7 +138,7 @@ def run():
             hl_data_band = hl_data_high-hl_data_low
             hl_data_umbral = hl_data_high+hl_data_band/10
 
-            if high > hl_data_umbral:
+            if price > hl_data_umbral:
                 alert_str = f'Price Change {symbol} price: {price} hst_high: {hl_data_high} umbral: {hl_data_umbral}'
                 if symbol not in data['alerts']:
                     log.alert(alert_str)
@@ -150,7 +150,7 @@ def run():
         else:
             if symbol in data['alerts']:
                 del data['alerts'][symbol]
-                
+
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
 
