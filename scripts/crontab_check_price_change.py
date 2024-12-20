@@ -62,7 +62,7 @@ def run():
         if symbol not in data:
             klines = exch.get_klines(symbol,'2d01',DIAS_HL)
             klines_downloaded += 1
-            hl_data = klines[['datetime','high','low']]
+            hl_data = klines[['datetime','high','low']].copy()
             hl_data['date'] = hl_data['datetime'].dt.strftime('%Y-%m-%d')
             hl_data.drop('datetime', axis=1, inplace=True)
 
