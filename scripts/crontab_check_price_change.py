@@ -40,6 +40,7 @@ def run():
     # Obtener prices actuales
     actual_prices = {}
     tickers = exch.client.get_ticker()
+    print(tickers)
     if len(tickers) > 0:
         for ticker in tickers:
             symbol = ticker['symbol']
