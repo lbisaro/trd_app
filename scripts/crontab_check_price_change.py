@@ -54,7 +54,7 @@ def run():
     klines_downloaded = 0
     for symbol, price in actual_prices.items():
         if symbol not in data:
-            klines = exch.get_klines(symbol,'2d01',20)
+            klines = exch.get_klines(symbol,'2d01',DIAS_HL)
             klines_downloaded += 1
             hl_data = klines[['datetime','high','low']]
             hl_data.rename(columns={'datetime': 'date'}, inplace=True)
@@ -89,11 +89,11 @@ def run():
                 elif price<symbol_info['low']:
                     symbol_info['low'] = price
             else: #Cambio de dia
-                if hl_data['date'].count() == 20: #hl_data completo
+                if hl_data['date'].count() == DIAS_HL: #hl_data completo
                     hl_data = hl_data.shift(-1)
-                    hl_data.at[19,'date'] = symbol_info['date']
-                    hl_data.at[19,'high'] = symbol_info['high']
-                    hl_data.at[19,'low'] = symbol_info['low']
+                    hl_data.at[DIAS_HL-1,'date'] = symbol_info['date']
+                    hl_data.at[DIAS_HL-1,'high'] = symbol_info['high']
+                    hl_data.at[DIAS_HL-1,'low'] = symbol_info['low']
                 else:
                     to_add = {'date': symbol_info['date'], 'high': symbol_info['high'], 'low': symbol_info['low']}
                     hl_data = pd.concat([hl_data, pd.DataFrame([to_add]) ], ignore_index=True)
@@ -125,7 +125,7 @@ def run():
         price = symbol_info['price']
         high = symbol_info['high']
         low = symbol_info['low']
-        if hl_data['date'].count()==20:
+        if hl_data['date'].count()==DIAS_HL:
             hl_data_high = hl_data['high'].max()
             hl_data_low = hl_data['low'].min()
             hl_data_band = hl_data_high-hl_data_low

@@ -5,8 +5,11 @@
 {% load static %}
 {% block content %}
 <h1>Home</h1>
-<div class="container text-center">
-    <img src="{% static 'images/login.png' %}" height="100"/>
+<div class="container">
+    <h4>DATA_FILE: {{DATA_FILE}}</h4>
+    <h4>Symbols: {{qty_symbols}}</h4>
+
+    <!-- <img src="{% static 'images/login.png' %}" height="100"/> -->
     
 </div>
 {% endblock %}

@@ -15,7 +15,15 @@ from django.conf import settings
 
 @login_required
 def home(request):
-    return render(request, 'home.html')
+
+
+    from scripts.crontab_check_price_change import DATA_FILE,load_data_file
+    data = load_data_file(DATA_FILE)
+    qty_symbols = len(data)
+    return render(request, 'home.html',{
+            'DATA_FILE': DATA_FILE ,
+            'qty_symbols': qty_symbols ,
+        })
 
 def signup(request):
     json_rsp = {}
