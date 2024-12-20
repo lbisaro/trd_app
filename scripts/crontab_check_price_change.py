@@ -59,6 +59,9 @@ def run():
     if 'symbols' not in data:
         data['symbols'] = {} 
     
+    if 'alerts' not in data:
+        data['alerts'] = {} 
+    
 
     # Actualizar data de prices
     klines_downloaded = 0
@@ -133,12 +136,18 @@ def run():
             hl_data_high = hl_data['high'].max()
             hl_data_low = hl_data['low'].min()
             hl_data_band = hl_data_high-hl_data_low
-            hl_data_umbral = hl_data_high+hl_data_band
+            hl_data_umbral = hl_data_high+hl_data_band/2
 
             if high > hl_data_umbral:
-                log.alert(f'Price Change {symbol} price: {price} umbral: {hl_data_umbral}')
-                print(symbol,'price:',price,'umbral:',hl_data_umbral)
-
+                if symbol not in data['alerts']:
+                    alert_str = f'Price Change {symbol} price: {price} umbral: {hl_data_umbral}'
+                    data['alerts'][symbol] = alert_str
+                    log.alert(alert_str)
+                    print(alert_str)
+            else:
+                if symbol in data['alerts']:
+                    del data['alerts'][symbol]
+                    
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
 

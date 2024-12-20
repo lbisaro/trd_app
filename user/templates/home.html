@@ -12,6 +12,18 @@
         <h4>Ultima Actualizacion: {{updated}}</h4>
         <h4>Duracion del proceso: {{proc_duration}} segundos</h4>
     </div>
+
+    {% if alerts %}
+    <div class="container">
+        <h2>Alertas</h2>
+        <ul>
+            {% for symbol,alert in alerts.items %}
+            <li>{{symbol}}: {{alert}}</li>
+            {% endfor%}
+        </ul>
+    </div>
+    {% endif %}
+
     {% else %}
     <div class="container text-center">
         <img src="{% static 'images/login.png' %}" height="100"/>

@@ -23,12 +23,17 @@ def home(request):
         qty_symbols = len(data['symbols'])
         updated = data['updated']
         proc_duration = data['proc_duration']
+        alerts = data['alerts']
+        alerts = {}
+        alerts['jose']='pepe'
+        alerts['juan']='juancito'
         
         return render(request, 'home.html',{
             'DATA_FILE': DATA_FILE ,
             'qty_symbols': qty_symbols ,
             'updated': updated ,
             'proc_duration': proc_duration ,
+            'alerts': alerts ,
         })
     except:
         return render(request, 'home.html')
