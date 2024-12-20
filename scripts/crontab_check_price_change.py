@@ -56,6 +56,7 @@ def run():
     # Actualizar data de prices
     klines_downloaded = 0
     for symbol, price in actual_prices.items():
+        print(symbol,end=" ")
         if symbol not in data:
             klines = exch.get_klines(symbol,'2d01',DIAS_HL)
             klines_downloaded += 1
