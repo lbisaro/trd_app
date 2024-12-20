@@ -47,16 +47,16 @@ def run():
         close_time = datetime.fromtimestamp(ticker['closeTime']/1000).date()
         check_proc_date = datetime.strptime(proc_date, '%Y-%m-%d').date()
         diff_days = abs((check_proc_date - close_time).days)
+        print(check_proc_date,close_time,diff_days)
         if symbol.endswith(USDT_PAIR) and diff_days==0:
             actual_prices[symbol] = float(ticker['lastPrice'])
 
     # Cargar data previos
     data = load_data_file(DATA_FILE)
-    print('actual_prices:',len(actual_prices))
+    
     # Actualizar data de prices
     klines_downloaded = 0
     for symbol, price in actual_prices.items():
-        print(symbol,end=" ")
         if symbol not in data:
             klines = exch.get_klines(symbol,'2d01',DIAS_HL)
             klines_downloaded += 1
