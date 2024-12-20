@@ -45,6 +45,7 @@ def run():
     for ticker in tickers:
         if 'symbol' in ticker:
             symbol = ticker['symbol']
+            print(symbol,end=" ")
             close_time = datetime.fromtimestamp(ticker['closeTime']/1000).date()
             check_proc_date = datetime.strptime(proc_date, '%Y-%m-%d').date()
             diff_days = abs((check_proc_date - close_time).days)
