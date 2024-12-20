@@ -5,9 +5,10 @@ import pickle
 import os
 from datetime import datetime, timedelta
 from scripts.app_log import app_log as Log
+from django.conf import settings
 
 # Configuraciones iniciales
-LOG_DIR = "log"
+LOG_DIR = os.path.join(settings.BASE_DIR,'log')
 DATA_FILE = os.path.join(LOG_DIR, "pchange_data.pkl")
 USDT_PAIR = "USDT"
 DIAS_HL = 20
