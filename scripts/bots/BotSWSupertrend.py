@@ -157,6 +157,8 @@ class BotSWSupertrend(Bot_Core):
             buy_order_id = self.buy(qty,Order.FLAG_SIGNAL)
             if buy_order_id:
                 buy_order = self.get_order(buy_order_id)
+                buyed_usd = round(buy_order.price*buy_order.qty,self.qd_quote)
+                self.status['buyed_usd'] = {'l': 'Compra inicial','v': buyed_usd, 'r': buyed_usd}
                 
                 #Stop-loss price
                 if self.stop_loss > 0:
@@ -164,20 +166,24 @@ class BotSWSupertrend(Bot_Core):
                     self.sell_limit(qty,Order.FLAG_STOPLOSS,limit_price,tag='STOP_LOSS')
                 
         elif 'st_trend' in self.row and hold > 10 and self.signal == 'VENTA': 
+            del self.status['buyed_usd']
             self.close(Order.FLAG_SIGNAL)
         
         else:
-            if self.lot_to_safe > 0 and hold > start_cash*(1+(self.lot_to_safe/100)):
-                qty = round_down(((hold - start_cash)/price) , self.qd_qty)
-                if (qty*self.price) < 20.0:
-                    qty = round_down(20.0/price, self.qd_qty)
-                sell_order_id = self.sell(qty,Order.FLAG_TAKEPROFIT)
-                 
-                if sell_order_id > 0:
-                    if self.re_buy_perc > 0:
-                        sell_order = self.get_order(sell_order_id)
-                        limit_price = round(sell_order.price*(1-(self.re_buy_perc/100)),self.qd_price)
-                        rebuy_order_id = self.buy_limit(qty,Order.FLAG_TAKEPROFIT,limit_price)
+            if 'buyed_usd' in self.status:
+                buyed_usd = self.status['buyed_usd']['r']
+                if self.lot_to_safe > 0 and hold > buyed_usd*(1+(self.lot_to_safe/100)):
+                    usd_to_sell = hold - buyed_usd
+                    qty = round_down((usd_to_sell/price) , self.qd_qty)
+                    if (qty*self.price) < 20.0:
+                        qty = round_down(20.0/price, self.qd_qty)
+                    sell_order_id = self.sell(qty,Order.FLAG_TAKEPROFIT)
+                    
+                    if sell_order_id > 0:
+                        if self.re_buy_perc > 0:
+                            sell_order = self.get_order(sell_order_id)
+                            limit_price = round(sell_order.price*(1-(self.re_buy_perc/100)),self.qd_price)
+                            rebuy_order_id = self.buy_limit(qty,Order.FLAG_TAKEPROFIT,limit_price)
         
         if 'st_trend' in self.row and hold > 10:
             qty = self.wallet_base
