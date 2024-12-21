@@ -432,7 +432,8 @@ def telegram_send(MESSAGE):
     url = f"https://api.telegram.org/bot{LOC_TLGRM_TK}/sendMessage"
     payload = {
         'chat_id': LOC_TLGRM_CHATID,
-        'text': MESSAGE
+        'text': MESSAGE,
+        'parse_mode': 'MarkdownV2'
     }
     response = requests.post(url, data=payload)
     return response
