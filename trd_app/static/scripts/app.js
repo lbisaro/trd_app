@@ -110,7 +110,7 @@ function set_estr_prm()
             $(this).attr('type','number');
         }
 
-        $(this).on('input',function () {
+        $(this).on('change',function () {
 
             estrategia_prm_valid(id);
         });
@@ -124,6 +124,7 @@ function estrategia_prm_valid(id)
     type = input.attr('data-type');
     limit = input.attr('data-limit');
     descripcion = input.attr('data-descripcion');
+    
     if (value && limit)
     {
         if (!validarNIntervalo(value,limit))
