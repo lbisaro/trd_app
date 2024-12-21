@@ -139,7 +139,7 @@ def run():
             hl_data_umbral = hl_data_high+hl_data_band/10
 
             if price > hl_data_umbral:
-                alert_str = f'Price Change {symbol} price: {price} hst_high: {hl_data_high} umbral: {hl_data_umbral}'
+                alert_str = f'Price Change <b>{symbol}</b><br>Precio: {price}<br>High 20 dias: {hl_data_high}<br>Umbral: {hl_data_umbral}'
                 if symbol not in data['alerts']:
                     log.alert(alert_str)
                     print(alert_str)
