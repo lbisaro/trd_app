@@ -88,6 +88,7 @@ def run():
             symbol_info = data['symbols'][symbol]
             symbol_info['price'] = price
             symbol_info['c_1m'].append(price)
+            symbol_info['c_1m'] = symbol_info['c_1m'][-1200:]
             hlc_1h = symbol_info['hlc_1h']
 
             #Verificando que exista correlacion entre hlc_1h y proc_date
@@ -169,4 +170,3 @@ def run():
     # Guardar data actualizados en binario
     save_data_file(DATA_FILE, data)
 
-    print(data['symbols']['BTCUSDT']['c_1m'])
