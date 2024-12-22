@@ -433,8 +433,9 @@ def telegram_send(MESSAGE):
     payload = {
         'chat_id': LOC_TLGRM_CHATID,
         'text': MESSAGE,
-        'parse_mode': 'MarkdownV2'
+        'parse_mode': 'HTML',
     }
     response = requests.post(url, data=payload)
+    print(response)
     return response
 
