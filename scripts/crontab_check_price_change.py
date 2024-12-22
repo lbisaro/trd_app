@@ -132,6 +132,8 @@ def run():
         else:
             symbol_info = data['symbols'][symbol]
             symbol_info['price'] = price
+            if 'c_1m' not in symbol_info:
+                symbol_info['c_1m'] = []
             symbol_info['c_1m'].append(price)
             symbol_info['c_1m'] = symbol_info['c_1m'][-3000:]
             hlc_1h = symbol_info['hlc_1h']
