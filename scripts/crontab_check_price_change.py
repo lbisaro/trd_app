@@ -1,12 +1,14 @@
+import pandas as pd
+import numpy as np
 from scripts.Exchange import Exchange
-from bot.models import *
-from bot.model_kline import *
 import pickle
 import json
 import os
 from datetime import datetime, timedelta
 from scripts.app_log import app_log as Log
 from django.conf import settings
+
+from scripts.indicators import zigzag,resample
 
 # Configuraciones iniciales
 LOG_DIR = os.path.join(settings.BASE_DIR,'log')
@@ -29,6 +31,46 @@ def load_data_file(ruta):
     except Exception as e:
         print(f"Error al cargar el archivo {ruta}: {e}")
     return {}
+
+def ohlc_from_prices(prices,resample_period):
+    df = pd.DataFrame({'close': prices})
+    df['high'] = df['close']
+    df['low'] = df['close']
+    df['open'] = df['close'].shift()
+    df['volume'] = 0.0
+    now = datetime.now().replace(second=0, microsecond=0)  # Fecha y hora actuales
+    intervalos = [now - timedelta(minutes=i) for i in range(len(df))]
+    df['datetime'] = intervalos[::-1]  # Revertir el orden para que el último sea el actual
+
+    df = resample(df,periods=resample_period)
+    return df
+
+def load_pivots(df):
+    df = zigzag(df)
+
+    #Detectando pivots para analisis de fibonacci
+    pivots = df[df['ZigZag']>0].copy()
+    pivots['pivots'] = pivots['ZigZag'].copy()
+    pivots['fb_0'] = pivots['ZigZag'].copy()
+    pivots['fb_1'] = pivots['ZigZag'].shift(1)
+    pivots['fb_2'] = pivots['ZigZag'].shift(2)
+
+    #Cambios de tendencia
+    pivots['trend'] = np.where((pivots['fb_0']>pivots['fb_2']) & (pivots['fb_1']>pivots['fb_0']), 2,0)
+    pivots['trend'] = np.where((pivots['fb_0']>pivots['fb_2']) & (pivots['fb_1']<pivots['fb_0']), 1,pivots['trend'])
+    pivots['trend'] = np.where((pivots['fb_0']<pivots['fb_2']) & (pivots['fb_1']<pivots['fb_0']),-2,pivots['trend'])
+    pivots['trend'] = np.where((pivots['fb_0']<pivots['fb_2']) & (pivots['fb_1']>pivots['fb_0']),-1,pivots['trend'])
+
+    #Completando el datafame principal con los datos de pivots
+    df_cols = df.columns.copy()
+    for col in pivots.columns:
+        if not col in df_cols:
+            df[col]=None
+    for index, row in pivots.iterrows():
+        for col in pivots.columns:
+            if not col in df_cols:
+                df.at[index,col] = row[col] 
+    return df
 
 def run():
     print('Ejecución del script crontab_check_24hs_change.py')
@@ -61,7 +103,10 @@ def run():
         data['symbols'] = {} 
     
     if 'alerts' not in data:
-        data['alerts'] = {} 
+        data['alerts'] = {}
+    
+    if 'scan_pivots' not in data:
+        data['scan_pivots'] = {} 
     
 
     # Actualizar data de prices
@@ -88,7 +133,7 @@ def run():
             symbol_info = data['symbols'][symbol]
             symbol_info['price'] = price
             symbol_info['c_1m'].append(price)
-            symbol_info['c_1m'] = symbol_info['c_1m'][-1200:]
+            symbol_info['c_1m'] = symbol_info['c_1m'][-3000:]
             hlc_1h = symbol_info['hlc_1h']
 
             #Verificando que exista correlacion entre hlc_1h y proc_date
@@ -127,7 +172,8 @@ def run():
 
         if klines_downloaded > 5: #Limita la cantidad de symbols que se descargan por ciclo
             break
-
+    
+    print("Cantidad de precios 1m:",len(data['symbols']['BTCUSDT']['c_1m']))
     print("Cantidad de symbols:",len(data['symbols']))
     print('proc_date:',proc_date)
     
@@ -146,12 +192,11 @@ def run():
             hlc_1h_umbral = hlc_1h_high+hlc_1h_band/10
 
             if price > hlc_1h_umbral:
-                alert_str = f"""`Price Change *{symbol}*`
+                alert_str = f"""Price Change <b>{symbol}</b>
                 Precio: {price}
                 High 20 dias: {hlc_1h_high}
-                Umbral de alerta: {hlc_1h_umbral}
-                """
-                
+                Umbral de alerta: {hlc_1h_umbral}"""
+
                 if symbol not in data['alerts']:
                     log.alert(alert_str)
                     print(alert_str)
@@ -160,6 +205,24 @@ def run():
                 if symbol in data['alerts']:
                     del data['alerts'][symbol]
 
+            ##Escaneando precios para detectar tendencia
+            #prices = data['symbols'][symbol]['c_1m']
+            #resample_period = 5
+            #df = ohlc_from_prices(prices,resample_period)
+            #df = load_pivots(df)
+            #if symbol == 'BTCUSDT' or df['trend'].iloc[-1] is not None and df['trend'].iloc[-1] > 1:
+            #    if df['trend'].iloc[-1] == 1:
+            #        trend_msg = 'Maximos en aumento'
+            #    else:
+            #        trend_msg = 'Minimos en aumento'
+            #    alert_str = f"""Scaner Scalper <b>{symbol}</b> {resample_period}m Precio: {price} {trend_msg}"""
+            #    if symbol not in data['scan_pivots']:
+            #        log.alert(alert_str)
+            #        print(alert_str)
+            #    data['scan_pivots'][symbol] = alert_str
+            #else:
+            #    if symbol in data['scan_pivots']:
+            #        del data['scan_pivots'][symbol]
         else:
             if symbol in data['alerts']:
                 del data['alerts'][symbol]
