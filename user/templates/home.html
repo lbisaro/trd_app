@@ -24,6 +24,17 @@
     </div>
     {% endif %}
 
+    {% if scan_pivots %}
+    <div class="container">
+        <h2>Scan Pivots</h2>
+        <ul>
+            {% for symbol,sp in scan_pivots.items %}
+            <li>{{symbol}}: {{sp}}</li>
+            {% endfor%}
+        </ul>
+    </div>
+    {% endif %}
+
     {% else %}
     <div class="container text-center">
         <img src="{% static 'images/login.png' %}" height="100"/>
