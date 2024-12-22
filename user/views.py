@@ -25,10 +25,12 @@ def home(request):
         proc_duration = data['proc_duration']
         alerts = data['alerts']
         scan_pivots = data['scan_pivots']
+        qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
         
         return render(request, 'home.html',{
             'DATA_FILE': DATA_FILE ,
             'qty_symbols': qty_symbols ,
+            'qty_c_1m': qty_c_1m ,
             'updated': updated ,
             'proc_duration': proc_duration ,
             'alerts': alerts ,

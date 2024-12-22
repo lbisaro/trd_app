@@ -45,7 +45,7 @@ def ohlc_from_prices(prices,resample_period):
     df = resample(df,periods=resample_period)
     return df
 
-def load_pivots(df):
+def load_pivots(df,threshold=3):
     df = zigzag(df)
 
     #Detectando pivots para analisis de fibonacci
@@ -56,8 +56,8 @@ def load_pivots(df):
     pivots['fb_2'] = pivots['ZigZag'].shift(2)
 
     #Cambios de tendencia
-    pivots['trend'] = np.where((pivots['fb_0']>pivots['fb_2']) & (pivots['fb_1']>pivots['fb_0']), 2,0)
-    pivots['trend'] = np.where((pivots['fb_0']>pivots['fb_2']) & (pivots['fb_1']<pivots['fb_0']), 1,pivots['trend'])
+    pivots['trend'] = np.where((pivots['fb_0']>pivots['fb_2']*(1+(threshold/100))) & (pivots['fb_1']>pivots['fb_0']), 2,0)
+    pivots['trend'] = np.where((pivots['fb_0']>pivots['fb_2']*(1+(threshold/100))) & (pivots['fb_1']<pivots['fb_0']), 1,pivots['trend'])
     pivots['trend'] = np.where((pivots['fb_0']<pivots['fb_2']) & (pivots['fb_1']<pivots['fb_0']),-2,pivots['trend'])
     pivots['trend'] = np.where((pivots['fb_0']<pivots['fb_2']) & (pivots['fb_1']>pivots['fb_0']),-1,pivots['trend'])
 
@@ -192,10 +192,10 @@ def run():
             hlc_1h_umbral = hlc_1h_high+hlc_1h_band/10
 
             if price > hlc_1h_umbral:
-                alert_str = f"""Price Change <b>{symbol}</b>
-                Precio: {price}
-                High 20 dias: {hlc_1h_high}
-                Umbral de alerta: {hlc_1h_umbral}"""
+                alert_str = f'Price Change <b>{symbol}</b>'+\
+                            f'<br>Precio: {price}'+\
+                            f'<br>High 20 dias: {hlc_1h_high}'+\
+                            f'<br>Umbral de alerta: {hlc_1h_umbral}'
 
                 if symbol not in data['alerts']:
                     log.alert(alert_str)
@@ -205,9 +205,9 @@ def run():
                 if symbol in data['alerts']:
                     del data['alerts'][symbol]
 
-            ##Escaneando precios para detectar tendencia
+            #Escaneando precios para detectar tendencia
             #prices = data['symbols'][symbol]['c_1m']
-            #resample_period = 5
+            #resample_period = 15
             #df = ohlc_from_prices(prices,resample_period)
             #df = load_pivots(df)
             #if symbol == 'BTCUSDT' or df['trend'].iloc[-1] is not None and df['trend'].iloc[-1] > 1:
@@ -215,7 +215,9 @@ def run():
             #        trend_msg = 'Maximos en aumento'
             #    else:
             #        trend_msg = 'Minimos en aumento'
-            #    alert_str = f"""Scaner Scalper <b>{symbol}</b> {resample_period}m Precio: {price} {trend_msg}"""
+            #    alert_str = f'Scaner Scalper <b>{symbol}</b>'+\
+            #                f'<br>{resample_period}m'+\
+            #                f'<br>Precio: {price} {trend_msg}'
             #    if symbol not in data['scan_pivots']:
             #        log.alert(alert_str)
             #        print(alert_str)

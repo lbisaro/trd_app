@@ -436,6 +436,5 @@ def telegram_send(MESSAGE):
         'parse_mode': 'HTML',
     }
     response = requests.post(url, data=payload)
-    print(response)
     return response
 
