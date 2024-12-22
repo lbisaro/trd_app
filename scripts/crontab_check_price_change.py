@@ -2,6 +2,7 @@ from scripts.Exchange import Exchange
 from bot.models import *
 from bot.model_kline import *
 import pickle
+import json
 import os
 from datetime import datetime, timedelta
 from scripts.app_log import app_log as Log
@@ -69,7 +70,7 @@ def run():
         if symbol not in data['symbols']:
             klines = exch.get_klines(symbol,'2d01',DIAS_HL)
             klines_downloaded += 1
-            hl_data = klines[['datetime','high','low']].copy()
+            hl_data = klines[['datetime','high','low','close']].copy()
             hl_data['date'] = hl_data['datetime'].dt.strftime('%Y-%m-%d')
             hl_data.drop('datetime', axis=1, inplace=True)
 
@@ -107,8 +108,9 @@ def run():
                     hl_data.at[DIAS_HL-1,'date'] = symbol_info['date']
                     hl_data.at[DIAS_HL-1,'high'] = symbol_info['high']
                     hl_data.at[DIAS_HL-1,'low'] = symbol_info['low']
+                    hl_data.at[DIAS_HL-1,'close'] = symbol_info['price']
                 else:
-                    to_add = {'date': symbol_info['date'], 'high': symbol_info['high'], 'low': symbol_info['low']}
+                    to_add = {'date': symbol_info['date'], 'high': symbol_info['high'], 'low': symbol_info['low'], 'close': symbol_info['close']}
                     hl_data = pd.concat([hl_data, pd.DataFrame([to_add]) ], ignore_index=True)
 
                 symbol_info['price'] = price
@@ -161,3 +163,4 @@ def run():
 
     # Guardar data actualizados en binario
     save_data_file(DATA_FILE, data)
+
