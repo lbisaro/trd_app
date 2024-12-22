@@ -24,6 +24,7 @@ def home(request):
         updated = data['updated']
         proc_duration = data['proc_duration']
         alerts = data['alerts']
+        scan_pivots = data['scan_pivots']
         
         return render(request, 'home.html',{
             'DATA_FILE': DATA_FILE ,
@@ -31,6 +32,7 @@ def home(request):
             'updated': updated ,
             'proc_duration': proc_duration ,
             'alerts': alerts ,
+            'scan_pivots': scan_pivots ,
         })
     except:
         return render(request, 'home.html')
