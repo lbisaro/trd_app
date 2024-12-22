@@ -70,31 +70,33 @@ def run():
         if symbol not in data['symbols']:
             klines = exch.get_klines(symbol,'2d01',DIAS_HL)
             klines_downloaded += 1
-            hl_data = klines[['datetime','high','low','close']].copy()
-            hl_data['date'] = hl_data['datetime'].dt.strftime('%Y-%m-%d')
-            hl_data.drop('datetime', axis=1, inplace=True)
+            hlc_1h = klines[['datetime','high','low','close']].copy()
+            hlc_1h['date'] = hlc_1h['datetime'].dt.strftime('%Y-%m-%d')
+            hlc_1h.drop('datetime', axis=1, inplace=True)
 
             #Obtener el high y Low del registro actual
-            high = hl_data.iloc[-1]['high']
-            low = hl_data.iloc[-1]['low']
+            high = hlc_1h.iloc[-1]['high']
+            low = hlc_1h.iloc[-1]['low']
 
             #Eliminar los datos correspondientes a la fecha de proceso
-            hl_data = hl_data[hl_data['date']<proc_date]
+            hlc_1h = hlc_1h[hlc_1h['date']<proc_date]
 
-            symbol_info = {'date':proc_date,'price':price,'high':high,'low':low,'hl_data':hl_data}
-            print('Descargando...',symbol)
+            symbol_info = {'date':proc_date,'price':price,'high':high,'low':low,'hlc_1h':hlc_1h, 'c_1m':[price]}
+            print('Descargado ',symbol)
+
         else:
             symbol_info = data['symbols'][symbol]
             symbol_info['price'] = price
-            hl_data = symbol_info['hl_data']
+            symbol_info['c_1m'].append(price)
+            hlc_1h = symbol_info['hlc_1h']
 
-            #Verificando que exista correlacion entre hl_data y proc_date
-            check_hl_data = datetime.strptime(hl_data['date'].max(), '%Y-%m-%d').date()
+            #Verificando que exista correlacion entre hlc_1h y proc_date
+            check_hlc_1h = datetime.strptime(hlc_1h['date'].max(), '%Y-%m-%d').date()
             check_proc_date = datetime.strptime(proc_date, '%Y-%m-%d').date()
-            diff_days = abs((check_proc_date - check_hl_data).days)
+            diff_days = abs((check_proc_date - check_hlc_1h).days)
             if diff_days>1:
                 del data['symbols'][symbol]
-                print('ERROR en fechas',symbol,check_hl_data,check_proc_date)
+                print('ERROR en fechas',symbol,check_hlc_1h,check_proc_date)
                 continue
 
             if symbol_info['date'] == proc_date:
@@ -103,20 +105,20 @@ def run():
                 elif price<symbol_info['low']:
                     symbol_info['low'] = price
             else: #Cambio de dia
-                if hl_data['date'].count() == DIAS_HL: #hl_data completo
-                    hl_data = hl_data.shift(-1)
-                    hl_data.at[DIAS_HL-1,'date'] = symbol_info['date']
-                    hl_data.at[DIAS_HL-1,'high'] = symbol_info['high']
-                    hl_data.at[DIAS_HL-1,'low'] = symbol_info['low']
-                    hl_data.at[DIAS_HL-1,'close'] = symbol_info['price']
+                if hlc_1h['date'].count() == DIAS_HL: #hlc_1h completo
+                    hlc_1h = hlc_1h.shift(-1)
+                    hlc_1h.at[DIAS_HL-1,'date'] = symbol_info['date']
+                    hlc_1h.at[DIAS_HL-1,'high'] = symbol_info['high']
+                    hlc_1h.at[DIAS_HL-1,'low'] = symbol_info['low']
+                    hlc_1h.at[DIAS_HL-1,'close'] = symbol_info['price']
                 else:
                     to_add = {'date': symbol_info['date'], 'high': symbol_info['high'], 'low': symbol_info['low'], 'close': symbol_info['close']}
-                    hl_data = pd.concat([hl_data, pd.DataFrame([to_add]) ], ignore_index=True)
+                    hlc_1h = pd.concat([hlc_1h, pd.DataFrame([to_add]) ], ignore_index=True)
 
                 symbol_info['price'] = price
                 symbol_info['high'] = price
                 symbol_info['low'] = price
-                symbol_info['hl_data'] = hl_data
+                symbol_info['hlc_1h'] = hlc_1h
             
             symbol_info['date'] = proc_date
         
@@ -130,21 +132,23 @@ def run():
     
     #Analisis de los datos
     for symbol, symbol_info in data['symbols'].items():
-        hl_data = symbol_info['hl_data']
+        hlc_1h = symbol_info['hlc_1h']
         price = symbol_info['price']
         high = symbol_info['high']
         low = symbol_info['low']
-        if hl_data['date'].count()==DIAS_HL:
-            hl_data_high = hl_data['high'].max()
-            hl_data_low = hl_data['low'].min()
-            hl_data_band = hl_data_high-hl_data_low
-            hl_data_umbral = hl_data_high+hl_data_band/10
+        if hlc_1h['date'].count()==DIAS_HL: #Verifica que esten completas las 20hs de velas
 
-            if price > hl_data_umbral:
+            #Buscando precios que esten por sobre el humbral superior al max-high de 20hs
+            hlc_1h_high = hlc_1h['high'].max()
+            hlc_1h_low = hlc_1h['low'].min()
+            hlc_1h_band = hlc_1h_high-hlc_1h_low
+            hlc_1h_umbral = hlc_1h_high+hlc_1h_band/10
+
+            if price > hlc_1h_umbral:
                 alert_str = f"""`Price Change *{symbol}*`
                 Precio: {price}
-                High 20 dias: {hl_data_high}
-                Umbral de alerta: {hl_data_umbral}
+                High 20 dias: {hlc_1h_high}
+                Umbral de alerta: {hlc_1h_umbral}
                 """
                 
                 if symbol not in data['alerts']:
@@ -154,6 +158,7 @@ def run():
             else:
                 if symbol in data['alerts']:
                     del data['alerts'][symbol]
+
         else:
             if symbol in data['alerts']:
                 del data['alerts'][symbol]
@@ -164,3 +169,4 @@ def run():
     # Guardar data actualizados en binario
     save_data_file(DATA_FILE, data)
 
+    print(data['symbols']['BTCUSDT']['c_1m'])
