@@ -45,32 +45,36 @@ def ohlc_from_prices(prices,resample_period):
     df = resample(df,periods=resample_period)
     return df
 
-def load_pivots(df,threshold=3):
+def get_pivots_alert(df,threshold=3):
     df = zigzag(df)
+    last_close = df['close'].iloc[-1]
 
-    #Detectando pivots para analisis de fibonacci
-    pivots = df[df['ZigZag']>0].copy()
-    pivots['pivots'] = pivots['ZigZag'].copy()
-    pivots['fb_0'] = pivots['ZigZag'].copy()
-    pivots['fb_1'] = pivots['ZigZag'].shift(1)
-    pivots['fb_2'] = pivots['ZigZag'].shift(2)
+    #Detectando pivots 
+    pivots = df[df['ZigZag']>0]['ZigZag'].tolist()
+    pivots.append(last_close)
+    if len(pivots) > 0:
+        if len(pivots) > 3:
 
-    #Cambios de tendencia
-    pivots['trend'] = np.where((pivots['fb_0']>pivots['fb_2']*(1+(threshold/100))) & (pivots['fb_1']>pivots['fb_0']), 2,0)
-    pivots['trend'] = np.where((pivots['fb_0']>pivots['fb_2']*(1+(threshold/100))) & (pivots['fb_1']<pivots['fb_0']), 1,pivots['trend'])
-    pivots['trend'] = np.where((pivots['fb_0']<pivots['fb_2']) & (pivots['fb_1']<pivots['fb_0']),-2,pivots['trend'])
-    pivots['trend'] = np.where((pivots['fb_0']<pivots['fb_2']) & (pivots['fb_1']>pivots['fb_0']),-1,pivots['trend'])
+            percent_change = ((pivots[-3]/pivots[-4])-1)*100
+            #Maximos y Minimos en aumento
+            if pivots[-1]>pivots[-3] and pivots[-3]>pivots[-2] and pivots[-2]>pivots[-4]:
+                limit_price = pivots[-4] + ((pivots[-3]-pivots[-4])/3)
+                if pivots[-2] > limit_price and percent_change >= threshold:
+                    print(f'OK: {percent_change}%')
+                    return 1
+            
+            #Minimos en aumento, con intencion
+            elif pivots[-3]>pivots[-2] and pivots[-2]>pivots[-4]:
+                limit_price = pivots[-2] + 2 * ((pivots[-3]-pivots[-2])/3)
+                if pivots[-1] > limit_price and percent_change >= threshold:
+                    print(f'OK: {percent_change}%')
+                    return 2
 
-    #Completando el datafame principal con los datos de pivots
-    df_cols = df.columns.copy()
-    for col in pivots.columns:
-        if not col in df_cols:
-            df[col]=None
-    for index, row in pivots.iterrows():
-        for col in pivots.columns:
-            if not col in df_cols:
-                df.at[index,col] = row[col] 
-    return df
+    return 0
+    
+
+
+    
 
 def run():
     print('Ejecución del script crontab_check_24hs_change.py')
@@ -142,7 +146,7 @@ def run():
             check_hlc_1h = datetime.strptime(hlc_1h['date'].max(), '%Y-%m-%d').date()
             check_proc_date = datetime.strptime(proc_date, '%Y-%m-%d').date()
             diff_days = abs((check_proc_date - check_hlc_1h).days)
-            if diff_days>1:
+            if diff_days>2:
                 del data['symbols'][symbol]
                 print('ERROR en fechas',symbol,check_hlc_1h,check_proc_date)
                 continue
@@ -174,7 +178,7 @@ def run():
 
         if klines_downloaded > 5: #Limita la cantidad de symbols que se descargan por ciclo
             break
-    
+
     print("Cantidad de precios 1m:",len(data['symbols']['BTCUSDT']['c_1m']))
     print("Cantidad de symbols:",len(data['symbols']))
     print('proc_date:',proc_date)
@@ -193,11 +197,13 @@ def run():
             hlc_1h_band = hlc_1h_high-hlc_1h_low
             hlc_1h_umbral = hlc_1h_high+hlc_1h_band/10
 
+            volatility = ((hlc_1h_high/hlc_1h_low)-1)*100
+            
             if price > hlc_1h_umbral:
                 alert_str = f'Price Change <b>{symbol}</b>'+\
-                            f'<br>Precio: {price}'+\
-                            f'<br>High 20 dias: {hlc_1h_high}'+\
-                            f'<br>Umbral de alerta: {hlc_1h_umbral}'
+                            f'\nPrecio: {price}'+\
+                            f'\nHigh 20 dias: {hlc_1h_high}'+\
+                            f'\nUmbral de alerta: {hlc_1h_umbral}'
 
                 if symbol not in data['alerts']:
                     log.alert(alert_str)
@@ -208,25 +214,32 @@ def run():
                     del data['alerts'][symbol]
 
             #Escaneando precios para detectar tendencia
-            #prices = data['symbols'][symbol]['c_1m']
-            #resample_period = 15
-            #df = ohlc_from_prices(prices,resample_period)
-            #df = load_pivots(df)
-            #if symbol == 'BTCUSDT' or df['trend'].iloc[-1] is not None and df['trend'].iloc[-1] > 1:
-            #    if df['trend'].iloc[-1] == 1:
-            #        trend_msg = 'Maximos en aumento'
-            #    else:
-            #        trend_msg = 'Minimos en aumento'
-            #    alert_str = f'Scaner Scalper <b>{symbol}</b>'+\
-            #                f'<br>{resample_period}m'+\
-            #                f'<br>Precio: {price} {trend_msg}'
-            #    if symbol not in data['scan_pivots']:
-            #        log.alert(alert_str)
-            #        print(alert_str)
-            #    data['scan_pivots'][symbol] = alert_str
-            #else:
-            #    if symbol in data['scan_pivots']:
-            #        del data['scan_pivots'][symbol]
+            """
+            prices = data['symbols'][symbol]['c_1m']
+            resample_period = 15
+            if len(prices)>resample_period*4:
+                df = ohlc_from_prices(prices,resample_period)
+                pivots_alert = get_pivots_alert(df,threshold = volatility/10)
+                if pivots_alert > 0:
+
+                    if pivots_alert == 2:
+                        trend_msg = 'Maximos en aumento'
+                    elif pivots_alert == 1:
+                        trend_msg = 'Minimos en aumento, con intencion'
+                    else:
+                        trend_msg = 'Motivo desconocido'
+
+                    alert_str = f'Scaner Scalper {resample_period}m <b>{symbol}</b>'+\
+                                f'\n {trend_msg}\nPrecio: {price}'
+                    if symbol not in data['scan_pivots']:
+                        log.alert(alert_str)
+                    print(alert_str)
+                    print('volatility:',volatility)
+                    data['scan_pivots'][symbol] = alert_str
+                else:
+                    if symbol in data['scan_pivots']:
+                        del data['scan_pivots'][symbol]
+            """
         else:
             if symbol in data['alerts']:
                 del data['alerts'][symbol]
