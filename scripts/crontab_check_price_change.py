@@ -164,7 +164,7 @@ def run():
                     hlc_1h.at[DIAS_HL-1,'low'] = symbol_info['low']
                     hlc_1h.at[DIAS_HL-1,'close'] = symbol_info['price']
                 else:
-                    to_add = {'date': symbol_info['date'], 'high': symbol_info['high'], 'low': symbol_info['low'], 'close': symbol_info['close']}
+                    to_add = {'date': symbol_info['date'], 'high': symbol_info['high'], 'low': symbol_info['low'], 'close': symbol_info['price']}
                     hlc_1h = pd.concat([hlc_1h, pd.DataFrame([to_add]) ], ignore_index=True)
 
                 symbol_info['price'] = price
