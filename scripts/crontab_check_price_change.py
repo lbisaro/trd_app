@@ -188,6 +188,7 @@ def run():
     #Analisis de los datos
     if new_day:
         data['alerts'] = {} #Reset de alertas
+        data['scan_pivots'] = {} #Reset de alertas
 
     for symbol, symbol_info in data['symbols'].items():
         hlc_1h = symbol_info['hlc_1h']
@@ -238,13 +239,9 @@ def run():
                     print(alert_str)
                     print('volatility:',volatility)
                     data['scan_pivots'][symbol] = alert_str
-                else:
-                    if symbol in data['scan_pivots']:
-                        del data['scan_pivots'][symbol]
+
             """
-        else:
-            if symbol in data['alerts']:
-                del data['alerts'][symbol]
+
 
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
