@@ -115,6 +115,7 @@ def run():
 
     # Actualizar data de prices
     klines_downloaded = 0
+    new_day = False
     for symbol, price in actual_prices.items():
         if symbol not in data['symbols']:
             klines = exch.get_klines(symbol,'2d01',DIAS_HL)
@@ -157,6 +158,7 @@ def run():
                 elif price<symbol_info['low']:
                     symbol_info['low'] = price
             else: #Cambio de dia
+                new_day = True
                 if hlc_1h['date'].count() == DIAS_HL: #hlc_1h completo
                     hlc_1h = hlc_1h.shift(-1)
                     hlc_1h.at[DIAS_HL-1,'date'] = symbol_info['date']
@@ -184,6 +186,9 @@ def run():
     print('proc_date:',proc_date)
     
     #Analisis de los datos
+    if new_day:
+        data['alerts'] = {} #Reset de alertas
+
     for symbol, symbol_info in data['symbols'].items():
         hlc_1h = symbol_info['hlc_1h']
         price = symbol_info['price']
@@ -208,10 +213,7 @@ def run():
                 if symbol not in data['alerts']:
                     log.alert(alert_str)
                     print(alert_str)
-                data['alerts'][symbol] = alert_str                
-            else:
-                if symbol in data['alerts']:
-                    del data['alerts'][symbol]
+                    data['alerts'][symbol] = alert_str                
 
             #Escaneando precios para detectar tendencia
             """
