@@ -139,6 +139,8 @@ class BotSWSupertrend(Bot_Core):
         price = self.price
 
         hold = round(self.wallet_base*price,self.qd_quote)
+        if hold < 10:
+            del self.status['buyed_usd'] 
         
         """
         La linea
