@@ -9,4 +9,4 @@ backtest/results/*.json
 *.sqlite3
 *.pkl
 *.csv
-backtest/test_telegram.py
+backtest/test_tlgrm.py
