@@ -217,7 +217,7 @@ def run():
                     data['alerts'][symbol] = alert_str                
 
             #Escaneando precios para detectar tendencia
-            """
+            
             prices = data['symbols'][symbol]['c_1m']
             resample_period = 15
             if len(prices)>resample_period*4:
@@ -240,7 +240,7 @@ def run():
                     print('volatility:',volatility)
                     data['scan_pivots'][symbol] = alert_str
 
-            """
+            
 
 
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
