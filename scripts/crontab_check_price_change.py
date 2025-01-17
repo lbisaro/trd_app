@@ -181,7 +181,8 @@ def run():
         if klines_downloaded > 5: #Limita la cantidad de symbols que se descargan por ciclo
             break
 
-    print("Cantidad de precios 1m:",len(data['symbols']['BTCUSDT']['c_1m']))
+    if 'BTCUSDT' in data['symbols']:
+        print("Cantidad de precios 1m:",len(data['symbols']['BTCUSDT']['c_1m']))
     print("Cantidad de symbols:",len(data['symbols']))
     print('proc_date:',proc_date)
     
