@@ -223,6 +223,8 @@ def run():
             if len(prices)>resample_period*4:
                 df = ohlc_from_prices(prices,resample_period)
                 pivots_alert,percent_change = get_pivots_alert(df,threshold = volatility/10)
+                if pivots_alert>0:
+                    print(symbol,percent_change)
                 if pivots_alert > 0:
 
                     if pivots_alert == 2:
