@@ -55,22 +55,22 @@ def get_pivots_alert(df,threshold=3):
     if len(pivots) > 0:
         if len(pivots) > 3:
 
-            percent_change = ((pivots[-3]/pivots[-4])-1)*100
+            percent_change = ((pivots[-1]/pivots[-3])-1)*100
             #Maximos y Minimos en aumento
             if pivots[-1]>pivots[-3] and pivots[-3]>pivots[-2] and pivots[-2]>pivots[-4]:
                 limit_price = pivots[-4] + ((pivots[-3]-pivots[-4])/3)
-                if pivots[-2] > limit_price and percent_change >= threshold:
+                if pivots[-2] > limit_price and abs(percent_change) >= threshold:
                     print(f'OK: {percent_change}%')
-                    return 1
+                    return 1,percent_change
             
             #Minimos en aumento, con intencion
             elif pivots[-3]>pivots[-2] and pivots[-2]>pivots[-4]:
                 limit_price = pivots[-2] + 2 * ((pivots[-3]-pivots[-2])/3)
-                if pivots[-1] > limit_price and percent_change >= threshold:
+                if pivots[-1] > limit_price and abs(percent_change) >= threshold:
                     print(f'OK: {percent_change}%')
-                    return 2
+                    return 2,percent_change
 
-    return 0
+    return 0,0
     
 
 
@@ -218,12 +218,11 @@ def run():
                     data['alerts'][symbol] = alert_str                
 
             #Escaneando precios para detectar tendencia
-            
             prices = data['symbols'][symbol]['c_1m']
             resample_period = 15
             if len(prices)>resample_period*4:
                 df = ohlc_from_prices(prices,resample_period)
-                pivots_alert = get_pivots_alert(df,threshold = volatility/10)
+                pivots_alert,percent_change = get_pivots_alert(df,threshold = volatility/10)
                 if pivots_alert > 0:
 
                     if pivots_alert == 2:
@@ -233,8 +232,8 @@ def run():
                     else:
                         trend_msg = 'Motivo desconocido'
 
-                    alert_str = f'Scaner Scalper {resample_period}m <b>{symbol}</b>'+\
-                                f'\n {trend_msg}\nPrecio: {price}'
+                    alert_str = f'Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
+                                f'\n {trend_msg}\nPrecio: {price}\% CHG {percent_change}'
                     if symbol not in data['scan_pivots']:
                         log.alert(alert_str)
                     print(alert_str)
@@ -246,7 +245,7 @@ def run():
 
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
-
     # Guardar data actualizados en binario
+    
     save_data_file(DATA_FILE, data)
 
