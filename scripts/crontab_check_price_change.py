@@ -235,12 +235,10 @@ def run():
                         trend_msg = 'Motivo desconocido'
 
                     alert_str = f'Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
-                                f'\n {trend_msg}\nPrecio: {price}\% CHG {percent_change}'
-                    if symbol not in data['scan_pivots']:
+                                f'\n {trend_msg}\nPrecio: {price}\nCHG % {percent_change:.2f}'
+                    if f'{symbol}.{pivots_alert}' not in data['scan_pivots']:
                         log.alert(alert_str)
-                    print(alert_str)
-                    print('volatility:',volatility)
-                    data['scan_pivots'][symbol] = alert_str
+                    data['scan_pivots'][f'{symbol}.{pivots_alert}'] = alert_str
 
             
 
