@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}{{title}}{% endblock %}
+{% block nav_title %}{{nav_title}}{% endblock %}
+
+{% load static %}
+{% block content %}
+<script>
+    a = 8;
+</script>
+<div class="container">
+    <div class="row">
+        <div class="form-group col">
+            <label class="form-label" for="symbol_stable">Stable Coin</label>
+            <input type="text" id="symbol_stable" class="form-control" value="{{symbol_stable}}">
+        </div>
+    </div>
+
+    <div class="form-group row pt-3 ">
+        <div class="col-12 d-grid gap-2">
+            <div class="btn btn-success " onclick="grabar()">Grabar</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+
+    function grabar() {
+        url = '{% url "sw_create" %}';
+
+        data = {
+                symbol_stable: $('#symbol_stable').val(),
+            }
+
+        err = '';
+        if (data.symbol_stable != 'USDT')
+           err += 'Stable Coin debe ser igual a USDT<br>';
+                
+        if (err)
+            html_alert('Errores detectados',err,'text-danger');
+        else
+        {
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.error)
+                    html_alert('Errores detectados',rsp.error,'text-danger')
+                if (rsp.ok)
+                {
+                    location.href = rsp.ok;
+                }
+            });    
+
+        }
+        
+    }
+
+</script>
+
+{% endblock %}

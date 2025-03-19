@@ -8,6 +8,7 @@ from bot import views_backtest as vbt
 from bot import views_symbols as vs
 from bot import views_graph_test as vgt
 from bot import views_indicator as vi
+from bot import views_sw as sw
 
 urlpatterns = [
     path('estrategias/',ve.estrategias,name='estrategias'),
@@ -44,10 +45,16 @@ urlpatterns = [
     path('backtest/execute/<int:backtest_id>/',vbt.execute,name='backtest_execute'),
     path('backtest/delete/<int:backtest_id>/',vbt.delete,name='backtest_delete'),
 
-
     path('backtesting/',vbt_old.backtesting,name='backtesting'),
     path('backtesting/config/<str:bot_class_name>/',vbt_old.config,name='backtesting_config'),
     path('backtesting/run/',vbt_old.run,name='backtesting_run'),
+
+    path('sw/list',sw.list,name='sw_list'),
+    path('sw/create/',sw.create,name='sw_create'),
+    path('sw/view/<int:sw_id>/',sw.view,name='sw_view'),
+    path('sw/activar/<int:sw_id>/',sw.activar,name='sw_activar'),
+    path('sw/desactivar/<int:sw_id>/<str:action>/',sw.desactivar,name='sw_desactivar'),
+    path('sw/delete/<int:sw_id>/',sw.delete,name='sw_delete'),
 
     path('chart/get/<str:symbol>',vgt.chart_get,name='chart_get'),
     path('chart/',vgt.chart,name='chart'),

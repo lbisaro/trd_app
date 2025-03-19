@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Smart Wallets{% endblock %}
+{% block nav_title %}Smart Wallets{% endblock %}
+
+{% load static %}
+
+{% block action_bar %}
+<a class="btn btn-primary btn-sm" href="{% url 'sw_create' %}">Crear Smart Wallet</a>
+{% endblock %}
+
+{% block css %}
+<style>
+    table#sws tbody tr {
+        cursor: pointer;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <table id="sws" class="table-dg">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Stable Coin</th>
+                <th>Assets</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            {% for sw in sws %}
+            <tr onclick="ver('{{sw.sw_id}}')" >
+                <td>{{sw.name}}</td>
+                <td>{{sw.symbol_stable}}</td>
+                <td>{{sw.assets}}</td>
+                <td>
+                    {% if sw.activo > 0 %} 
+                    <span class="text-success">Activo</span>
+                    {% else %}
+                    <span class="text-danger">Inactivo</span>
+                    {% endif %}
+                </td>
+                
+            </tr>
+            {% endfor %}
+        </tbody>
+        
+    </table>
+</div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+function ver(id)
+{
+    window.location = '{% url "sw_view" 0 %}'.replace('0',id);
+}
+</script>
+{% endblock %}

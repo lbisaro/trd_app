@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% block title %}{{title}}{% endblock %}
+{% block nav_title %}{{nav_title}}{% endblock %}
+
+{% load static %}
+{% load tz %}
+
+{% block action_bar %}
+    
+    {% if activo > 0 %}
+    <button class="btn btn-danger  btn-sm" onclick="desactivar()">Desactivar</a>
+    {% else %}
+    <button class="btn btn-success  btn-sm" onclick="activar()">Activar</a>
+    {% endif %}
+
+    {% if can_delete %}
+        <button class="btn btn-danger  btn-sm" onclick="eliminar()">Eliminar</a>
+    {% endif %}
+
+{% endblock %}
+
+{% block css %}
+<style>
+    /* CSS */
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row pt-2">
+        <div class="col-sm">
+            <span class="text-secondary">Stable Coin:</span>  
+            <span class="col ">{{symbol_stable}}</span>
+        </div>
+        <div class="col-sm">
+            <span class="text-secondary">Estado:</span>
+            <span class="col {{estado_class}}">{{str_estado}}</span>
+        </div>
+    </div>
+    <div class="row pt-2">
+    <div class="row pt-2">
+        <div class="col-sm">
+            <span class="text-secondary">Assets:</span>
+            <span class="col ">{{assets}}</span>
+        </div>
+    </div>
+
+    <div class="row pt-4">
+        <table class="table-dg">
+            <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th class="text-end">Cantidad</th>
+                    <th class="text-end">Precio Compra Promedio</th>
+                    <th class="text-end">Precio Actual</th>
+                    <th class="text-end">Comprado</th>
+                    <th class="text-end">Capital Actual</th>
+                    <th class="text-end">Participacion</th>
+                    <th class="text-end">Resultado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for asset, data in assets_brief.items %}
+                <tr>
+                    <td>{{data.asset}}</td>
+                    <td class="text-end">{{data.qty}}</td>
+                    <td class="text-end">{{data.avg_price}}</td>
+                    <td class="text-end">{{data.price}}</td>
+                    <td class="text-end">{{data.buyed}}</td>
+                    <td class="text-end">{{data.cap}}</td>
+                    <td class="text-end">{{data.portion}}%</td>
+                    <td class="text-end {% if data.result < 0 %} text-danger {% else %} text-success {% endif %}">{{data.result}}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>Totales</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="fw-bold text-end">{{assets_brief_total_buyed}}</td>
+                    <td class="fw-bold text-end {% if assets_brief_total_cap < assets_brief_total_buyed %} text-danger {% else %} text-success {% endif %}">{{assets_brief_total_cap}}</td>
+                    <td></td>
+                    <td class="fw-bold text-end {% if assets_brief_result < 0 %} text-danger {% else %} text-success {% endif %}">{{assets_brief_result}}%</td>
+                </tr>                
+            </tfoot>
+        </table>
+    </div>
+
+
+    <div class="row pt-4">
+        <div class="col-sm">
+            <span class="text-secondary">Creado:</span>  
+            <span class="col text-secondary">{{creado}}</span>
+        </div>
+        {% if finalizado %}
+        <div class="col-sm">
+            Finalizado:  
+            <span class="col text-secondary">{{finalizado}}</span>
+        </div>
+        {% endif %}
+    </div>    
+
+</div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+
+    function activar()
+    {
+        if (confirm('Confirma Activar la Smart Wallet {{name}}?'))
+        {
+            url = "{% url 'sw_activar' sw_id %}"
+            data = null
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.error)
+                    html_alert('Errores detectados',rsp.error,'text-danger')
+                if (rsp.ok)
+                {
+                    location.href = "{% url 'sw_view' sw_id %}";
+                }
+            });    
+        }
+    }
+
+    function desactivar()
+    {
+        if (confirm('Confirma Desactivar la Smart Wallet {{name}}?'))
+        {
+            url = "{% url 'sw_desactivar' sw_id 'check' %}"
+            data = null
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.error)
+                    html_alert('Errores detectados',rsp.error,'text-danger')
+                if (rsp.ok)
+                {
+                    location.href = "{% url 'sw_view' sw_id %}";
+                }
+            });    
+        }
+    }
+
+    function eliminar()
+    {
+        if (confirm('Confirma eliminar la Smart Wallet {{name}}?'))
+        {
+            url = "{% url 'sw_delete' sw_id %}"
+            data = null
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp.error)
+                    html_alert('Errores detectados',rsp.error,'text-danger')
+                if (rsp.ok)
+                {
+                    location.href = "{% url 'sw_list' %}";
+                }
+            });    
+
+            
+        }
+    }
+</script>
+{% endblock %}

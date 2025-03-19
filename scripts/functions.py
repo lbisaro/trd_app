@@ -259,6 +259,8 @@ def ohlc_chart(klines,**kwargs):
             symbol = 'x'
             if 'symbol' in ind:
                 symbol = ind['symbol']
+            if not 'name' in ind:
+                ind['name'] = ind['col']
             fig.add_trace(
                 go.Scatter(
                     x=f_klines["datetime"], y=f_klines[ind['col']], name=ind['name'], mode=mode,
@@ -327,7 +329,8 @@ def ohlc_chart(klines,**kwargs):
     
     if indicators_out:
         for ind in indicators_out:
-
+            if not 'name' in ind:
+                ind['name'] = ind['col']
             fig.append_trace(
                 go.Scatter(
                     x=klines["datetime"], y=klines[ind['col']], name=ind['name'], mode="lines", 
