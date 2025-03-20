@@ -10,8 +10,14 @@
 <div class="container">
     <div class="row">
         <div class="form-group col">
-            <label class="form-label" for="symbol_stable">Stable Coin</label>
-            <input type="text" id="symbol_stable" class="form-control" value="{{symbol_stable}}">
+            <label class="form-label" for="name">Nombre de la wallet</label>
+            <input type="text" id="name" class="form-control" value="{{name}}">
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col">
+            <label class="form-label" for="quote_asset">Stable Coin</label>
+            <input type="text" id="quote_asset" class="form-control" value="{{quote_asset}}">
         </div>
     </div>
 
@@ -31,11 +37,14 @@
         url = '{% url "sw_create" %}';
 
         data = {
-                symbol_stable: $('#symbol_stable').val(),
+            quote_asset: $('#quote_asset').val(),
+            name: $('#name').val(),
             }
 
         err = '';
-        if (data.symbol_stable != 'USDT')
+        if (data.name.length <= 5 )
+           err += 'El nombre de la wallet debe tener mas de 5 caracteres<br>';
+        if (data.quote_asset != 'USDT')
            err += 'Stable Coin debe ser igual a USDT<br>';
                 
         if (err)

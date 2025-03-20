@@ -1,21 +1,10 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from django.db.models import Q
-import scripts.functions as fn
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.template import RequestContext
-from django.urls import reverse
-import numpy as np
-import os
-from django.conf import settings
 
 from bot.models import *
 from bot.model_sw import *
-from user.models import UserProfile
-from scripts.functions import ohlc_chart 
-import local__config as local
-from scripts.Bot_Core_utils import Order as ord_u
 
 @login_required
 def list(request):
@@ -27,7 +16,7 @@ def list(request):
                              'name': sw.name,
                              'assets': ", ".join(assets),
                              'activo': sw.activo,
-                             'symbol_stable': sw.symbol_stable,
+                             'quote_asset': sw.quote_asset,
                              })
     if request.method == 'GET':
         return render(request, 'sws.html',{
@@ -42,7 +31,7 @@ def create(request):
         return render(request, 'sw_edit.html',{
             'title': 'Crear Smart Wallet',
             'nav_title': 'Crear Smart Wallet',
-            'symbol_stable': 'USDT',
+            'quote_asset': 'USDT',
         })
     else:
         sw = Sw()
@@ -50,7 +39,8 @@ def create(request):
         sw.usuario = request.user
         sw.estado = 0
         sw.creado = timezone.now()
-        sw.symbol_stable=request.POST['symbol_stable']
+        sw.quote_asset=request.POST['quote_asset']
+        sw.name=request.POST['name']
 
         try:
             sw.full_clean()
@@ -72,19 +62,19 @@ def create(request):
 @login_required
 def view(request, sw_id):
     sw = get_object_or_404(Sw, pk=sw_id, usuario=request.user)
-    swo = sw.get_orders()
+    swc = sw.get_capital()
 
     assets = sw.get_assets()
 
     assets_brief = sw.get_assets_brief()
-    assets_brief_total_buyed = round(sum(data['buyed'] for data in assets_brief.values()),2)
-    assets_brief_total_cap   = round(sum(data['cap'] for data in assets_brief.values()),2)
-    assets_brief_result = round(((assets_brief_total_cap/assets_brief_total_buyed)-1)*100,2)
+    #assets_brief_total_buyed = round(sum(data['buyed'] for data in assets_brief.values()),2)
+    #assets_brief_total_cap   = round(sum(data['cap'] for data in assets_brief.values()),2)
+    #assets_brief_result = round(((assets_brief_total_cap/assets_brief_total_buyed)-1)*100,2) if assets_brief_total_buyed != 0 else 0
 
     #Configurando el estado del SW en la DDBB de acuerdo a la informacion registrada
     act_estado = sw.estado
     new_estado = act_estado
-    if len(swo) > 0:
+    if len(swc) > 0:
         if act_estado != sw.ESTADO_ERROR and act_estado != sw.ESTADO_STOPPED and act_estado != sw.ESTADO_STANDBY:
             new_estado = sw.ESTADO_ONLINE
     else:
@@ -93,25 +83,27 @@ def view(request, sw_id):
         sw.estado = new_estado
         sw.save()
 
-    
-
-    return render(request, 'sw.html',{
+    data = {
         'title': f'Smart Wallet {sw.name}',
         'nav_title': f'Smart Wallet {sw.name}',
         'name': sw.name,
         'sw_id': sw.id,
-        'symbol_stable': sw.symbol_stable,
+        'quote_asset': sw.quote_asset,
         'str_estado': sw.str_estado(),
         'estado_class': sw.estado_class(),
         'activo': sw.activo,
         'assets': ", ".join(assets),
         'creado': sw.creado,
         'finalizado': sw.finalizado,
+        'can_activar': sw.can_activar(),
+        'can_delete': sw.can_delete(),
         'assets_brief': assets_brief,
-        'assets_brief_total_buyed': assets_brief_total_buyed,
-        'assets_brief_total_cap':   assets_brief_total_cap,
-        'assets_brief_result':   assets_brief_result,
-    })
+        #'assets_brief_total_buyed': assets_brief_total_buyed,
+        #'assets_brief_total_cap':   assets_brief_total_cap,
+        #'assets_brief_result':   assets_brief_result,
+    }
+
+    return render(request, 'sw.html', data)
 
 @login_required
 def activar(request,sw_id):
@@ -137,7 +129,7 @@ def delete(request,sw_id):
         sw.delete()
         json_rsp['ok'] = True
     else:
-        json_rsp['error'] = 'No es psible eliminar el Bot'
+        json_rsp['error'] = 'No es psible eliminar la Smart Wallet'
     return JsonResponse(json_rsp)
 
 """        

@@ -9,7 +9,7 @@
     
     {% if activo > 0 %}
     <button class="btn btn-danger  btn-sm" onclick="desactivar()">Desactivar</a>
-    {% else %}
+    {% elif  can_activar %}
     <button class="btn btn-success  btn-sm" onclick="activar()">Activar</a>
     {% endif %}
 
@@ -31,7 +31,7 @@
     <div class="row pt-2">
         <div class="col-sm">
             <span class="text-secondary">Stable Coin:</span>  
-            <span class="col ">{{symbol_stable}}</span>
+            <span class="col ">{{quote_asset}}</span>
         </div>
         <div class="col-sm">
             <span class="text-secondary">Estado:</span>
@@ -46,31 +46,43 @@
         </div>
     </div>
 
+    {% if assets_brief %}
     <div class="row pt-4">
         <table class="table-dg">
             <thead>
                 <tr>
                     <th>Asset</th>
-                    <th class="text-end">Cantidad</th>
-                    <th class="text-end">Precio Compra Promedio</th>
-                    <th class="text-end">Precio Actual</th>
-                    <th class="text-end">Comprado</th>
-                    <th class="text-end">Capital Actual</th>
-                    <th class="text-end">Participacion</th>
-                    <th class="text-end">Resultado</th>
+                    <th class="text-end">stock_total</th>
+                    <th class="text-end">valor_stock</th>
+                    <th class="text-end">costo_neto</th>
+                    <th class="text-end">valor_retiros</th>
+                    <th class="text-end">valor_actual_total</th>
+                    <th class="text-end">precio_actual</th>
+                    <th class="text-end">pppag</th>
+                    <th class="text-end">ganancias_realizadas</th>
+                    <th class="text-end">ganancias_netas</th>
+                    <th class="text-end">ganancia_absoluta</th>
+                    <th class="text-end">ganancia_neta_total</th>
+                    <th class="text-end">rendimiento</th>
+
                 </tr>
             </thead>
             <tbody>
                 {% for asset, data in assets_brief.items %}
                 <tr>
-                    <td>{{data.asset}}</td>
-                    <td class="text-end">{{data.qty}}</td>
-                    <td class="text-end">{{data.avg_price}}</td>
-                    <td class="text-end">{{data.price}}</td>
-                    <td class="text-end">{{data.buyed}}</td>
-                    <td class="text-end">{{data.cap}}</td>
-                    <td class="text-end">{{data.portion}}%</td>
-                    <td class="text-end {% if data.result < 0 %} text-danger {% else %} text-success {% endif %}">{{data.result}}%</td>
+                    <td>{{asset}}</td>
+                    <td class="text-end">{{data.stock_total}}</td>
+                    <td class="text-end">{{data.valor_stock}}</td>
+                    <td class="text-end">{{data.costo_neto}}</td>
+                    <td class="text-end">{{data.valor_retiros}}</td>
+                    <td class="text-end">{{data.valor_actual_total}}</td>
+                    <td class="text-end">{{data.precio_actual}}</td>
+                    <td class="text-end">{{data.pppag}}</td>
+                    <td class="text-end">{{data.ganancias_realizadas}}</td>
+                    <td class="text-end">{{data.ganancias_netas}}</td>
+                    <td class="text-end">{{data.ganancia_absoluta}}</td>
+                    <td class="text-end">{{data.ganancia_neta_total}}</td>
+                    <td class="text-end {% if data.rendimiento < 0 %} text-danger {% else %} text-success {% endif %}">{{data.rendimiento}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -80,15 +92,20 @@
                     <td></td>
                     <td></td>
                     <td></td>
+                    <td></td>
                     <td class="fw-bold text-end">{{assets_brief_total_buyed}}</td>
                     <td class="fw-bold text-end {% if assets_brief_total_cap < assets_brief_total_buyed %} text-danger {% else %} text-success {% endif %}">{{assets_brief_total_cap}}</td>
                     <td></td>
+                    <td></td>
                     <td class="fw-bold text-end {% if assets_brief_result < 0 %} text-danger {% else %} text-success {% endif %}">{{assets_brief_result}}%</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                 </tr>                
             </tfoot>
         </table>
     </div>
-
+    {% endif %}
 
     <div class="row pt-4">
         <div class="col-sm">
@@ -119,7 +136,7 @@
             get_ajax(url,data).done( function (rsp) {
                 if (rsp.error)
                     html_alert('Errores detectados',rsp.error,'text-danger')
-                if (rsp.ok)
+                else if (rsp.ok)
                 {
                     location.href = "{% url 'sw_view' sw_id %}";
                 }
@@ -136,7 +153,7 @@
             get_ajax(url,data).done( function (rsp) {
                 if (rsp.error)
                     html_alert('Errores detectados',rsp.error,'text-danger')
-                if (rsp.ok)
+                else if (rsp.ok)
                 {
                     location.href = "{% url 'sw_view' sw_id %}";
                 }
@@ -153,7 +170,7 @@
             get_ajax(url,data).done( function (rsp) {
                 if (rsp.error)
                     html_alert('Errores detectados',rsp.error,'text-danger')
-                if (rsp.ok)
+                else if (rsp.ok)
                 {
                     location.href = "{% url 'sw_list' %}";
                 }

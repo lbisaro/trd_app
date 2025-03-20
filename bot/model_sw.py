@@ -2,16 +2,13 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 
-from django.db.models import Max
-from django.core.exceptions import ValidationError
-from django.db.models import F, Min, Max, Avg, Sum
-from django.db.models.functions import TruncDay, TruncHour, TruncMinute
+from django.db.models import Sum
 from django.utils import timezone
-from datetime import datetime, timedelta
 import pandas as pd
-import numpy as np
-import scripts.functions as fn
 from scripts.Exchange import Exchange
+import pickle
+import os
+from django.conf import settings
 
 
 from scripts.Bot_Core_utils import Order as BotUtilsOrder
@@ -20,7 +17,7 @@ from bot.models import Symbol
 class Sw(models.Model):
     name = models.CharField(max_length = 50, unique = True, null=False, blank=False)
     usuario = models.ForeignKey(User, on_delete = models.CASCADE)
-    symbol_stable = models.CharField(max_length = 16, unique = True, null=False, blank=False)
+    quote_asset = models.CharField(max_length = 16, null=False, blank=False)
     estado = models.IntegerField(default=timezone.now, null=False, blank=False)
     creado = models.DateTimeField(null=False, blank=False, db_index=True)
     finalizado = models.DateTimeField(null=True, blank=True, db_index=True)
@@ -40,6 +37,12 @@ class Sw(models.Model):
         verbose_name = "Smart Wallet"
         verbose_name_plural='Smart Wallets'
 
+    def can_activar(self):
+        cap = self.get_capital()
+        orders = self.get_orders()
+        qty = len(orders)+len(cap)
+        return True if (qty > 0 and self.activo == 0) else False
+    
     def activar(self):
         self.activo = 1
         self.estado = self.ESTADO_NODATA
@@ -50,6 +53,12 @@ class Sw(models.Model):
         self.estado = self.ESTADO_STOPPED
         self.save()
 
+    def can_delete(self):
+        cap = self.get_capital()
+        orders = self.get_orders()
+        qty = len(orders)+len(cap)
+        return True if (qty == 0 and self.activo == 0) else False
+    
     def str_estado(self):
         arr = {
             self.ESTADO_NODATA      : 'Pendiente de incorporar ordenes',
@@ -73,85 +82,112 @@ class Sw(models.Model):
         return arr.get(self.estado)
     
     
+    def get_capital(self):
+        cap = SwCapital.objects.filter(sw=self).order_by('datetime')
+        return list(cap)
+    
+    def get_symbols(self):
+        symbols = Symbol.objects.filter(swcapital__sw=self).distinct()
+        return symbols
+
+    def get_assets(self):
+        cap = SwCapital.objects.filter(sw=self).order_by('symbol__base_asset')
+        base_assets = cap.values_list('symbol__base_asset', flat=True).distinct()
+        return list(base_assets)
+    
     def get_orders(self):
         orders = SwOrder.objects.filter(sw=self).order_by('datetime')
         return list(orders)
-    
-    def get_assets(self):
-        orders = SwOrder.objects.filter(sw=self).order_by('symbol__base_asset')
-        base_assets = orders.values_list('symbol__base_asset', flat=True).distinct()
-        return list(base_assets)
-    
+
+    def calcular_rendimiento(self, symbol, orders, price):
+
+        #Calcular el stock total
+        stock_compra = sum(o['qty'] for o in orders if (o['side']==0))
+        stock_venta  = sum(o['qty'] for o in orders if (o['side']==1))
+        stock_total = stock_compra - stock_venta
+        
+        #Calcular el costo neto invertido
+        costo_compras_orders = sum(o['qty']*o['price'] for o in orders if (o['side']==0 and o['type']=='O'))
+        costo_aportes = sum(o['qty']*o['price'] for o in orders if (o['side']==0 and o['type']=='C'))
+        valor_retiros = sum(o['qty']*o['price'] for o in orders if (o['side']==1 and o['type']=='C'))
+        costo_neto = costo_compras_orders + costo_aportes - valor_retiros
+
+        #Calcular las ganancias y el valor actual total
+        qty_comprada = sum(o['qty'] for o in orders if (o['side']==0 ))
+        costo_qty_comprada = sum(o['qty']*o['price'] for o in orders if (o['side']==0 ))
+        precio_promedio = costo_qty_comprada/qty_comprada
+        ganancias_realizadas = sum(o['qty']* (o['price'] - precio_promedio) for o in orders if (o['side']==1))
+        ganancias_netas = ganancias_realizadas - valor_retiros
+
+        valor_stock = stock_total * price
+        valor_actual_total = ganancias_netas + valor_stock
+        ganancia_absoluta = ganancias_realizadas + valor_stock
+        ganancia_neta_total = ganancia_absoluta - costo_neto
+
+        #Calcular el rendimiento total (%)
+        if costo_neto > 0:
+            rendimiento = ((valor_actual_total / costo_neto) - 1) * 100
+        else:
+            rendimiento = float('inf') if valor_actual_total > 0 else 0
+
+        # Calcular el PPPAG (Precio Promedio Ponderado Ajustado por Ganancias)
+        if stock_total > 0:
+            costo_ajustado = costo_qty_comprada - ganancias_realizadas
+            pppag = costo_ajustado / stock_total
+        else:
+            pppag = None  # No hay stock, no tiene sentido calcularlo
+
+        return {
+            'stock_total': round(stock_total,symbol.qty_decs_qty),
+            'costo_neto': round(costo_neto,2),
+            'valor_retiros': round(valor_retiros,symbol.qty_decs_price),
+            'valor_stock': round(valor_stock,symbol.qty_decs_price),
+            'valor_actual_total': round(valor_actual_total,2),
+            'precio_actual': round(price,symbol.qty_decs_price),
+            'ganancias_realizadas':  round(ganancias_realizadas,2),
+            'ganancias_netas':  round(ganancias_netas,2),
+            'ganancia_absoluta': round(ganancia_absoluta,2),
+            'ganancia_neta_total': round(ganancia_neta_total,2),
+            'rendimiento': round(rendimiento,2),
+            'pppag': round(pppag,symbol.qty_decs_price),
+        }
+
     def get_assets_brief(self):
-        orders = SwOrder.objects.filter(sw=self).order_by('datetime').values(
-            *[field.name for field in SwOrder._meta.fields],  # Todos los campos de SwOrder
-            *[f'symbol__{field.name}' for field in Symbol._meta.fields]  # Todos los campos de Symbol
-        )   
-        df_orders = pd.DataFrame.from_records(orders)
-        assets = self.get_assets()
+
+        symbols = self.get_symbols()
         assets_brief = {}
         
         #Buscando precios de los symbols
         exchInfo = Exchange(type='info',exchange='bnc',prms=None)
         prices = exchInfo.get_all_prices()
-        
 
-        for asset in assets:
+        for symbol in symbols:
+            asset = symbol.base_asset
+            price = prices[symbol.base_asset+symbol.quote_asset] 
+            orders_capital = self.get_capital()
+            orders_orders = self.get_orders()
+
+            orders = []
+            for o in orders_capital:
+                if o.symbol == symbol:
+                    qty = o.qty if o.qty > 0 else -o.qty
+                    side = 0 if o.qty > 0 else 1
+                    orders.append({'qty':qty, 'price': o.price,'type':'C','side':side})
+            for o in orders_orders:
+                if o.symbol == symbol:
+                    orders.append({'qty':o.qty, 'price': o.price,'type':'O','side':o.side})
             
-            df = df_orders[df_orders['symbol__base_asset'] == asset].copy()
-            compras = df[(df["side"] == 0)]
-            ventas  = df[(df["side"] == 1)]
+            assets_brief[asset] = self.calcular_rendimiento(symbol,orders,price)
 
-            #Obteniendo info sobre la cantidad de decimales 
-            qd_qty =  compras.iloc[0]['symbol__qty_decs_qty']
-            qd_price =  compras.iloc[0]['symbol__qty_decs_price']
-            qd_quote =  compras.iloc[0]['symbol__qty_decs_quote']
-
-            # Calcular valores totales de compras
-            total_qty_comprada = compras["qty"].sum()
-            total_usdt_compras = (compras["qty"] * compras["price"]).sum()
-            ppp_compras = total_usdt_compras / total_qty_comprada  # Precio promedio de compras
-
-            # Calcular valores totales de ventas
-            total_qty_vendida = ventas["qty"].sum()  # Ya es negativo, lo pasamos a positivo
-            total_usdt_ventas = (ventas["qty"].abs() * ventas["price"]).sum()
-            
-            # Calcular ganancia total
-            costo_tokens_vendidos = abs(total_qty_vendida) * ppp_compras
-            ganancia_total = total_usdt_ventas - costo_tokens_vendidos
-
-            # Calcular stock final y costo ajustado
-            stock_final = total_qty_comprada + total_qty_vendida  # Suma porque ventas es negativo
-            costo_ajustado = total_usdt_compras - ganancia_total
-
-            # Calcular nuevo precio promedio ajustado
-            ppp_ajustado = costo_ajustado / stock_final if stock_final > 0 else 0
-
-            #Calculo de resultados
-            symbol = asset+self.symbol_stable
-            qty =  round(total_qty_comprada-total_qty_vendida,qd_qty)
-            avg_price = round(ppp_ajustado,qd_price)
-            price = prices[symbol]
-            buyed = round(qty*avg_price,qd_quote)
-            cap = round(qty*price,qd_quote)
-            result = round(((cap/buyed)-1)*100,2)
-            
-            assets_brief[asset] = {'asset': asset,
-                                   'qty':qty,
-                                   'avg_price': avg_price,
-                                   'price': price,
-                                   'buyed': buyed,
-                                   'cap': cap,
-                                   'result': result,
-                                   }
-            
-        #Calculando porcion de cada asset sobre la Smart Wallet
-        tot_cap = sum(data['cap'] for data in assets_brief.values())
-        for asset in assets:
-            assets_brief[asset]['portion'] = round((assets_brief[asset]['cap']/tot_cap)*100,2)
         return assets_brief
         
-        
+class SwCapital(models.Model):
+    sw = models.ForeignKey(Sw, on_delete = models.CASCADE)
+    datetime = models.DateTimeField(default=timezone.now)
+    qty = models.FloatField(null=False, blank=False) #Positivo para inyeccion de capital y negativo para retiros
+    price = models.FloatField(null=False, blank=False)
+    symbol = models.ForeignKey(Symbol, on_delete = models.CASCADE)
+    
 class SwOrder(models.Model):
     sw = models.ForeignKey(Sw, on_delete = models.CASCADE)
     datetime = models.DateTimeField(default=timezone.now)

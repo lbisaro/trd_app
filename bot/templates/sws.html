@@ -34,7 +34,7 @@
             {% for sw in sws %}
             <tr onclick="ver('{{sw.sw_id}}')" >
                 <td>{{sw.name}}</td>
-                <td>{{sw.symbol_stable}}</td>
+                <td>{{sw.quote_asset}}</td>
                 <td>{{sw.assets}}</td>
                 <td>
                     {% if sw.activo > 0 %} 
