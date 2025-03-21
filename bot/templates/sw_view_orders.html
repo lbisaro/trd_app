@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}{{title}}{% endblock %}
+{% block nav_title %}{{nav_title}}{% endblock %}
+
+{% load static %}
+{% load tz %}
+
+{% block action_bar %}
+    
+    <a class="btn btn-info btn-sm" href="{% url 'sw_view' sw_id %}">Volver a la Smart Wallet</a>
+
+{% endblock %}
+
+{% block css %}
+<style>
+    table#assets tbody tr {
+        cursor: pointer;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row pt-2">
+        <div class="col-sm">
+            <span class="text-secondary">Par:</span>  
+            <span class="col ">{{symbol}}</span>
+        </div>
+    </div>
+
+    <div class="row pt-4">
+        <h6 class="text-info">Evolucion de las Ordenes</h6>
+        <table id="assets" class="table-dg table-trade-info">
+            <thead>
+                <tr>
+                    <th class="">datetime</th>
+                    <th class="text-end">Stock</th>
+                    <th class="text-end">Precio</th>
+                    <th class="text-end">Valor</th>
+                    <th class="text-end">Aporte/Retiro</th>
+                    <th class="text-end">stock_total</th>
+                    <th class="text-end">Valor Stock</th>
+                    <th class="text-end">Precio Promedio</th>
+                    <th class="text-end">valor_actual_total</th>
+                    <th class="text-end">Precio Actual</th>
+                    <th class="text-end">Ganancias Realizadas</th>
+                    <th class="text-end">Capital</th>
+                    <th class="text-end">Rendimiento</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in full_orders %}
+                <tr onclick="sw_view_orders('{{data.symbol_id}}')" >
+                    <td class="">{{data.datetime}}</td>
+                    <td class="{{data.row_class}} text-end">{{data.qty}}</td>
+                    <td class="{{data.row_class}} text-end">{{data.price}}</td>
+                    <td class="{{data.row_class}} text-end">{{data.valor_orden}}</td>
+                    <td class="{{data.row_class}} text-end">{{data.capital}}</td>
+                    <td class="text-end">{{data.stock_total}}</td>
+                    <td class="text-end">{{data.valor_stock}}</td>
+                    <td class="text-end">{{data.precio_promedio}}</td>
+                    <td class="text-end">{{data.valor_actual_total}}</td>
+                    <td class="text-end">{{data.precio_actual}}</td>
+                    <td class="text-end {% if data.ganancias_realizadas < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.ganancias_realizadas}}
+                    </td>
+                    <td class="text-end">{{data.valor_capital}}</td>
+                    <td class="text-end {% if data.rendimiento < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.rendimiento}} %
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+
+</script>
+{% endblock %}

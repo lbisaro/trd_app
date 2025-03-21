@@ -6,3 +6,8 @@
 .data {
     font-weight: bolder;
 }
+
+.table-hover tbody tr:hover {
+    border-top: 1px solid #aaaaaa !important; 
+    border-bottom: 1px solid #aaaaaa !important; 
+}

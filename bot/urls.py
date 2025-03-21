@@ -52,6 +52,7 @@ urlpatterns = [
     path('sw/list',sw.list,name='sw_list'),
     path('sw/create/',sw.create,name='sw_create'),
     path('sw/view/<int:sw_id>/',sw.view,name='sw_view'),
+    path('sw/view_orders/<int:sw_id>/<int:symbol_id>/',sw.view_orders,name='sw_view_orders'),
     path('sw/activar/<int:sw_id>/',sw.activar,name='sw_activar'),
     path('sw/desactivar/<int:sw_id>/<str:action>/',sw.desactivar,name='sw_desactivar'),
     path('sw/delete/<int:sw_id>/',sw.delete,name='sw_delete'),

@@ -38,9 +38,8 @@ class Sw(models.Model):
         verbose_name_plural='Smart Wallets'
 
     def can_activar(self):
-        cap = self.get_capital()
         orders = self.get_orders()
-        qty = len(orders)+len(cap)
+        qty = len(orders)
         return True if (qty > 0 and self.activo == 0) else False
     
     def activar(self):
@@ -54,9 +53,8 @@ class Sw(models.Model):
         self.save()
 
     def can_delete(self):
-        cap = self.get_capital()
         orders = self.get_orders()
-        qty = len(orders)+len(cap)
+        qty = len(orders)
         return True if (qty == 0 and self.activo == 0) else False
     
     def str_estado(self):
@@ -81,75 +79,59 @@ class Sw(models.Model):
         }
         return arr.get(self.estado)
     
-    
-    def get_capital(self):
-        cap = SwCapital.objects.filter(sw=self).order_by('datetime')
-        return list(cap)
-    
     def get_symbols(self):
-        symbols = Symbol.objects.filter(swcapital__sw=self).distinct()
+        symbols = Symbol.objects.filter(sworder__sw=self).distinct()
         return symbols
 
     def get_assets(self):
-        cap = SwCapital.objects.filter(sw=self).order_by('symbol__base_asset')
+        cap = SwOrder.objects.filter(sw=self).order_by('symbol__base_asset')
         base_assets = cap.values_list('symbol__base_asset', flat=True).distinct()
         return list(base_assets)
     
-    def get_orders(self):
-        orders = SwOrder.objects.filter(sw=self).order_by('datetime')
+    def get_orders(self,**kwargs):
+        if 'symbol' in kwargs:
+            orders = SwOrder.objects.filter(sw=self,symbol=kwargs['symbol']).order_by('datetime')
+        else:
+            orders = SwOrder.objects.filter(sw=self).order_by('datetime')
+
         return list(orders)
 
     def calcular_rendimiento(self, symbol, orders, price):
-
         #Calcular el stock total
         stock_compra = sum(o['qty'] for o in orders if (o['side']==0))
         stock_venta  = sum(o['qty'] for o in orders if (o['side']==1))
         stock_total = stock_compra - stock_venta
-        
-        #Calcular el costo neto invertido
-        costo_compras_orders = sum(o['qty']*o['price'] for o in orders if (o['side']==0 and o['type']=='O'))
-        costo_aportes = sum(o['qty']*o['price'] for o in orders if (o['side']==0 and o['type']=='C'))
-        valor_retiros = sum(o['qty']*o['price'] for o in orders if (o['side']==1 and o['type']=='C'))
-        costo_neto = costo_compras_orders + costo_aportes - valor_retiros
+
+        #Calcular el capital invertido
+        valor_compras_capital = sum(o['qty']*o['price'] for o in orders if (o['side']==0 and o['capital']))
+        valor_ventas_capital = sum(o['qty']*o['price'] for o in orders if (o['side']==1 and o['capital']))
+        valor_capital = valor_compras_capital - valor_ventas_capital
+
+        #Calcular el valor del stock actual
+        valor_compras = sum(o['qty']*o['price'] for o in orders if (o['side']==0 ))
+        valor_ventas = sum(o['qty']*o['price'] for o in orders if (o['side']==1 ))
 
         #Calcular las ganancias y el valor actual total
-        qty_comprada = sum(o['qty'] for o in orders if (o['side']==0 ))
-        costo_qty_comprada = sum(o['qty']*o['price'] for o in orders if (o['side']==0 ))
-        precio_promedio = costo_qty_comprada/qty_comprada
+        precio_promedio = valor_compras/stock_compra
         ganancias_realizadas = sum(o['qty']* (o['price'] - precio_promedio) for o in orders if (o['side']==1))
-        ganancias_netas = ganancias_realizadas - valor_retiros
-
+        
         valor_stock = stock_total * price
-        valor_actual_total = ganancias_netas + valor_stock
-        ganancia_absoluta = ganancias_realizadas + valor_stock
-        ganancia_neta_total = ganancia_absoluta - costo_neto
+        valor_actual_total = ganancias_realizadas + valor_stock
 
-        #Calcular el rendimiento total (%)
-        if costo_neto > 0:
-            rendimiento = ((valor_actual_total / costo_neto) - 1) * 100
-        else:
-            rendimiento = float('inf') if valor_actual_total > 0 else 0
-
-        # Calcular el PPPAG (Precio Promedio Ponderado Ajustado por Ganancias)
-        if stock_total > 0:
-            costo_ajustado = costo_qty_comprada - ganancias_realizadas
-            pppag = costo_ajustado / stock_total
-        else:
-            pppag = None  # No hay stock, no tiene sentido calcularlo
+        rendimiento = (valor_actual_total / valor_capital - 1) * 100
 
         return {
             'stock_total': round(stock_total,symbol.qty_decs_qty),
-            'costo_neto': round(costo_neto,2),
-            'valor_retiros': round(valor_retiros,symbol.qty_decs_price),
-            'valor_stock': round(valor_stock,symbol.qty_decs_price),
+            'valor_stock': round(valor_stock,2),
+            'precio_promedio': round(precio_promedio,symbol.qty_decs_price),
+            'valor_compras': round(valor_compras,2),
+            'valor_ventas': round(valor_ventas,2),
             'valor_actual_total': round(valor_actual_total,2),
             'precio_actual': round(price,symbol.qty_decs_price),
             'ganancias_realizadas':  round(ganancias_realizadas,2),
-            'ganancias_netas':  round(ganancias_netas,2),
-            'ganancia_absoluta': round(ganancia_absoluta,2),
-            'ganancia_neta_total': round(ganancia_neta_total,2),
+            'valor_capital': round(valor_capital,2),
             'rendimiento': round(rendimiento,2),
-            'pppag': round(pppag,symbol.qty_decs_price),
+            'symbol_id': symbol.id,
         }
 
     def get_assets_brief(self):
@@ -164,29 +146,16 @@ class Sw(models.Model):
         for symbol in symbols:
             asset = symbol.base_asset
             price = prices[symbol.base_asset+symbol.quote_asset] 
-            orders_capital = self.get_capital()
-            orders_orders = self.get_orders()
+            db_orders = self.get_orders(symbol=symbol)
 
             orders = []
-            for o in orders_capital:
+            for o in db_orders:
                 if o.symbol == symbol:
-                    qty = o.qty if o.qty > 0 else -o.qty
-                    side = 0 if o.qty > 0 else 1
-                    orders.append({'qty':qty, 'price': o.price,'type':'C','side':side})
-            for o in orders_orders:
-                if o.symbol == symbol:
-                    orders.append({'qty':o.qty, 'price': o.price,'type':'O','side':o.side})
+                    orders.append({'qty':o.qty, 'price': o.price,'side':o.side, 'capital': True if o.is_capital > 0 else False})
             
             assets_brief[asset] = self.calcular_rendimiento(symbol,orders,price)
 
         return assets_brief
-        
-class SwCapital(models.Model):
-    sw = models.ForeignKey(Sw, on_delete = models.CASCADE)
-    datetime = models.DateTimeField(default=timezone.now)
-    qty = models.FloatField(null=False, blank=False) #Positivo para inyeccion de capital y negativo para retiros
-    price = models.FloatField(null=False, blank=False)
-    symbol = models.ForeignKey(Symbol, on_delete = models.CASCADE)
     
 class SwOrder(models.Model):
     sw = models.ForeignKey(Sw, on_delete = models.CASCADE)
@@ -195,7 +164,6 @@ class SwOrder(models.Model):
     qty = models.FloatField(null=False, blank=False)
     price = models.FloatField(null=False, blank=False)
     orderid = models.CharField(max_length = 20, null=False, blank=True, db_index=True)
-    pos_order_id = models.IntegerField(default=0, null=False, blank=False, db_index=True)
     symbol = models.ForeignKey(Symbol, on_delete = models.CASCADE)
     #Definido en BotUtilsOrder: SIDE_BUY, SIDE_SELL
     side = models.IntegerField(default=0, null=False, blank=False, db_index=True)
@@ -205,6 +173,7 @@ class SwOrder(models.Model):
     type = models.IntegerField(default=0, null=False, blank=False)
     limit_price = models.FloatField(null=False, blank=True, default=0.0)
     tag = models.TextField(null=False, blank=True, default='')
+    is_capital = models.IntegerField(default=0, null=False, blank=False, db_index=True)
     
     class Meta:
         verbose_name = "SW Order"

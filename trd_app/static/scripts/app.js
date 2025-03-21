@@ -13,7 +13,7 @@ function bootstrapFormat()
 {
     $('table.table-dg').addClass('table')
     $('table.table-dg').addClass('table-hover')
-    $('table.table-dg thead th').addClass('fw-light')
+    $('table.table-dg thead th').addClass('fw-light text-secondary')
     $('table.table-dg thead th').css('background-color','#162124')
     
     $('table.table-trade-info').addClass('table-sm')

@@ -25,7 +25,7 @@ class Symbol(models.Model):
     activo = models.IntegerField(default=0)  
     
     def __str__(self):
-        return self.symbol
+        return f'{self.base_asset} {self.quote_asset}'
     
     class Meta:
         verbose_name = "Par"

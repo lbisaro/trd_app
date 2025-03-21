@@ -32,7 +32,7 @@
         
         <tbody>
             {% for sw in sws %}
-            <tr onclick="ver('{{sw.sw_id}}')" >
+            <tr onclick="sw_view('{{sw.sw_id}}')" >
                 <td>{{sw.name}}</td>
                 <td>{{sw.quote_asset}}</td>
                 <td>{{sw.assets}}</td>
@@ -55,7 +55,7 @@
 
 {% block script %}
 <script>
-function ver(id)
+function sw_view(id)
 {
     window.location = '{% url "sw_view" 0 %}'.replace('0',id);
 }

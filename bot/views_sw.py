@@ -62,7 +62,7 @@ def create(request):
 @login_required
 def view(request, sw_id):
     sw = get_object_or_404(Sw, pk=sw_id, usuario=request.user)
-    swc = sw.get_capital()
+    swo = sw.get_orders()
 
     assets = sw.get_assets()
 
@@ -74,7 +74,7 @@ def view(request, sw_id):
     #Configurando el estado del SW en la DDBB de acuerdo a la informacion registrada
     act_estado = sw.estado
     new_estado = act_estado
-    if len(swc) > 0:
+    if len(swo) > 0:
         if act_estado != sw.ESTADO_ERROR and act_estado != sw.ESTADO_STOPPED and act_estado != sw.ESTADO_STANDBY:
             new_estado = sw.ESTADO_ONLINE
     else:
@@ -104,6 +104,55 @@ def view(request, sw_id):
     }
 
     return render(request, 'sw.html', data)
+
+def view_orders(request, sw_id, symbol_id):
+    sw = get_object_or_404(Sw, pk=sw_id, usuario=request.user)
+    symbol = get_object_or_404(Symbol, pk=symbol_id)
+    swo = sw.get_orders(symbol=symbol)
+
+    #Buscando precios de los symbols
+    exchInfo = Exchange(type='info',exchange='bnc',prms=None)
+    prices = exchInfo.get_all_prices()
+    actual_price = prices[symbol.base_asset+symbol.quote_asset]
+    
+    orders = []
+    full_orders = []
+    for o in swo:
+        full_order = {'datetime':o.datetime,
+                      'qty':o.qty, 
+                      'price': o.price,
+                      'side':o.side, 
+                      'capital': True if o.is_capital > 0 else False
+                      }
+        orders.append(full_order)
+        results = sw.calcular_rendimiento(symbol,orders,o.price)
+        for k,v in results.items():
+            full_order[k] = v
+        full_order['valor_orden'] = round(full_order['qty']*full_order['price'],2)
+        full_order['row_class'] = 'text-danger' if full_order['side'] == 1 else 'text-success'
+        full_order['capital'] = 'Si' if full_order['capital'] else ''
+        
+        full_orders.append(full_order)
+
+    #Analisis del resultado a la fecha
+    results = sw.calcular_rendimiento(symbol,orders,actual_price)
+    results['datetime'] = timezone.now()
+    full_orders.append(results)
+    
+    
+    data = {
+        'title': f'Smart Wallet {sw.name} - {symbol.base_asset}',
+        'nav_title': f'Smart Wallet {sw.name} - {symbol.base_asset}',
+        'name': sw.name,
+        'sw_id': sw.id,
+        'symbol_id': symbol.id,
+        'symbol': symbol,
+        'full_orders': full_orders,
+
+
+    }
+
+    return render(request, 'sw_view_orders.html', data)
 
 @login_required
 def activar(request,sw_id):

@@ -8,20 +8,22 @@
 {% block action_bar %}
     
     {% if activo > 0 %}
-    <button class="btn btn-danger  btn-sm" onclick="desactivar()">Desactivar</a>
+    <button class="btn btn-danger  btn-sm" onclick="desactivar()">Desactivar</button>
     {% elif  can_activar %}
-    <button class="btn btn-success  btn-sm" onclick="activar()">Activar</a>
+    <button class="btn btn-success  btn-sm" onclick="activar()">Activar</button>
     {% endif %}
 
     {% if can_delete %}
-        <button class="btn btn-danger  btn-sm" onclick="eliminar()">Eliminar</a>
+        <button class="btn btn-danger  btn-sm" onclick="eliminar()">Eliminar</button>
     {% endif %}
 
 {% endblock %}
 
 {% block css %}
 <style>
-    /* CSS */
+    table#assets tbody tr {
+        cursor: pointer;
+    }
 
 </style>
 {% endblock %}
@@ -38,7 +40,7 @@
             <span class="col {{estado_class}}">{{str_estado}}</span>
         </div>
     </div>
-    <div class="row pt-2">
+
     <div class="row pt-2">
         <div class="col-sm">
             <span class="text-secondary">Assets:</span>
@@ -48,44 +50,44 @@
 
     {% if assets_brief %}
     <div class="row pt-4">
-        <table class="table-dg">
+        <table id="assets" class="table-dg table-trade-info">
             <thead>
                 <tr>
                     <th>Asset</th>
-                    <th class="text-end">stock_total</th>
-                    <th class="text-end">valor_stock</th>
-                    <th class="text-end">costo_neto</th>
-                    <th class="text-end">valor_retiros</th>
-                    <th class="text-end">valor_actual_total</th>
-                    <th class="text-end">precio_actual</th>
-                    <th class="text-end">pppag</th>
-                    <th class="text-end">ganancias_realizadas</th>
-                    <th class="text-end">ganancias_netas</th>
-                    <th class="text-end">ganancia_absoluta</th>
-                    <th class="text-end">ganancia_neta_total</th>
-                    <th class="text-end">rendimiento</th>
-
+                    <th class="text-end">Stock</th>
+                    <th class="text-end">Precio Actual</th>
+                    <th class="text-end">Precio Promedio Compra</th>
+                    <th class="text-end">Valor Stock</th>
+                    <th class="text-end">Ganancias Realizadas</th>
+                    <th class="text-end">Valor Actual Total</th>
+                    <th class="text-end">Capital</th>
+                    <th class="text-end">Rendimiento</th>
                 </tr>
             </thead>
             <tbody>
                 {% for asset, data in assets_brief.items %}
-                <tr>
+                <tr onclick="sw_view_orders('{{data.symbol_id}}')" >
                     <td>{{asset}}</td>
-                    <td class="text-end">{{data.stock_total}}</td>
-                    <td class="text-end">{{data.valor_stock}}</td>
-                    <td class="text-end">{{data.costo_neto}}</td>
-                    <td class="text-end">{{data.valor_retiros}}</td>
-                    <td class="text-end">{{data.valor_actual_total}}</td>
-                    <td class="text-end">{{data.precio_actual}}</td>
-                    <td class="text-end">{{data.pppag}}</td>
-                    <td class="text-end">{{data.ganancias_realizadas}}</td>
-                    <td class="text-end">{{data.ganancias_netas}}</td>
-                    <td class="text-end">{{data.ganancia_absoluta}}</td>
-                    <td class="text-end">{{data.ganancia_neta_total}}</td>
-                    <td class="text-end {% if data.rendimiento < 0 %} text-danger {% else %} text-success {% endif %}">{{data.rendimiento}}</td>
-                </tr>
+                    <td class="text-end">
+                        {{data.stock_total}}</td>
+                    <td class="text-end">
+                        {{data.precio_actual}}</td>
+                    <td class="text-end {% if data.precio_promedio > data.precio_actual %} text-danger {% else %} text-success {% endif %}">
+                        {{data.precio_promedio}}</td>
+                    <td class="text-end">
+                        {{data.valor_stock}}</td>
+                    <td class="text-end">
+                        {{data.ganancias_realizadas}}</td>
+                    <td class="text-end {% if data.valor_actual_total < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.valor_actual_total}}</td>
+                    <td class="text-end">
+                        {{data.valor_capital}}</td>
+                    <td class="text-end {% if data.rendimiento < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.rendimiento}}%</td>
+                    </tr>
                 {% endfor %}
             </tbody>
+            <!--
             <tfoot>
                 <tr>
                     <td>Totales</td>
@@ -103,6 +105,7 @@
                     <td></td>
                 </tr>                
             </tfoot>
+            -->
         </table>
     </div>
     {% endif %}
@@ -178,6 +181,12 @@
 
             
         }
+    }
+
+    function sw_view_orders(symbol_id) {
+        var sw_id = '{{sw_id}}';
+        let url = '/bot/sw/view_orders/'+sw_id+'/'+symbol_id+'/'; 
+        window.location.href = url;
     }
 </script>
 {% endblock %}
