@@ -28,47 +28,76 @@
             <span class="col ">{{symbol}}</span>
         </div>
     </div>
+    
+    {% if chart %}
+    <div class="row pt-4">  
+        <h6 class="text-info">Grafico</h6>
+        {{ chart|safe }}
+    </div>
+    {% endif %}
 
     <div class="row pt-4">
         <h6 class="text-info">Evolucion de las Ordenes</h6>
         <table id="assets" class="table-dg table-trade-info">
             <thead>
                 <tr>
-                    <th class="">datetime</th>
-                    <th class="text-end">Stock</th>
-                    <th class="text-end">Precio</th>
-                    <th class="text-end">Valor</th>
-                    <th class="text-end">Aporte/Retiro</th>
-                    <th class="text-end">stock_total</th>
-                    <th class="text-end">Valor Stock</th>
-                    <th class="text-end">Precio Promedio</th>
-                    <th class="text-end">valor_actual_total</th>
-                    <th class="text-end">Precio Actual</th>
-                    <th class="text-end">Ganancias Realizadas</th>
-                    <th class="text-end">Capital</th>
-                    <th class="text-end">Rendimiento</th>
+                    <th class="">
+                        Fecha Hora</th>
+                    <th class="text-end">
+                        Cantidad<br/>{{symbol.base_asset}}</th>
+                    <th class="text-end">
+                        Precio</th>
+                    <th class="text-end">
+                        Valor Orden<br/>{{symbol.quote_asset}}</th>
+                    <th class="text-end">
+                        Precio Promedio</th>
+                    <th class="text-end">
+                        Stock<br/>{{symbol.base_asset}}</th>
+                    <th class="text-end">
+                        {{symbol.base_asset}}<br/>{{symbol.quote_asset}}</th>
+                    <th class="text-end">
+                        Stock<br/>{{symbol.quote_asset}}</th>
+                    <th class="text-end">
+                        Total<br/>{{symbol.quote_asset}}</th>
+                    <th class="text-end" title="">
+                        {{symbol.quote_asset}}/Capital-1<br/>(%)</th>
+                    <th class="text-end">
+                        Ganancias<br/>{{symbol.quote_asset}}</th>
+                    <th class="text-end">
+                        Ganancias/Capital<br/>(%)</th>
+                    <th class="text-end">
+                        Capital<br/>{{symbol.quote_asset}}</th>
+
                 </tr>
             </thead>
             <tbody>
                 {% for data in full_orders %}
                 <tr onclick="sw_view_orders('{{data.symbol_id}}')" >
                     <td class="">{{data.datetime}}</td>
-                    <td class="{{data.row_class}} text-end">{{data.qty}}</td>
+                    <td class="{{data.row_class}} text-end">  
+                        {% if data.side == 1 %}-{% endif %}{{data.qty}}</td>
                     <td class="{{data.row_class}} text-end">{{data.price}}</td>
-                    <td class="{{data.row_class}} text-end">{{data.valor_orden}}</td>
-                    <td class="{{data.row_class}} text-end">{{data.capital}}</td>
-                    <td class="text-end">{{data.stock_total}}</td>
-                    <td class="text-end">{{data.valor_stock}}</td>
-                    <td class="text-end">{{data.precio_promedio}}</td>
+                    <td class="{{data.row_class}} text-end">
+                        {% if data.side == 0 %}-{% endif %}{{data.valor_orden}}</td>
+                    <td class="text-end {% if data.precio_promedio > data.price %} text-danger {% else %} text-success {% endif %}">
+                        {{data.precio_promedio}}</td>
+                    <td class="text-end">
+                        {% if data.stock_total != 0 %} {{data.stock_total}} {% else %}-{% endif %}</td>
+                    <td class="text-end">
+                        {% if data.valor_stock != 0 %} {{data.valor_stock}} {% else %}-{% endif %}</td>
+                    <td class="text-end">{{data.stock_quote}}</td>
                     <td class="text-end">{{data.valor_actual_total}}</td>
-                    <td class="text-end">{{data.precio_actual}}</td>
+                    <td class="text-end {% if data.rendimiento_valor < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.rendimiento_valor}} %
+                    </td>
                     <td class="text-end {% if data.ganancias_realizadas < 0 %} text-danger {% else %} text-success {% endif %}">
                         {{data.ganancias_realizadas}}
                     </td>
-                    <td class="text-end">{{data.valor_capital}}</td>
-                    <td class="text-end {% if data.rendimiento < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.rendimiento}} %
+                    <td class="text-end {% if data.rendimiento_ganancias < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.rendimiento_ganancias}} %
                     </td>
+                    <td class="text-end {{data.capital_class}}">
+                        {{data.valor_capital}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

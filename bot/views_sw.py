@@ -3,6 +3,11 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+import numpy as np
+
 from bot.models import *
 from bot.model_sw import *
 
@@ -117,7 +122,10 @@ def view_orders(request, sw_id, symbol_id):
     
     orders = []
     full_orders = []
+    limit_days = 0
     for o in swo:
+        if limit_days == 0:
+            limit_days = (timezone.now() - o.datetime).days
         full_order = {'datetime':o.datetime,
                       'qty':o.qty, 
                       'price': o.price,
@@ -130,15 +138,171 @@ def view_orders(request, sw_id, symbol_id):
             full_order[k] = v
         full_order['valor_orden'] = round(full_order['qty']*full_order['price'],2)
         full_order['row_class'] = 'text-danger' if full_order['side'] == 1 else 'text-success'
-        full_order['capital'] = 'Si' if full_order['capital'] else ''
+        if full_order['capital'] and full_order['side'] == 0:
+            full_order['capital_class'] = 'text-success'
+        elif full_order['capital'] and full_order['side'] == 1:
+            full_order['capital_class'] = 'text-danger'
         
         full_orders.append(full_order)
 
     #Analisis del resultado a la fecha
     results = sw.calcular_rendimiento(symbol,orders,actual_price)
+    results['price'] = actual_price
     results['datetime'] = timezone.now()
     full_orders.append(results)
-    
+
+
+    #Obteniendo las velas del Symbol desde el inicio de las operaciones para adjuntar las ordenes
+    klines = exchInfo.get_klines(symbol=symbol.base_asset+symbol.quote_asset,
+                                 interval_id='2d01',
+                                 limit=limit_days+1)
+    klines['price'] = klines['close']
+    df_orders = pd.DataFrame(full_orders[0:-1])
+    df_orders["datetime"] = pd.to_datetime(df_orders["datetime"])
+    df = pd.concat([klines, df_orders], ignore_index=True)
+    df = df.sort_values(by="datetime")
+    #df.set_index('datetime',inplace=True)
+
+
+    # Guardar log del dataframe para su estudio
+    LOG_DIR = os.path.join(settings.BASE_DIR,'log')
+    DATA_FILE = os.path.join(LOG_DIR, f'SW_{sw.name}_{symbol.base_asset}.pkl')
+    with open(DATA_FILE, "wb") as archivo:
+            pickle.dump(df, archivo)
+       
+    #Ajustando valores del dataframe para charts
+    #ffill
+    df["stock_total"] = df["stock_total"].fillna(method="ffill")
+    df["stock_quote"] = df["stock_quote"].fillna(method="ffill")
+    df["valor_capital"] = df["valor_capital"].fillna(method="ffill")
+    df["precio_promedio"] = df["precio_promedio"].fillna(method="ffill")
+    df["ganancias_realizadas"] = df["ganancias_realizadas"].fillna(method="ffill")
+    #Calculos
+    df["valor_stock"] = df["stock_total"]*df['price'] 
+    df['valor_actual_total'] = df['stock_quote'] + df['valor_stock']
+    df["rendimiento_ganancias"] = (df["ganancias_realizadas"] / df['valor_capital'] )*100
+    df["rendimiento_valor"] = (df["valor_actual_total"] / df['valor_capital'] - 1 )*100
+    #Eventos
+    df['buy'] = np.where((df['side']==0)&(df['capital'] == False),df['price'],None)
+    df['sell'] = np.where((df['side']==1)&(df['capital'] == False),df['price'],None)
+    df['aporte'] = np.where((df['side']==0)&(df['capital'] == True),df['price'],None)
+    df['retiro'] = np.where((df['side']==1)&(df['capital'] == True),df['price'],None)
+
+    #Creando Chart 
+    chart_rows = 3
+    row_heights=[300,150,150]
+    total_height = sum(row_heights)
+
+    fig = make_subplots(rows=chart_rows, 
+                        shared_xaxes=True,
+                        row_heights=row_heights)
+
+    fig.add_trace(
+            go.Scatter(
+                x=df["datetime"], y=df["price"], name=f'{symbol.base_asset}{symbol.quote_asset}', mode="lines",  
+                line={'width': 0.5},  
+                marker=dict(color='gray'),
+            ),
+            row=1,
+            col=1,
+        )  
+    fig.add_trace(
+            go.Scatter(
+                x=df["datetime"], y=df["precio_promedio"], name=f'Precio Promedio', mode="lines",  
+                line={'width': 0.5},  
+                marker=dict(color='#f8b935'),
+            ),
+            row=1,
+            col=1,
+        )  
+
+    fig.add_trace(
+            go.Scatter(x=df["datetime"], y=df['buy'], name='Compras', mode='markers', 
+                    marker=dict(symbol='circle',size=4,color='#0ecb81',line=dict(width=0.75, color="black"),),
+                    ),row=1,col=1,
+    )
+    fig.add_trace(
+            go.Scatter(x=df["datetime"], y=df['sell'], name='Ventas', mode='markers', 
+                    marker=dict(symbol='circle',size=4,color='#f6465d',line=dict(width=0.75, color="black"),),
+                    ),row=1,col=1,
+        )
+    fig.add_trace(
+            go.Scatter(x=df["datetime"], y=df['aporte'], name='Aportes', mode='markers', 
+                    marker=dict(symbol='triangle-up',size=8,color='#0ecb81',line=dict(width=0.75, color="black"),),
+                    ),row=1,col=1,
+        )
+    fig.add_trace(
+            go.Scatter(x=df["datetime"], y=df['retiro'], name='Retiros', mode='markers', 
+                    marker=dict(symbol='triangle-down',size=8,color='#f6465d',line=dict(width=0.75, color="black"),),
+                    ),row=1,col=1,
+        )
+
+
+    fig.add_trace(
+            go.Scatter(
+                x=df["datetime"], y=df["ganancias_realizadas"], name=f'Ganancias', mode="lines",  
+                line={'width': 0.5},  
+                marker=dict(color='#0dcaf0'),
+            ),
+            row=2,
+            col=1,
+        )  
+    fig.add_trace(
+            go.Scatter(
+                x=df["datetime"], y=df["valor_capital"], name=f'Capital', mode="lines",  
+                line={'width': 0.5},  
+                marker=dict(color='gray'),
+            ),
+            row=2,
+            col=1,
+        )  
+
+    fig.add_trace(
+            go.Scatter(
+                x=df["datetime"], y=df["rendimiento_ganancias"], name=f'Ganancias (%)', mode="lines",  
+                line={'width': 0.5},  
+                marker=dict(color='#fcd535'),
+            ),
+            row=3,
+            col=1,
+        )  
+    fig.add_trace(
+            go.Scatter(
+                x=df["datetime"], y=df["rendimiento_valor"], name=f'Valor (%)', mode="lines",  
+                line={'width': 0.5},  
+                marker=dict(color='#fd7e14'),
+            ),
+            row=3,
+            col=1,
+        )  
+
+    # Adjust layout for subplots
+    fig.update_layout(
+        font=dict(color="#ffffff", family="Helvetica"),
+        paper_bgcolor="rgba(0,0,0,0)",  # Transparent background
+        plot_bgcolor="rgba(0,0,0,0)",  # Transparent plot area 
+        height=total_height,
+        xaxis_rangeslider_visible=False,
+        modebar_bgcolor="rgba(0,0,0,0)",
+        legend=dict(
+            orientation = 'h',
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0,
+        ),
+    )
+
+    #Ajustar el tamaño de cada sub_plot
+    fig.update_layout(
+        yaxis1=dict(title="Precio",showticklabels=True,
+                    zeroline=False,),
+        yaxis2=dict(title="USDT",showticklabels=True,),
+        yaxis3=dict(title="(%)",showticklabels=True,),
+    )
+    fig.update_xaxes(showline=True, linewidth=0.5,linecolor='#40444e', gridcolor='#40444e')
+    fig.update_yaxes(showline=False, linewidth=0.5, zeroline= False, linecolor='#40444e', gridcolor='rgba(40,40,40,10)')    
+    chart = fig.to_html(config = {'scrollZoom': True, })
     
     data = {
         'title': f'Smart Wallet {sw.name} - {symbol.base_asset}',
@@ -148,6 +312,7 @@ def view_orders(request, sw_id, symbol_id):
         'symbol_id': symbol.id,
         'symbol': symbol,
         'full_orders': full_orders,
+        'chart': chart,
 
 
     }

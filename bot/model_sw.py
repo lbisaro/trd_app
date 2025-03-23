@@ -102,6 +102,10 @@ class Sw(models.Model):
         stock_venta  = sum(o['qty'] for o in orders if (o['side']==1))
         stock_total = stock_compra - stock_venta
 
+        #Controlando Stock en cero aproximado
+        if stock_total * price < 0.1: # Stock menor a 0.10 USD
+            stock_total = 0.0
+
         #Calcular el capital invertido
         valor_compras_capital = sum(o['qty']*o['price'] for o in orders if (o['side']==0 and o['capital']))
         valor_ventas_capital = sum(o['qty']*o['price'] for o in orders if (o['side']==1 and o['capital']))
@@ -110,27 +114,30 @@ class Sw(models.Model):
         #Calcular el valor del stock actual
         valor_compras = sum(o['qty']*o['price'] for o in orders if (o['side']==0 ))
         valor_ventas = sum(o['qty']*o['price'] for o in orders if (o['side']==1 ))
+        stock_quote = valor_capital + valor_ventas - valor_compras
 
         #Calcular las ganancias y el valor actual total
         precio_promedio = valor_compras/stock_compra
         ganancias_realizadas = sum(o['qty']* (o['price'] - precio_promedio) for o in orders if (o['side']==1))
         
         valor_stock = stock_total * price
-        valor_actual_total = ganancias_realizadas + valor_stock
+        valor_actual_total = stock_quote + valor_stock
 
-        rendimiento = (valor_actual_total / valor_capital - 1) * 100
+        rendimiento_ganancias = (ganancias_realizadas / valor_capital ) * 100
+        rendimiento_valor = (valor_actual_total / valor_capital - 1) * 100
 
         return {
             'stock_total': round(stock_total,symbol.qty_decs_qty),
             'valor_stock': round(valor_stock,2),
             'precio_promedio': round(precio_promedio,symbol.qty_decs_price),
             'valor_compras': round(valor_compras,2),
-            'valor_ventas': round(valor_ventas,2),
+            'stock_quote': round(stock_quote,2),
             'valor_actual_total': round(valor_actual_total,2),
             'precio_actual': round(price,symbol.qty_decs_price),
             'ganancias_realizadas':  round(ganancias_realizadas,2),
             'valor_capital': round(valor_capital,2),
-            'rendimiento': round(rendimiento,2),
+            'rendimiento_ganancias': round(rendimiento_ganancias,2),
+            'rendimiento_valor': round(rendimiento_valor,2),
             'symbol_id': symbol.id,
         }
 
