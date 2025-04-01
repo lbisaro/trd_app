@@ -53,9 +53,13 @@ urlpatterns = [
     path('sw/create/',sw.create,name='sw_create'),
     path('sw/view/<int:sw_id>/',sw.view,name='sw_view'),
     path('sw/view_orders/<int:sw_id>/<int:symbol_id>/',sw.view_orders,name='sw_view_orders'),
+    path('sw/add_trades_empty/<int:sw_id>/',sw.add_trades_empty,name='sw_add_trades_empty'),
+    path('sw/add_trades/<int:sw_id>/<int:symbol_id>/',sw.add_trades,name='sw_add_trades'),
     path('sw/activar/<int:sw_id>/',sw.activar,name='sw_activar'),
     path('sw/desactivar/<int:sw_id>/<str:action>/',sw.desactivar,name='sw_desactivar'),
     path('sw/delete/<int:sw_id>/',sw.delete,name='sw_delete'),
+    path('sw/get_orders/<int:symbol_id>/',sw.get_orders,name='sw_get_orders'),
+    path('sw/add_order/<int:sw_id>/',sw.add_order,name='sw_add_order'),
 
     path('chart/get/<str:symbol>',vgt.chart_get,name='chart_get'),
     path('chart/',vgt.chart,name='chart'),

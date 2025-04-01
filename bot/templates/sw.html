@@ -8,6 +8,7 @@
 {% block action_bar %}
     
     {% if activo > 0 %}
+    <a class="btn btn-primary  btn-sm" href="{% url 'sw_add_trades_empty' sw_id %}">Agregar Trades</a>
     <button class="btn btn-danger  btn-sm" onclick="desactivar()">Desactivar</button>
     {% elif  can_activar %}
     <button class="btn btn-success  btn-sm" onclick="activar()">Activar</button>
@@ -41,13 +42,6 @@
         </div>
     </div>
 
-    <div class="row pt-2">
-        <div class="col-sm">
-            <span class="text-secondary">Assets:</span>
-            <span class="col ">{{assets}}</span>
-        </div>
-    </div>
-
     {% if assets_brief %}
     <div class="row pt-4">
         <table id="assets" class="table-dg table-trade-info">
@@ -56,14 +50,13 @@
                     <th>Asset</th>
                     <th class="text-end">Precio Actual</th>
                     <th class="text-end">Precio Promedio Compra</th>
-                    <th class="text-end">Stock</th>
-                    <th class="text-end">Valor Stock<br/>{{quote_asset}}</th>
-                    <th class="text-end">Stock<br/>{{quote_asset}}</th>
-                    <th class="text-end">Total<br/>{{quote_asset}}</th>
-                    <th class="text-end">Total/Capital-1<br/>(%)</th>
+                    <th class="text-end">Stock<br/>Asset</th>
+                    <th class="text-end">Stock Asset<br/>{{quote_asset}}</th>
+                    <th class="text-end">Stock Estable<br/>{{quote_asset}}</th>
+                    <th class="text-end">Total Stock<br/>{{quote_asset}}</th>
                     <th class="text-end">Ganancias<br/>{{quote_asset}}</th>
-                    <th class="text-end">Ganancias/Capital<br/>(%)</th>
-                    <th class="text-end">Capital<br/>{{quote_asset}}</th>
+                    <th class="text-end">Ganancias + Stock<br/>{{quote_asset}}</th>
+                    <th class="text-end">Distancia Precio Promedio<br/>%</th>
                 </tr>
             </thead>
             <tbody>
@@ -80,38 +73,31 @@
                         {{data.valor_stock}}</td>
                     <td class="text-end">
                         {{data.stock_quote}}</td>
-                    <td class="text-end {% if data.valor_actual_total < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.valor_actual_total}}</td>
-                    <td class="text-end {% if data.rendimiento_valor < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.rendimiento_valor}}%</td>
+                    <td class="text-end {% if data.total_stock_en_usd < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.total_stock_en_usd}}</td>
                     <td class="text-end">
                         {{data.ganancias_realizadas}}</td>
-                    <td class="text-end {% if data.rendimiento_ganancias < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.rendimiento_ganancias}}%</td>
-                    <td class="text-end">
-                        {{data.valor_capital}}</td>
+                    <td class="text-end {% if data.ganancias_y_stock < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.ganancias_y_stock}}</td>
+                    <td class="text-end {% if data.distancia_ppc < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.distancia_ppc}} %</td>
                     </tr>
                 {% endfor %}
             </tbody>
-            <!--
             <tfoot>
                 <tr>
-                    <td>Totales</td>
+                    <td class="fw-bold">Totales</td>
                     <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td class="fw-bold text-end">{{assets_brief_total_buyed}}</td>
-                    <td class="fw-bold text-end {% if assets_brief_total_cap < assets_brief_total_buyed %} text-danger {% else %} text-success {% endif %}">{{assets_brief_total_cap}}</td>
                     <td></td>
-                    <td></td>
-                    <td class="fw-bold text-end {% if assets_brief_result < 0 %} text-danger {% else %} text-success {% endif %}">{{assets_brief_result}}%</td>
-                    <td></td>
-                    <td></td>
+                    <td class="fw-bold text-end {% if assets_brief_total_stock_en_usd < 0 %} text-danger {% else %} text-success {% endif %}">{{assets_brief_total_stock_en_usd}}</td>
+                    <td class="fw-bold text-end {% if assets_brief_ganancias_realizadas < 0 %} text-danger {% else %} text-success {% endif %}">{{assets_brief_ganancias_realizadas}}</td>
+                    <td class="fw-bold text-end {% if assets_brief_total < 0 %} text-danger {% else %} text-success {% endif %}">{{assets_brief_total}}</td>
                     <td></td>
                 </tr>                
             </tfoot>
-            -->
         </table>
     </div>
     {% endif %}

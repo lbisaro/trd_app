@@ -174,3 +174,22 @@ function validarNIntervalo(valor, intervalo) {
 
     return esValido;
 }
+
+function date_to_str(date)
+{
+    return date.getDate().toString().padStart(2, '0') + "/" + 
+           (date.getMonth() + 1).toString().padStart(2, '0') + "/" + 
+           date.getFullYear() + " " + 
+           date.getHours().toString().padStart(2, '0') + ":" + 
+           date.getMinutes().toString().padStart(2, '0') ;
+}
+
+function str_to_date(date_str)
+{
+    date_str = date_str.trim();
+    let [fecha, hora] = date_str.split(" ");
+    let [dia, mes, anio] = fecha.split("/").map(Number);
+    let [horas, minutos] = hora.split(":").map(Number);
+    
+    return new Date(anio, mes - 1, dia, horas, minutos);
+}

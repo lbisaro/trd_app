@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block title %}{{title}}{% endblock %}
+{% block nav_title %}{{nav_title}}{% endblock %}
+
+{% load static %}
+{% load tz %}
+
+{% block action_bar %}
+    {% if symbol_id %}
+    <a class="btn btn-primary  btn-sm" href="{% url 'sw_view_orders' sw_id symbol_id %}">Ver ordenes</a>
+    {% endif %}
+    
+    <a class="btn btn-primary btn-sm" href="{% url 'sw_view' sw_id %}">Volver a la Smart Wallet</a>
+{% endblock %}
+
+{% block css %}
+<style>
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if symbol_id %}
+    <div class="row pt-2">
+        <div class="col-sm ">
+            <span class="text-secondary">Par:</span>  
+            <span class="col ">{{symbol}}</span>
+        </div>
+    </div>
+    {% else %}
+    <div class="row pt-2">
+        <div class="col-sm form-group">
+            <label class="form-label" for="symbol_id">Par</label>  
+            <select id="symbol_id" class="form-control" onchange="get_orders()">
+            <option value="">Seleccionar</option>
+            {% for s in symbols %}
+                <option value="{{s.id}}">{{s.base_asset}} {{s.quote_asset}}</option>
+            {% endfor %}
+            </select>
+            <span class="col ">{{symbol}}</span>
+        </div>
+    </div>
+    <div class="row pt-2">
+        <div class="col-sm form-group">
+            <table id="orders" class="table-dg table-trade-info"  style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Fecha Hora</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Precio</th>
+                        <th>ID</th>
+                        <th>Accion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <input type="text" id="datetime" class="form-control" value=""/>
+                        </td>
+                        <td>
+                            <select id="side" class="form-control">
+                                <option value="-1" selected >Selecccionar</option>
+                                <option value="0">Compra</option>
+                                <option value="1">Venta</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" id="qty" class="form-control" onchange="adjust_decs(this.id)" data-qty-decs="2" />
+                        </td>
+                        <td>
+                            <input type="text" id="price" class="form-control" onchange="adjust_decs(this.id)" data-qty-decs="2" />
+                        </td>
+                        <td>
+                            <input type="text" id="orderid" readonly class="form-control"/>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-success" onclick="add_order()">Grabar</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    <div class="row pt-4">
+
+    </div>
+
+</div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+
+let now = new Date();
+let now_str = date_to_str(now);
+$(document).ready( $('#datetime').val(now_str))
+
+function adjust_decs(id)
+{
+    var qty_decs = $('#'+id).attr('data-qty-decs')
+    val = to_dec($('#'+id).val(), qty_decs) 
+    $('#'+id).val(val)
+}
+
+function get_orders()
+{
+    $('#orders').hide();
+    $('.dinamic_tr').remove();
+    $('#datetime').val(now_str)
+    $('#qty').val('')
+    $('#price').val('')
+    $('#orderid').val('')
+    if ($('#symbol_id').val() > 0)
+    {
+        url = '{% url "sw_get_orders" 0 %}'.replace('0',$('#symbol_id').val());
+        data = null;
+        get_ajax(url,data).done( function (rsp) {
+            if (rsp.ok > 0)
+            {
+                $('#orders').show();
+                for (const order of rsp.orders)
+                {
+                    $('#qty').attr('data-qty-decs',rsp.qd_qty)
+                    $('#price').attr('data-qty-decs',rsp.qd_qty)
+                    parse_order_tr(order);
+                }
+            }
+        }); 
+    }
+}
+
+function add_order()
+{
+    url = '{% url "sw_add_order" sw_id %}';
+
+    data = {
+            datetime: $('#datetime').val(),
+            symbol_id: $('#symbol_id').val(),
+            side: $('#side').val()*1,
+            price:    $('#price').val()*1,
+            qty: $('#qty').val()*1,
+            orderid:    $('#orderid').val(),
+        }
+
+    err = '';
+    if (str_to_date(data.datetime) > now)
+        err += 'Se debe especificar fecha y hora anterior a la actual<br>';
+    if (data.symbol_id < 1)
+        err += 'Se debe seleccionar un par<br>';
+    if (data.side < 0 || data.side > 1)
+        err += 'Se debe especificar si es compra o venta<br>';
+    if (data.price<=0 )
+        err += 'Se debe especificar un precio<br>';
+    if (data.qty<=0)
+        err += 'Se debe especificar una cantidad<br>';
+            
+    if (err)
+        html_alert('Errores detectados',err,'text-danger');
+    else
+    {
+        get_ajax(url,data).done( function (rsp) {
+            if (rsp.error)
+                html_alert('Errores detectados',rsp.error,'text-danger')
+            if (rsp.ok)
+            {
+                get_orders()
+            }
+        });    
+
+    }
+}
+
+function parse_order_tr(order) 
+{
+    var exch_orders = $('.dinamic_tr').length
+    if (exch_orders == 0)
+    {
+        html = '<tr class="dinamic_tr"><td colspan="6"><h6 class="text-info text-center">Ordenes registradas en Binance</h6></td></tr>'
+        $('#orders tbody').append(html);
+    }
+    var side_class = (order.side == 0 ? 'text-success' : 'text-danger')
+    html = '<tr class="dinamic_tr">';
+    html += '<td><div class=" '+side_class+'">'+order.datetime+'<div></td>';
+    html += '<td><div class=" '+side_class+'">'+(order.side == 0 ? 'Compra' : 'Venta')+'<div></td>';
+    html += '<td><div class=" '+side_class+'">'+order.qty+'<div></td>';
+    html += '<td><div class=" '+side_class+'">'+order.price+'<div></td>';
+    html += '<td><div class=" '+side_class+'">'+order.orderid+'<div></td>';
+    if (order.exists<1)
+        html += '<td><button class="btn btn-sm btn-secondary" onclick="load_order(\''+order.datetime+'\','+order.side+','+order.qty+','+order.price+','+order.orderid+')">Cargar</button></td>';
+    else
+        html += '<td></td>';
+    html += '</tr>';
+    $('#orders tbody').append(html);
+
+}
+
+function load_order(datetime,side,qty,price,orderid)
+{
+    $('#datetime').val(datetime);
+    $('#side').val(side).change();
+    $('#qty').val(qty);
+    $('#price').val(price);
+    $('#orderid').val(orderid);
+}
+</script>
+{% endblock %}

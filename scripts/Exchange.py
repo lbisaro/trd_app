@@ -12,7 +12,7 @@ class Exchange():
 
     start_klines_str = '2022-08-01 00:00:00 UTC-3'
     exchange = ''
-
+    
     def __init__(self,type,exchange,prms):
         self.exchange = exchange
         try:
@@ -32,7 +32,7 @@ class Exchange():
                     else:
                         self.client = BinanceClient(api_key=apk, api_secret=aps, testnet=False)
         except Exception:
-            errMsg = f'exchange::__init__() - sError de conexion exchange - type {type} - exchange: {exchange}'
+            errMsg = f'exchange::__init__() - Error de conexion exchange - type {type} - exchange: {exchange}'
             print(errMsg)
             raise Exception(errMsg)
 
@@ -223,9 +223,31 @@ class Exchange():
         info['orderId'] = order['orderId']
         info['qty'] = float(order['executedQty'])
         info['quote'] = float(order['cummulativeQuoteQty'])
-        info['price'] = round(float(order['cummulativeQuoteQty'])/float(order['executedQty']) , symbol_info['qty_decs_price'])
+        info['price'] = round(float(order['cummulativeQuoteQty'])/float(order['executedQty'] if float(order['executedQty']) != 0 else 0) , symbol_info['qty_decs_price'])
         info['status'] = order['status']
         info['type'] = order['type']
         info['side'] = order['side']
         info['time'] = datetime.utcfromtimestamp(order['time'] / 1000) - timedelta(hours = 3)
         return info
+
+    def get_all_orders(self, symbol):
+        bnc_orders = self.client.get_all_orders(symbol=symbol,limit=100)
+        symbol_info = self.get_symbol_info(symbol=symbol)
+        orders = []
+        for order in bnc_orders:
+            info = {}
+            info['symbol'] = order['symbol']
+            info['orderId'] = order['orderId']
+            info['qty'] = round(float(order['executedQty']), symbol_info['qty_decs_qty'])
+            info['quote'] = round(float(order['cummulativeQuoteQty']), symbol_info['qty_decs_quote'])
+            if float(order['executedQty']) != 0:
+                info['price'] = round(float(order['cummulativeQuoteQty'])/float(order['executedQty']) , symbol_info['qty_decs_price'])
+            else:
+                info['price'] = round(float(order['price']) , symbol_info['qty_decs_price'])
+            info['status'] = order['status']
+            info['type'] = order['type']
+            info['side'] = order['side']
+            info['time'] = datetime.utcfromtimestamp(order['time'] / 1000) - timedelta(hours = 3)
+            orders.append(info)
+        return orders
+    

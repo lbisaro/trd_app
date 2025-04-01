@@ -96,35 +96,32 @@ class Sw(models.Model):
 
         return list(orders)
 
-    def calcular_rendimiento(self, symbol, orders, price):
+    def get_asset_brief(self, symbol, orders, precio_actual):
         #Calcular el stock total
         stock_compra = sum(o['qty'] for o in orders if (o['side']==0))
         stock_venta  = sum(o['qty'] for o in orders if (o['side']==1))
         stock_total = stock_compra - stock_venta
 
         #Controlando Stock en cero aproximado
-        if stock_total * price < 0.1: # Stock menor a 0.10 USD
+        if stock_total * precio_actual < 0.1: # Stock menor a 0.10 USD
             stock_total = 0.0
-
-        #Calcular el capital invertido
-        valor_compras_capital = sum(o['qty']*o['price'] for o in orders if (o['side']==0 and o['capital']))
-        valor_ventas_capital = sum(o['qty']*o['price'] for o in orders if (o['side']==1 and o['capital']))
-        valor_capital = valor_compras_capital - valor_ventas_capital
 
         #Calcular el valor del stock actual
         valor_compras = sum(o['qty']*o['price'] for o in orders if (o['side']==0 ))
         valor_ventas = sum(o['qty']*o['price'] for o in orders if (o['side']==1 ))
-        stock_quote = valor_capital + valor_ventas - valor_compras
+        stock_quote = valor_ventas - valor_compras
 
         #Calcular las ganancias y el valor actual total
         precio_promedio = valor_compras/stock_compra
         ganancias_realizadas = sum(o['qty']* (o['price'] - precio_promedio) for o in orders if (o['side']==1))
-        
-        valor_stock = stock_total * price
-        valor_actual_total = stock_quote + valor_stock
 
-        rendimiento_ganancias = (ganancias_realizadas / valor_capital ) * 100
-        rendimiento_valor = (valor_actual_total / valor_capital - 1) * 100
+        
+        valor_stock = stock_total * precio_actual
+        total_stock_en_usd = stock_quote + valor_stock
+
+        ganancias_y_stock = ganancias_realizadas + total_stock_en_usd
+        
+        distancia_ppc     = (precio_actual / precio_promedio - 1) * 100
 
         return {
             'stock_total': round(stock_total,symbol.qty_decs_qty),
@@ -132,12 +129,11 @@ class Sw(models.Model):
             'precio_promedio': round(precio_promedio,symbol.qty_decs_price),
             'valor_compras': round(valor_compras,2),
             'stock_quote': round(stock_quote,2),
-            'valor_actual_total': round(valor_actual_total,2),
-            'precio_actual': round(price,symbol.qty_decs_price),
+            'total_stock_en_usd': round(total_stock_en_usd,2),
+            'precio_actual': round(precio_actual,symbol.qty_decs_price),
             'ganancias_realizadas':  round(ganancias_realizadas,2),
-            'valor_capital': round(valor_capital,2),
-            'rendimiento_ganancias': round(rendimiento_ganancias,2),
-            'rendimiento_valor': round(rendimiento_valor,2),
+            'distancia_ppc': round(distancia_ppc,2),
+            'ganancias_y_stock': round(ganancias_y_stock,2),
             'symbol_id': symbol.id,
         }
 
@@ -158,9 +154,9 @@ class Sw(models.Model):
             orders = []
             for o in db_orders:
                 if o.symbol == symbol:
-                    orders.append({'qty':o.qty, 'price': o.price,'side':o.side, 'capital': True if o.is_capital > 0 else False})
+                    orders.append({'qty':o.qty, 'price': o.price,'side':o.side})
             
-            assets_brief[asset] = self.calcular_rendimiento(symbol,orders,price)
+            assets_brief[asset] = self.get_asset_brief(symbol,orders,price)
 
         return assets_brief
     
@@ -170,7 +166,7 @@ class SwOrder(models.Model):
     completed = models.IntegerField(default=0, null=False, blank=False, db_index=True)
     qty = models.FloatField(null=False, blank=False)
     price = models.FloatField(null=False, blank=False)
-    orderid = models.CharField(max_length = 20, null=False, blank=True, db_index=True)
+    orderid = models.CharField(default='NA', max_length = 20, null=False, blank=True, db_index=True)
     symbol = models.ForeignKey(Symbol, on_delete = models.CASCADE)
     #Definido en BotUtilsOrder: SIDE_BUY, SIDE_SELL
     side = models.IntegerField(default=0, null=False, blank=False, db_index=True)
@@ -180,7 +176,6 @@ class SwOrder(models.Model):
     type = models.IntegerField(default=0, null=False, blank=False)
     limit_price = models.FloatField(null=False, blank=True, default=0.0)
     tag = models.TextField(null=False, blank=True, default='')
-    is_capital = models.IntegerField(default=0, null=False, blank=False, db_index=True)
     
     class Meta:
         verbose_name = "SW Order"

@@ -72,9 +72,9 @@ def view(request, sw_id):
     assets = sw.get_assets()
 
     assets_brief = sw.get_assets_brief()
-    #assets_brief_total_buyed = round(sum(data['buyed'] for data in assets_brief.values()),2)
-    #assets_brief_total_cap   = round(sum(data['cap'] for data in assets_brief.values()),2)
-    #assets_brief_result = round(((assets_brief_total_cap/assets_brief_total_buyed)-1)*100,2) if assets_brief_total_buyed != 0 else 0
+    assets_brief_total_stock_en_usd = round(sum(data['total_stock_en_usd'] for data in assets_brief.values()),2)
+    assets_brief_ganancias_realizadas   = round(sum(data['ganancias_realizadas'] for data in assets_brief.values()),2)
+    assets_brief_total = round(assets_brief_total_stock_en_usd + assets_brief_ganancias_realizadas,2)
 
     #Configurando el estado del SW en la DDBB de acuerdo a la informacion registrada
     act_estado = sw.estado
@@ -103,23 +103,51 @@ def view(request, sw_id):
         'can_activar': sw.can_activar(),
         'can_delete': sw.can_delete(),
         'assets_brief': assets_brief,
-        #'assets_brief_total_buyed': assets_brief_total_buyed,
-        #'assets_brief_total_cap':   assets_brief_total_cap,
-        #'assets_brief_result':   assets_brief_result,
+        'assets_brief_total_stock_en_usd': assets_brief_total_stock_en_usd,
+        'assets_brief_ganancias_realizadas':   assets_brief_ganancias_realizadas,
+        'assets_brief_total':   assets_brief_total,
     }
 
     return render(request, 'sw.html', data)
+
+def add_trades_empty(request, sw_id):
+    sw = get_object_or_404(Sw, pk=sw_id, usuario=request.user)
+    symbols = Symbol.objects.filter(quote_asset=sw.quote_asset).order_by('symbol')
+
+    data = {
+        'title': f'Smart Wallet {sw.name} - Agregar Ordenes',
+        'nav_title': f'Smart Wallet {sw.name} - Agregar Ordenes',
+        'sw_id': sw.id,
+        'name': sw.name,
+        'symbols': symbols,
+        'sw': sw,
+        
+    }
+    return render(request, 'sw_add_trades.html', data)    
+
+def add_trades(request, sw_id, symbol_id):
+    sw = get_object_or_404(Sw, pk=sw_id, usuario=request.user)
+
+    symbol = get_object_or_404(Symbol, pk=symbol_id)
+    swo = sw.get_orders(symbol=symbol)
+
+    data = {
+        'title': f'Smart Wallet {sw.name} - Agregar Ordenes',
+        'nav_title': f'Smart Wallet {sw.name} - Agregar Ordenes',
+        'sw_id': sw.id,
+        'symbol_id': symbol.id,
+        'name': sw.name,
+        'sw': sw,
+        'symbol': symbol,
+        
+    }
+    return render(request, 'sw_add_trades.html', data)
 
 def view_orders(request, sw_id, symbol_id):
     sw = get_object_or_404(Sw, pk=sw_id, usuario=request.user)
     symbol = get_object_or_404(Symbol, pk=symbol_id)
     swo = sw.get_orders(symbol=symbol)
 
-    #Buscando precios de los symbols
-    exchInfo = Exchange(type='info',exchange='bnc',prms=None)
-    prices = exchInfo.get_all_prices()
-    actual_price = prices[symbol.base_asset+symbol.quote_asset]
-    
     orders = []
     full_orders = []
     limit_days = 0
@@ -129,79 +157,76 @@ def view_orders(request, sw_id, symbol_id):
         full_order = {'datetime':o.datetime,
                       'qty':o.qty, 
                       'price': o.price,
-                      'side':o.side, 
-                      'capital': True if o.is_capital > 0 else False
+                      'side':o.side,
                       }
         orders.append(full_order)
-        results = sw.calcular_rendimiento(symbol,orders,o.price)
+        results = sw.get_asset_brief(symbol,orders,o.price)
         for k,v in results.items():
             full_order[k] = v
         full_order['valor_orden'] = round(full_order['qty']*full_order['price'],2)
         full_order['row_class'] = 'text-danger' if full_order['side'] == 1 else 'text-success'
-        if full_order['capital'] and full_order['side'] == 0:
-            full_order['capital_class'] = 'text-success'
-        elif full_order['capital'] and full_order['side'] == 1:
-            full_order['capital_class'] = 'text-danger'
         
         full_orders.append(full_order)
 
+    #Obteniendo las velas del Symbol desde el inicio de las operaciones para adjuntar las ordenes
+    exchInfo = Exchange(type='info',exchange='bnc',prms=None)
+    klines = exchInfo.get_klines(symbol=symbol.base_asset+symbol.quote_asset,
+                                 interval_id='2d01',
+                                 limit=limit_days+1)
+    actual_price = klines.iloc[-1]['close']
+
     #Analisis del resultado a la fecha
-    results = sw.calcular_rendimiento(symbol,orders,actual_price)
+    results = sw.get_asset_brief(symbol,orders,actual_price)
     results['price'] = actual_price
     results['datetime'] = timezone.now()
     full_orders.append(results)
 
-
-    #Obteniendo las velas del Symbol desde el inicio de las operaciones para adjuntar las ordenes
-    klines = exchInfo.get_klines(symbol=symbol.base_asset+symbol.quote_asset,
-                                 interval_id='2d01',
-                                 limit=limit_days+1)
+    #Unificando ordenes con klines 
     klines['price'] = klines['close']
     df_orders = pd.DataFrame(full_orders[0:-1])
     df_orders["datetime"] = pd.to_datetime(df_orders["datetime"])
     df = pd.concat([klines, df_orders], ignore_index=True)
     df = df.sort_values(by="datetime")
-    #df.set_index('datetime',inplace=True)
-
-
-    # Guardar log del dataframe para su estudio
-    LOG_DIR = os.path.join(settings.BASE_DIR,'log')
-    DATA_FILE = os.path.join(LOG_DIR, f'SW_{sw.name}_{symbol.base_asset}.pkl')
-    with open(DATA_FILE, "wb") as archivo:
-            pickle.dump(df, archivo)
        
     #Ajustando valores del dataframe para charts
     #ffill
     df["stock_total"] = df["stock_total"].fillna(method="ffill")
     df["stock_quote"] = df["stock_quote"].fillna(method="ffill")
-    df["valor_capital"] = df["valor_capital"].fillna(method="ffill")
     df["precio_promedio"] = df["precio_promedio"].fillna(method="ffill")
     df["ganancias_realizadas"] = df["ganancias_realizadas"].fillna(method="ffill")
     #Calculos
     df["valor_stock"] = df["stock_total"]*df['price'] 
-    df['valor_actual_total'] = df['stock_quote'] + df['valor_stock']
-    df["rendimiento_ganancias"] = (df["ganancias_realizadas"] / df['valor_capital'] )*100
-    df["rendimiento_valor"] = (df["valor_actual_total"] / df['valor_capital'] - 1 )*100
+    df['total_stock_en_usd'] = df['stock_quote'] + df['valor_stock']
+    df['ganancias_y_stock'] = df['total_stock_en_usd'] + df['ganancias_realizadas']
+
+    df["distancia_ppc"] = (df["price"] / df['precio_promedio'] - 1 )*100
     #Eventos
-    df['buy'] = np.where((df['side']==0)&(df['capital'] == False),df['price'],None)
-    df['sell'] = np.where((df['side']==1)&(df['capital'] == False),df['price'],None)
-    df['aporte'] = np.where((df['side']==0)&(df['capital'] == True),df['price'],None)
-    df['retiro'] = np.where((df['side']==1)&(df['capital'] == True),df['price'],None)
+    df['buy']  = np.where((df['side']==0),df['price'],None)
+    df['sell'] = np.where((df['side']==1),df['price'],None)
+
+        
+    # Guardar log del dataframe para su estudio
+    LOG_DIR = os.path.join(settings.BASE_DIR,'log')
+    DATA_FILE = os.path.join(LOG_DIR, f'SW_{sw.name}_{symbol.base_asset}.pkl')
+    with open(DATA_FILE, "wb") as archivo:
+            pickle.dump(df, archivo)
 
     #Creando Chart 
     chart_rows = 3
-    row_heights=[300,150,150]
+    row_heights=[250,250,100]
     total_height = sum(row_heights)
 
     fig = make_subplots(rows=chart_rows, 
                         shared_xaxes=True,
-                        row_heights=row_heights)
+                        row_heights=row_heights,
+                        )
 
     fig.add_trace(
             go.Scatter(
                 x=df["datetime"], y=df["price"], name=f'{symbol.base_asset}{symbol.quote_asset}', mode="lines",  
-                line={'width': 0.5},  
+                line={'width': 0.75},  
                 marker=dict(color='gray'),
+                legendgroup = '1',
             ),
             row=1,
             col=1,
@@ -209,8 +234,9 @@ def view_orders(request, sw_id, symbol_id):
     fig.add_trace(
             go.Scatter(
                 x=df["datetime"], y=df["precio_promedio"], name=f'Precio Promedio', mode="lines",  
-                line={'width': 0.5},  
+                line={'width': 1},  
                 marker=dict(color='#f8b935'),
+                legendgroup = '1',
             ),
             row=1,
             col=1,
@@ -218,40 +244,23 @@ def view_orders(request, sw_id, symbol_id):
 
     fig.add_trace(
             go.Scatter(x=df["datetime"], y=df['buy'], name='Compras', mode='markers', 
-                    marker=dict(symbol='circle',size=4,color='#0ecb81',line=dict(width=0.75, color="black"),),
+                    marker=dict(symbol='circle',size=6,color='#0ecb81',line=dict(width=0.75, color="black"),),
+                    legendgroup = '1',
                     ),row=1,col=1,
     )
     fig.add_trace(
             go.Scatter(x=df["datetime"], y=df['sell'], name='Ventas', mode='markers', 
-                    marker=dict(symbol='circle',size=4,color='#f6465d',line=dict(width=0.75, color="black"),),
+                    marker=dict(symbol='circle',size=6,color='#f6465d',line=dict(width=0.75, color="black"),),
+                    legendgroup = '1',
                     ),row=1,col=1,
         )
-    fig.add_trace(
-            go.Scatter(x=df["datetime"], y=df['aporte'], name='Aportes', mode='markers', 
-                    marker=dict(symbol='triangle-up',size=8,color='#0ecb81',line=dict(width=0.75, color="black"),),
-                    ),row=1,col=1,
-        )
-    fig.add_trace(
-            go.Scatter(x=df["datetime"], y=df['retiro'], name='Retiros', mode='markers', 
-                    marker=dict(symbol='triangle-down',size=8,color='#f6465d',line=dict(width=0.75, color="black"),),
-                    ),row=1,col=1,
-        )
-
 
     fig.add_trace(
             go.Scatter(
                 x=df["datetime"], y=df["ganancias_realizadas"], name=f'Ganancias', mode="lines",  
-                line={'width': 0.5},  
+                line={'width': 0.75},  
                 marker=dict(color='#0dcaf0'),
-            ),
-            row=2,
-            col=1,
-        )  
-    fig.add_trace(
-            go.Scatter(
-                x=df["datetime"], y=df["valor_capital"], name=f'Capital', mode="lines",  
-                line={'width': 0.5},  
-                marker=dict(color='gray'),
+                legendgroup = '2',
             ),
             row=2,
             col=1,
@@ -259,38 +268,47 @@ def view_orders(request, sw_id, symbol_id):
 
     fig.add_trace(
             go.Scatter(
-                x=df["datetime"], y=df["rendimiento_ganancias"], name=f'Ganancias (%)', mode="lines",  
-                line={'width': 0.5},  
+                x=df["datetime"], y=df["total_stock_en_usd"], name=f'Stock', mode="lines",  
+                line={'width': 0.75},  
                 marker=dict(color='#fcd535'),
+                legendgroup = '2',
             ),
-            row=3,
+            row=2,
             col=1,
         )  
+
     fig.add_trace(
             go.Scatter(
-                x=df["datetime"], y=df["rendimiento_valor"], name=f'Valor (%)', mode="lines",  
-                line={'width': 0.5},  
-                marker=dict(color='#fd7e14'),
+                x=df["datetime"], y=df["ganancias_y_stock"], name=f'Stock + Ganancias', mode="lines",  
+                line={'width': 1},  
+                marker=dict(color='green'),
+                legendgroup = '2',
+            ),
+            row=2,
+            col=1,
+        )  
+
+    fig.add_trace(
+            go.Scatter(
+                x=df["datetime"], y=df["distancia_ppc"], name=f'Precio / P.Promedio', mode="lines",  
+                line={'width': 1},  
+                marker=dict(color='#fcd535'),
+                legendgroup = '3',
             ),
             row=3,
             col=1,
         )  
+
 
     # Adjust layout for subplots
     fig.update_layout(
         font=dict(color="#ffffff", family="Helvetica"),
         paper_bgcolor="rgba(0,0,0,0)",  # Transparent background
-        plot_bgcolor="rgba(0,0,0,0)",  # Transparent plot area 
+        plot_bgcolor="#162024",  
         height=total_height,
         xaxis_rangeslider_visible=False,
         modebar_bgcolor="rgba(0,0,0,0)",
-        legend=dict(
-            orientation = 'h',
-            yanchor="bottom",
-            y=1.02,
-            xanchor="left",
-            x=0,
-        ),
+        legend_tracegroupgap = 100,
     )
 
     #Ajustar el tamaño de cada sub_plot
@@ -300,9 +318,9 @@ def view_orders(request, sw_id, symbol_id):
         yaxis2=dict(title="USDT",showticklabels=True,),
         yaxis3=dict(title="(%)",showticklabels=True,),
     )
-    fig.update_xaxes(showline=True, linewidth=0.5,linecolor='#40444e', gridcolor='#40444e')
-    fig.update_yaxes(showline=False, linewidth=0.5, zeroline= False, linecolor='#40444e', gridcolor='rgba(40,40,40,10)')    
-    chart = fig.to_html(config = {'scrollZoom': True, })
+    fig.update_xaxes(showline=False, linewidth=2,linecolor='#000000', gridcolor='rgba(0,0,0,0)')
+    fig.update_yaxes(showline=False, linewidth=2, zeroline= False, linecolor='#ff0000', gridcolor='rgba(50,50,50,255)')     
+    chart = fig.to_html(config = {'scrollZoom': True, }) #'displayModeBar': False
     
     data = {
         'title': f'Smart Wallet {sw.name} - {symbol.base_asset}',
@@ -343,9 +361,73 @@ def delete(request,sw_id):
         sw.delete()
         json_rsp['ok'] = True
     else:
-        json_rsp['error'] = 'No es psible eliminar la Smart Wallet'
+        json_rsp['error'] = 'No es posible eliminar la Smart Wallet'
     return JsonResponse(json_rsp)
 
+
+@login_required
+def get_orders(request,symbol_id):
+    json_rsp = {}
+    symbol = get_object_or_404(Symbol, pk=symbol_id)
+    symbol_orders = SwOrder.objects.filter(symbol=symbol)
+    check_orderid = {}
+    for so in symbol_orders:
+        check_orderid[so.orderid] = so
+
+    usuario=request.user
+    usuario_id = usuario.id
+    profile = UserProfile.objects.get(user_id=usuario_id)
+    profile_config = profile.parse_config()
+    prms = {}
+    prms['bnc_apk'] = profile_config['bnc']['bnc_apk']
+    prms['bnc_aps'] = profile_config['bnc']['bnc_aps']
+    prms['bnc_env'] = profile_config['bnc']['bnc_env']
+    exch = Exchange(type='user_apikey',exchange='bnc',prms=prms)
+
+    bnc_orders = exch.get_all_orders(symbol=symbol.base_asset+symbol.quote_asset)
+    orders = []
+    for o in bnc_orders:
+        if o['status'] == 'FILLED':
+            info = {}
+            info['symbol'] = o['symbol']
+            info['datetime'] = o['time'].strftime('%d/%m/%Y %H:%M')
+            info['side'] = 0 if o['side'] == 'BUY' else 1
+            info['qty'] = o['qty']
+            info['price'] = o['price']
+            info['orderid'] = str(o['orderId'])
+            info['completed'] = 1 
+            info['exists'] = 1 if info['orderid'] in check_orderid else 0
+            orders = [info] + orders #Agrega elementos al inicio            
+
+
+    json_rsp['ok'] = True
+    json_rsp['qd_qty'] = symbol.qty_decs_qty
+    json_rsp['qd_price'] = symbol.qty_decs_price
+    json_rsp['orders'] = orders
+
+    return JsonResponse(json_rsp)
+
+@login_required
+def add_order(request,sw_id):
+    json_rsp = {}
+    sw = get_object_or_404(Sw, pk=sw_id,usuario=request.user)
+    symbol = get_object_or_404(Symbol, pk=int(request.POST['symbol_id']))
+    order = SwOrder()
+
+    order.sw = sw
+    order.symbol = symbol
+    order.datetime = (dt.datetime.strptime(request.POST['datetime'], "%d/%m/%Y %H:%M") )
+    order.side = int(request.POST['side'])
+    order.qty = float(request.POST['qty'])
+    order.price = float(request.POST['price'])
+    order.orderid = request.POST['orderid']
+
+    order.full_clean()
+    order.save()
+
+    json_rsp['ok'] = True
+    json_rsp['go_to'] = True
+    return JsonResponse(json_rsp)
 """        
 @login_required
 def get_parametros_estrategia(request,estrategia_id):

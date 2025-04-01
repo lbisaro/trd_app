@@ -566,3 +566,4 @@ def HeikinAshi(df):
     df['HA_low_trend'] = np.where(df['HA_vela_indecision'],1,None)
     df.drop(['HA_vela_indecision','HA_cuerpo','HA_sombra_inferior','HA_sombra_superior'], axis=1, inplace=True)
     return df
+

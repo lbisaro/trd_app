@@ -7,8 +7,9 @@
 
 {% block action_bar %}
     
-    <a class="btn btn-info btn-sm" href="{% url 'sw_view' sw_id %}">Volver a la Smart Wallet</a>
-
+    <a class="btn btn-primary  btn-sm" href="{% url 'sw_add_trades' sw_id symbol_id%}">Agregar Trades</a>
+    <a class="btn btn-primary btn-sm" href="{% url 'sw_view' sw_id %}">Volver a la Smart Wallet</a>
+    
 {% endblock %}
 
 {% block css %}
@@ -30,14 +31,16 @@
     </div>
     
     {% if chart %}
-    <div class="row pt-4">  
-        <h6 class="text-info">Grafico</h6>
+    <div class="row pt-4">
+        <h6 class="text-info text-center">Grafico</h6>
+    </div>
+    <div class="row" style="margin-top: -80px;">  
         {{ chart|safe }}
     </div>
     {% endif %}
 
     <div class="row pt-4">
-        <h6 class="text-info">Evolucion de las Ordenes</h6>
+        <h6 class="text-info text-center">Evolucion de las Ordenes</h6>
         <table id="assets" class="table-dg table-trade-info">
             <thead>
                 <tr>
@@ -54,19 +57,14 @@
                     <th class="text-end">
                         Stock<br/>{{symbol.base_asset}}</th>
                     <th class="text-end">
-                        {{symbol.base_asset}}<br/>{{symbol.quote_asset}}</th>
-                    <th class="text-end">
                         Stock<br/>{{symbol.quote_asset}}</th>
-                    <th class="text-end">
-                        Total<br/>{{symbol.quote_asset}}</th>
-                    <th class="text-end" title="">
-                        {{symbol.quote_asset}}/Capital-1<br/>(%)</th>
                     <th class="text-end">
                         Ganancias<br/>{{symbol.quote_asset}}</th>
                     <th class="text-end">
-                        Ganancias/Capital<br/>(%)</th>
-                    <th class="text-end">
-                        Capital<br/>{{symbol.quote_asset}}</th>
+                        Stock + Ganancias<br/>{{symbol.quote_asset}}</th>
+                    <th class="text-end" title="">
+                        Precio/Precio promedio-1<br/>(%)</th>
+
 
                 </tr>
             </thead>
@@ -83,21 +81,16 @@
                         {{data.precio_promedio}}</td>
                     <td class="text-end">
                         {% if data.stock_total != 0 %} {{data.stock_total}} {% else %}-{% endif %}</td>
-                    <td class="text-end">
-                        {% if data.valor_stock != 0 %} {{data.valor_stock}} {% else %}-{% endif %}</td>
-                    <td class="text-end">{{data.stock_quote}}</td>
-                    <td class="text-end">{{data.valor_actual_total}}</td>
-                    <td class="text-end {% if data.rendimiento_valor < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.rendimiento_valor}} %
-                    </td>
+                    <td class="text-end">{{data.total_stock_en_usd}}</td>
                     <td class="text-end {% if data.ganancias_realizadas < 0 %} text-danger {% else %} text-success {% endif %}">
                         {{data.ganancias_realizadas}}
                     </td>
-                    <td class="text-end {% if data.rendimiento_ganancias < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.rendimiento_ganancias}} %
+                    <td class="text-end {% if data.ganancias_y_stock < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.ganancias_y_stock}}
                     </td>
-                    <td class="text-end {{data.capital_class}}">
-                        {{data.valor_capital}}</td>
+                    <td class="text-end {% if data.distancia_ppc < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.distancia_ppc}} %
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -105,7 +98,7 @@
     </div>
 
 </div>
-    
+<input type="text" id="sw_id" vallue="{{sw_id}}">
 {% endblock %}
 
 {% block script %}
