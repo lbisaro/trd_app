@@ -1,10 +1,7 @@
-from binance import Client, ThreadedDepthCacheManager
+from binance import ThreadedDepthCacheManager
 import time
 import pickle
 import os
-
-# Variables api_key y api_secret ya definidas previamente
-client = Client()
 
 dcm = ThreadedDepthCacheManager()
 dcm.start()

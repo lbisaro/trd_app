@@ -23,7 +23,7 @@ def run():
     hh = startDt.strftime('%H')
     mm = startDt.strftime('%M')
 
-    if mm == '00' or mm == '30': #Cada 30 minutos
+    if mm == '57' or mm == '27': #Cada 30 minutos, 3 minutos antes 
         
         global execution_time, symbol
         dcm = ThreadedDepthCacheManager()
