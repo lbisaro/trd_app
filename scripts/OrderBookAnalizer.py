@@ -17,6 +17,10 @@ class OrderBookAnalyzer:
                 return pickle.load(f)
         return pd.DataFrame(columns=[
             'timestamp',
+            'high',
+            'low',
+            'close',
+            'volume',
             'base_price',
             'bid_supports',
             'ask_resistances',
@@ -151,7 +155,10 @@ class OrderBookAnalyzer:
             'ratio': total_bid / total_ask if total_ask > 0 else np.inf
         }
 
-    def analyze_order_book(self, bids, asks):
+    def analyze_order_book(self, high, low, close, volume, bids, asks):
+        
+        print(bids[0])
+        print(asks[0])
         """Analiza el libro de órdenes completo"""
         # 1. Precio base y referencia
         base_price = (asks[0][0] + bids[0][0]) / 2
@@ -170,6 +177,10 @@ class OrderBookAnalyzer:
         # 5. Crear nuevo registro
         new_record = {
             'timestamp': datetime.now(),
+            'high': high,
+            'low': low,
+            'close': close,
+            'volume': volume,
             'base_price': base_price,
             'bid_supports': bid_supports,
             'ask_resistances': ask_resistances,
