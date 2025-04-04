@@ -204,6 +204,34 @@ class OrderBookAnalyzer:
             'resistance_levels': self.aggregate_levels(last_records, 'ask_resistances'),
             'price_change_pct': (last_records['base_price'].iloc[-1] / last_records['base_price'].iloc[0] - 1) * 100
         }
+
+    def analyze_summary(self, summary, n_hours):
+        print(f"\n=== Análisis de los últimos {n_hours} periodos ===")
+        
+        # 1. Tendencias del mercado
+        imbalance = summary['mean_imbalance']
+        direction = "COMPRADORA" if imbalance > 0 else "VENDEDORA"
+        print(f"\nTendencia del mercado: Presión {direction} ({abs(imbalance):.2f}% de desbalance promedio)")
+        
+        # 2. Niveles significativos persistentes
+        print("\nSoportes más consistentes:")
+        for s in sorted(summary['support_levels'], key=lambda x: -x['frequency'])[:3]:
+            print(f"- ${s['mean_price']:.2f}: {s['frequency']} apariciones")
+        
+        print("\nResistencias más consistentes:")
+        for r in sorted(summary['resistance_levels'], key=lambda x: -x['frequency'])[:3]:
+            print(f"- ${r['mean_price']:.2f}: {r['frequency']} apariciones")
+        
+        # 3. Relación precio/volumen
+        price_change = summary['price_change_pct']
+        vol_ratio = summary['mean_bid_dominance'] / (100 - summary['mean_bid_dominance'])
+        
+        if price_change > 0 and vol_ratio > 1.5:
+            print("\nConfirmación alcista: Precio subiendo con fuerte volumen comprador")
+        elif price_change < 0 and vol_ratio < 0.67:
+            print("\nConfirmación bajista: Precio bajando con fuerte volumen vendedor")
+        else:
+            print("\nDivergencia detectada entre precio y volumen")
     
     def aggregate_levels(self, df, level_type):
         """Agrega niveles a lo largo del tiempo"""

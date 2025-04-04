@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Libro de Ordenes{% endblock %}
+{% block nav_title %}Libro de Ordenes{% endblock %}
+
+{% load static %}
+{% load tz %}
+
+{% block action_bar %}
+{% endblock %}
+
+{% block css %}
+<style>
+    /* CSS */
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if chart %}
+    <div class="row pt-4">
+        <h6 class="text-info text-center">Grafico</h6>
+    </div>
+    <div class="row" style="margin-top: -36px;">  
+        {{ chart|safe }}
+    </div>
+    {% endif %}
+
+    <div class="row pt-4">
+        <h6 class="text-info text-center">Reporte</h6>
+    </div>
+    <div class="row">
+        <ul>
+        {% for line in reporte %}
+        <li>{{line}}</li>
+        {% endfor %}
+        </ul>
+    </div>
+</div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+    /* SCRIPTS */
+</script>
+{% endblock %}

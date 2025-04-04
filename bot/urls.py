@@ -9,6 +9,7 @@ from bot import views_symbols as vs
 from bot import views_graph_test as vgt
 from bot import views_indicator as vi
 from bot import views_sw as sw
+from bot import views_ob as ob
 
 urlpatterns = [
     path('estrategias/',ve.estrategias,name='estrategias'),
@@ -63,6 +64,8 @@ urlpatterns = [
 
     path('chart/get/<str:symbol>',vgt.chart_get,name='chart_get'),
     path('chart/',vgt.chart,name='chart'),
+    
+    path('ob/panel',ob.panel,name='ob_panel'),
     
     path('indicator/',vi.panel,name='indicator_panel'),
 ]
