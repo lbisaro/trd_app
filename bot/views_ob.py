@@ -13,6 +13,7 @@ import pickle
 import os
 
 import scripts.OrderBookAnalizer as oba
+import scripts.functions as fn
 
 @login_required
 def panel(request):
@@ -104,6 +105,9 @@ def panel(request):
             mid.append({'timestamp':row['timestamp'],
                         'mi':-round(row['market_imbalance']['imbalance_pct'],2)})
     sr = pd.DataFrame(sr)
+    sr_pct_max = sr['pct'].max()
+    sr_pct_min = sr['pct'].min()
+    sr['pct_adj'] = fn.map(sr['pct'],sr_pct_min,sr_pct_max,1,10)
     miu = pd.DataFrame(miu, columns=['timestamp','mi'])
     mid = pd.DataFrame(mid, columns=['timestamp','mi'])
 
@@ -133,8 +137,8 @@ def panel(request):
     fig.add_trace(
             go.Scatter(x=sr["timestamp"], y=sr['price'], name='Sop y Res', mode='markers', 
                     marker=dict(symbol='circle',
-                                size=sr['pct'],
-                                color=sr['pct'],
+                                size=sr['pct_adj'],
+                                color=sr['pct_adj'],
                                 colorscale="Aggrnyl",
                                 #showscale=True,
                                 line=dict(width=0,),
