@@ -145,7 +145,7 @@ def panel(request):
             marker=dict(symbol='circle',
                         size=sr['pct_adj'],
                         color=sr['pct_adj'],
-                        colorscale="ice",
+                        colorscale="Aggrnyl", #ice
                         #showscale=True,
                         line=dict(width=0,),
                         ),
