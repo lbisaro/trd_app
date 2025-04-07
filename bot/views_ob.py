@@ -111,6 +111,9 @@ def panel(request):
     sr_pct_max = sr['pct'].max()
     sr_pct_min = sr['pct'].min()
     sr['pct_adj'] = fn.map(sr['pct'],sr_pct_min,sr_pct_max,1,10)
+    
+    mi = pd.DataFrame(mi, columns=['timestamp','mi'])
+    mi['ma'] = mi['mi'].rolling(window=48).mean()
     miu = pd.DataFrame(miu, columns=['timestamp','mi'])
     mid = pd.DataFrame(mid, columns=['timestamp','mi'])
 
@@ -125,58 +128,71 @@ def panel(request):
                         )
 
     fig.add_trace(
-            go.Scatter(
-                x=df["timestamp"], y=df["base_price"], name=f'{symbol} Price', mode="lines",  
-                line={'width': 0.75},  
-                marker=dict(color='yellow',),
-                legendgroup = '1',
-                hovertemplate="%{x}<br>%{y}<extra></extra>",
-            ),
-            row=1,
-            col=1,
-        )  
+        go.Scatter(
+            x=df["timestamp"], y=df["base_price"], name=f'{symbol} Price', mode="lines",  
+            line={'width': 0.75},  
+            marker=dict(color='yellow',),
+            legendgroup = '1',
+            hovertemplate="%{x}<br>%{y}<extra></extra>",
+        ),
+        row=1,
+        col=1,
+    )  
 
 
     fig.add_trace(
-            go.Scatter(x=sr["timestamp"], y=sr['price'], name='Sop y Res', mode='markers', 
-                    marker=dict(symbol='circle',
-                                size=sr['pct_adj'],
-                                color=sr['pct_adj'],
-                                colorscale="ice",
-                                #showscale=True,
-                                line=dict(width=0,),
-                                ),
-                    legendgroup = '1',
-                    hovertemplate="%{x}<br>%{y}<extra></extra>",
-                    ),row=1,col=1,
+        go.Scatter(x=sr["timestamp"], y=sr['price'], name='Sop y Res', mode='markers', 
+            marker=dict(symbol='circle',
+                        size=sr['pct_adj'],
+                        color=sr['pct_adj'],
+                        colorscale="ice",
+                        #showscale=True,
+                        line=dict(width=0,),
+                        ),
+            legendgroup = '1',
+            hovertemplate="%{x}<br>%{y}<extra></extra>",
+            ),row=1,col=1,
     )
 
     fig.add_trace(
-            go.Bar(
-                x=miu["timestamp"], y=miu["mi"], name=f'{symbol}',  
-                marker=dict(color='#f6465d',
-                            line=dict(width=0,)
-                            ),
-                hovertemplate="%{x}<br>%{y} %<extra></extra>",
-                legendgroup = '2',
-                showlegend=False,
-            ),
-            row=2,
-            col=1,
-        )  
+        go.Bar(
+            x=miu["timestamp"], y=miu["mi"], name=f'{symbol}',  
+            marker=dict(color='#f6465d',
+                        line=dict(width=0,)
+                        ),
+            hovertemplate="%{x}<br>%{y} %<extra></extra>",
+            legendgroup = '2',
+            showlegend=False,
+        ),
+        row=2,
+        col=1,
+    )  
     fig.add_trace(
-            go.Bar(
-                x=mid["timestamp"], y=mid["mi"], name=f'{symbol}',  
-                marker=dict(color='#0ecb81',
-                            line=dict(width=0,)
-                            ),
-                hovertemplate="%{x}<br>%{y} %<extra></extra>",
-                legendgroup = '2',
-                showlegend=False,
-            ),
-            row=2,
-            col=1,
-        )  
+        go.Bar(
+            x=mid["timestamp"], y=mid["mi"], name=f'{symbol}',  
+            marker=dict(color='#0ecb81',
+                        line=dict(width=0,)
+                        ),
+            hovertemplate="%{x}<br>%{y} %<extra></extra>",
+            legendgroup = '2',
+            showlegend=False,
+        ),
+        row=2,
+        col=1,
+    )  
+    
+    fig.add_trace(
+        go.Scatter(
+            x=mi["timestamp"], y=mi["ma"], name=f'MI MA', mode="lines",  
+            line={'width': 0.75},  
+            marker=dict(color='white',),
+            legendgroup = '1',
+            hovertemplate="%{x}<br>%{y}<extra></extra>",
+        ),
+        row=2,
+        col=1,
+    ) 
+
     fig.update_layout(
         font=dict(color="#ffffff", family="Helvetica"),
         paper_bgcolor="rgba(0,0,0,0)",  # Transparent background
