@@ -4,14 +4,24 @@ from datetime import datetime
 import os
 import numpy as np
 
+#Version 1.0
+
 class OrderBookAnalyzer:
-    def __init__(self, data_file=''):
+    def __init__(self, data_file='', price_scale=100):
+        """
+        Inicializa el analizador del libro de órdenes.
+        
+        Args:
+            data_file (str): Ruta al archivo para guardar datos históricos.
+            price_scale (int): Escala de agrupación (ej. 100 para BTC en niveles como 77000, 78000).
+        """
         self.data_file = data_file
-        if len(self.data_file)>0:
+        self.price_scale = price_scale
+        if len(self.data_file) > 0:
             self.df = self.load_or_create_dataframe()
 
     def load_or_create_dataframe(self):
-        """Carga el DataFrame existente o crea uno nuevo"""
+        """Carga datos históricos o crea un nuevo DataFrame."""
         if os.path.exists(self.data_file):
             with open(self.data_file, 'rb') as f:
                 return pickle.load(f)
@@ -24,116 +34,93 @@ class OrderBookAnalyzer:
             'total_ask_volume',
             'bid_volume_distribution',
             'ask_volume_distribution',
-            'market_imbalance'
+            'market_imbalance',
+            'price_scale_used'
         ])
 
-    def find_significant_levels(self, levels, is_bid=True, volume_threshold_pct=7.0, price_range_pct=1.0):
+    def _group_by_scale(self, price, is_bid=True):
         """
-        Identifica niveles significativos con métricas relativas
+        Agrupa un precio según la escala definida.
         
         Args:
-            levels: Lista de [precio, cantidad]
-            is_bid: True para bids, False para asks
-            volume_threshold_pct: Umbral porcentual mínimo para considerar nivel
-            price_range_pct: Rango alrededor del precio para calcular media
+            price (float): Precio a agrupar.
+            is_bid (bool): True para bids (usa floor), False para asks (usa ceil).
+        Returns:
+            float: Precio agrupado (ej. 77050 → 77000 para bids, 77100 para asks).
+        """
+        if is_bid:
+            return np.floor(price / self.price_scale) * self.price_scale
+        else:
+            return np.ceil(price / self.price_scale) * self.price_scale
+
+    def find_significant_levels(self, levels, is_bid=True, volume_threshold_pct=7.0):
+        """
+        Identifica niveles significativos agrupados por escala.
+        
+        Args:
+            levels (list): Lista de [precio, cantidad].
+            is_bid (bool): True para bids, False para asks.
+            volume_threshold_pct (float): Umbral mínimo de volumen para considerar un nivel.
             
         Returns:
-            Dict con niveles significativos y métricas
+            dict: Niveles significativos con métricas.
         """
         df = pd.DataFrame(levels, columns=['price', 'amount'])
         df['volume'] = df['price'] * df['amount']
         total_volume = df['volume'].sum()
         
-        # Convertir a porcentaje del volumen total
-        df['volume_pct'] = (df['volume'] / total_volume) * 100
+        # Agrupar por escala
+        df['price_group'] = df['price'].apply(lambda x: self._group_by_scale(x, is_bid))
         
-        # Calcular media del volumen en el rango de precios
-        price_reference = df['price'].iloc[0]
-        price_range = price_reference * (price_range_pct / 100)
-        range_mask = (df['price'] >= price_reference - price_range) & \
-                     (df['price'] <= price_reference + price_range)
-        mean_volume_in_range = df[range_mask]['volume_pct'].mean()
+        # Calcular volumen por grupo
+        grouped = df.groupby('price_group').agg({
+            'price': 'first',  # Precio representativo del grupo
+            'volume': 'sum',
+            'amount': 'sum'
+        }).reset_index()
         
-        # Umbral dinámico (máximo entre 1.5x la media o 1%)
-        dynamic_threshold = max(1.5 * mean_volume_in_range, volume_threshold_pct)
+        grouped['volume_pct'] = (grouped['volume'] / total_volume) * 100
         
-        # Filtrar niveles significativos
-        significant_levels = df[df['volume_pct'] > dynamic_threshold].copy()
+        # Filtrar por volumen significativo
+        significant_levels = grouped[grouped['volume_pct'] > volume_threshold_pct].copy()
         significant_levels.sort_values('price', ascending=not is_bid, inplace=True)
         
-        # Calcular score de fortaleza relativa
-        significant_levels['strength_score'] = significant_levels['volume_pct'] / mean_volume_in_range
-        
-        # Agrupar niveles cercanos (clusters)
-        price_group_size = price_reference * 0.005  # Agrupa en bins de 0.5%
-        significant_levels['price_group'] = (significant_levels['price'] / price_group_size).round()
-        
-        clusters = significant_levels.groupby('price_group').agg({
-            'price': 'first',
-            'volume': 'sum',
-            'volume_pct': 'sum',
-            'strength_score': 'mean'
-        }).reset_index(drop=True)
+        # Calcular fuerza relativa (vs. volumen promedio)
+        mean_volume = grouped['volume_pct'].mean()
+        significant_levels['strength_score'] = significant_levels['volume_pct'] / mean_volume
         
         return {
-            'levels': clusters.to_dict('records'),
+            'levels': significant_levels.to_dict('records'),
             'total_volume': total_volume,
-            'mean_volume_pct_in_range': mean_volume_in_range,
-            'price_reference': price_reference,
-            'dynamic_threshold': dynamic_threshold
+            'mean_volume_pct': mean_volume,
+            'price_reference': df['price'].iloc[0],
+            'dynamic_threshold': volume_threshold_pct
         }
 
     def calculate_volume_distribution(self, levels, base_price):
-        """Calcula distribución del volumen por rangos porcentuales (versión corregida)"""
+        """Calcula la distribución del volumen por rangos de escala."""
         df = pd.DataFrame(levels, columns=['price', 'amount'])
         df['volume'] = df['price'] * df['amount']
         
-        # Definir los bins correctamente
-        bins_pct = [-5, -2, -1, -0.5, 0, 0.5, 1, 2, 5]
-        bins = [base_price * (1 + p/100) for p in bins_pct]
+        # Definir bins basados en la escala
+        price_groups = sorted({self._group_by_scale(p, True) for p in df['price']})
+        bins = [-np.inf] + price_groups + [np.inf]
         
-        # Añadir -infinito e infinito para capturar valores fuera del rango
-        bins = [-np.inf] + bins + [np.inf]
+        df['price_group'] = df['price'].apply(lambda x: self._group_by_scale(x, True))
+        distribution = df.groupby('price_group')['volume'].sum().to_dict()
         
-        # Definir etiquetas que correspondan a los bins
-        labels = [
-            '<-5%', 
-            '-5% to -2%', 
-            '-2% to -1%', 
-            '-1% to -0.5%', 
-            '-0.5% to 0%',
-            '0% to 0.5%', 
-            '0.5% to 1%', 
-            '1% to 2%', 
-            '2% to 5%', 
-            '>5%'
-        ]
-        
-        # Verificar que tenemos una etiqueta menos que los bins
-        assert len(bins) == len(labels) + 1, "Número de bins y etiquetas no coincide"
-        
-        df['price_pct_from_base'] = (df['price'] - base_price) / base_price * 100
-        df['price_bin'] = pd.cut(
-            df['price'], 
-            bins=bins, 
-            labels=labels,
-            include_lowest=True
-        )
-        
-        distribution = df.groupby('price_bin')['volume'].sum().to_dict()
         total = sum(distribution.values())
-        distribution_pct = {k: (v/total*100 if total > 0 else 0) for k, v in distribution.items()}
+        distribution_pct = {k: (v / total * 100 if total > 0 else 0) for k, v in distribution.items()}
         
         return {
             'absolute': distribution,
             'percentage': distribution_pct,
             'total_volume': total,
-            'bins_used': bins,
-            'labels_used': labels
+            'price_scale_used': self.price_scale
         }
 
     def calculate_market_imbalance(self, bid_data, ask_data):
-        """Calcula el desequilibrio entre compra y venta"""
+        """Calcula el desequilibrio entre compras (bids) y ventas (asks)."""
         total_bid = bid_data['total_volume']
         total_ask = ask_data['total_volume']
         total = total_bid + total_ask
@@ -152,11 +139,11 @@ class OrderBookAnalyzer:
         }
 
     def analyze_order_book(self, bids, asks):
-        """Analiza el libro de órdenes completo"""
-        # 1. Precio base y referencia
+        """Analiza el libro de órdenes y devuelve métricas clave."""
+        # 1. Precio base
         base_price = (asks[0][0] + bids[0][0]) / 2
         
-        # 2. Niveles significativos
+        # 2. Soportes y resistencias agrupados por escala
         bid_supports = self.find_significant_levels(bids, is_bid=True)
         ask_resistances = self.find_significant_levels(asks, is_bid=False)
         
@@ -167,7 +154,7 @@ class OrderBookAnalyzer:
         # 4. Desequilibrio del mercado
         market_imbalance = self.calculate_market_imbalance(bid_supports, ask_resistances)
         
-        # 5. Crear nuevo registro
+        # 5. Crear registro
         new_record = {
             'timestamp': datetime.now(),
             'base_price': base_price,
@@ -177,21 +164,25 @@ class OrderBookAnalyzer:
             'total_ask_volume': ask_resistances['total_volume'],
             'bid_volume_distribution': bid_distribution,
             'ask_volume_distribution': ask_distribution,
-            'market_imbalance': market_imbalance
+            'market_imbalance': market_imbalance,
+            'price_scale_used': self.price_scale
         }
         
-        # 6. Actualizar DataFrame
-        self.df = pd.concat([self.df, pd.DataFrame([new_record])], ignore_index=True)
+        # 6. Actualizar DataFrame histórico
+        if hasattr(self, 'df'):
+            self.df = pd.concat([self.df, pd.DataFrame([new_record])], ignore_index=True)
+        else:
+            self.df = pd.DataFrame([new_record])
         
-        ## 7. Guardar datos
-        if len(self.data_file)>0:
+        # 7. Guardar datos (si se especificó archivo)
+        if len(self.data_file) > 0:
             with open(self.data_file, 'wb') as f:
                 pickle.dump(self.df, f)
             
         return new_record
 
     def get_summary_stats(self, last_n=24):
-        """Devuelve estadísticas resumidas de los últimos N registros"""
+        """Devuelve un resumen de los últimos `n` registros."""
         if len(self.df) < 1:
             return None
             
@@ -205,36 +196,8 @@ class OrderBookAnalyzer:
             'price_change_pct': (last_records['base_price'].iloc[-1] / last_records['base_price'].iloc[0] - 1) * 100
         }
 
-    def analyze_summary(self, summary, n_hours):
-        print(f"\n=== Análisis de los últimos {n_hours} periodos ===")
-        
-        # 1. Tendencias del mercado
-        imbalance = summary['mean_imbalance']
-        direction = "COMPRADORA" if imbalance > 0 else "VENDEDORA"
-        print(f"\nTendencia del mercado: Presión {direction} ({abs(imbalance):.2f}% de desbalance promedio)")
-        
-        # 2. Niveles significativos persistentes
-        print("\nSoportes más consistentes:")
-        for s in sorted(summary['support_levels'], key=lambda x: -x['frequency'])[:3]:
-            print(f"- ${s['mean_price']:.2f}: {s['frequency']} apariciones")
-        
-        print("\nResistencias más consistentes:")
-        for r in sorted(summary['resistance_levels'], key=lambda x: -x['frequency'])[:3]:
-            print(f"- ${r['mean_price']:.2f}: {r['frequency']} apariciones")
-        
-        # 3. Relación precio/volumen
-        price_change = summary['price_change_pct']
-        vol_ratio = summary['mean_bid_dominance'] / (100 - summary['mean_bid_dominance'])
-        
-        if price_change > 0 and vol_ratio > 1.5:
-            print("\nConfirmación alcista: Precio subiendo con fuerte volumen comprador")
-        elif price_change < 0 and vol_ratio < 0.67:
-            print("\nConfirmación bajista: Precio bajando con fuerte volumen vendedor")
-        else:
-            print("\nDivergencia detectada entre precio y volumen")
-    
     def aggregate_levels(self, df, level_type):
-        """Agrega niveles a lo largo del tiempo"""
+        """Agrupa niveles históricos para identificar zonas clave."""
         all_levels = []
         for _, row in df.iterrows():
             for level in row[level_type]['levels']:
@@ -260,3 +223,32 @@ class OrderBookAnalyzer:
         aggregated = aggregated[aggregated['frequency'] > 1]  # Filtra niveles poco frecuentes
         
         return aggregated.sort_values('mean_volume_pct', ascending=False).to_dict('records')
+
+    def analyze_summary(self, summary, n_hours):
+        """Muestra un análisis interpretable del resumen."""
+        print(f"\n=== Análisis de los últimos {n_hours} horas ===")
+        
+        # 1. Tendencias
+        imbalance = summary['mean_imbalance']
+        direction = "COMPRADORA" if imbalance > 0 else "VENDEDORA"
+        print(f"\nTendencia del mercado: Presión {direction} ({abs(imbalance):.2f}% de desbalance)")
+        
+        # 2. Niveles clave
+        print("\nSoportes más consistentes:")
+        for s in sorted(summary['support_levels'], key=lambda x: -x['frequency'])[:3]:
+            print(f"- ${s['mean_price']:.0f}: {s['frequency']} apariciones (Vol: {s['mean_volume_pct']:.1f}%)")
+        
+        print("\nResistencias más consistentes:")
+        for r in sorted(summary['resistance_levels'], key=lambda x: -x['frequency'])[:3]:
+            print(f"- ${r['mean_price']:.0f}: {r['frequency']} apariciones (Vol: {r['mean_volume_pct']:.1f}%)")
+        
+        # 3. Relación precio/volumen
+        price_change = summary['price_change_pct']
+        vol_ratio = summary['mean_bid_dominance'] / (100 - summary['mean_bid_dominance'])
+        
+        if price_change > 0 and vol_ratio > 1.5:
+            print("\nConfirmación alcista: Precio subiendo con fuerte volumen comprador")
+        elif price_change < 0 and vol_ratio < 0.67:
+            print("\nConfirmación bajista: Precio bajando con fuerte volumen vendedor")
+        else:
+            print("\nDivergencia detectada entre precio y volumen")

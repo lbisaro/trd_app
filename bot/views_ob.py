@@ -81,6 +81,7 @@ def panel(request):
 
     # Generando series de S&R y Market Imbalance
     sr = []
+    mi = []
     miu = []
     mid = []
     for i,row in df.iterrows():
@@ -98,6 +99,8 @@ def panel(request):
                         'price': r['price'],
                         'pct': round((r['volume']/tot_vol)*100,0),
                         })
+        mi.append({'timestamp':row['timestamp'],
+               'mi':-round(row['market_imbalance']['imbalance_pct'],2)})
         if row['market_imbalance']['imbalance_pct']>0:
             miu.append({'timestamp':row['timestamp'],
                         'mi':-round(row['market_imbalance']['imbalance_pct'],2)})
@@ -139,7 +142,7 @@ def panel(request):
                     marker=dict(symbol='circle',
                                 size=sr['pct_adj'],
                                 color=sr['pct_adj'],
-                                colorscale="Aggrnyl",
+                                colorscale="ice",
                                 #showscale=True,
                                 line=dict(width=0,),
                                 ),
