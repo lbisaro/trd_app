@@ -7,6 +7,9 @@ import numpy as np
 #Version 1.0
 
 class OrderBookAnalyzer:
+    
+    volume_threshold_pct = 5.0
+
     def __init__(self, data_file='', price_scale=100):
         """
         Inicializa el analizador del libro de órdenes.
@@ -53,7 +56,12 @@ class OrderBookAnalyzer:
         else:
             return np.ceil(price / self.price_scale) * self.price_scale
 
-    def find_significant_levels(self, levels, is_bid=True, volume_threshold_pct=7.0):
+    def find_significant_levels(self, levels, is_bid=True, volume_threshold_pct=None):
+
+        if volume_threshold_pct is not None :
+            self.volume_threshold_pct = volume_threshold_pct
+        else:
+            volume_threshold_pct = self.volume_threshold_pct
         """
         Identifica niveles significativos agrupados por escala.
         
@@ -82,7 +90,7 @@ class OrderBookAnalyzer:
         grouped['volume_pct'] = (grouped['volume'] / total_volume) * 100
         
         # Filtrar por volumen significativo
-        significant_levels = grouped[grouped['volume_pct'] > volume_threshold_pct].copy()
+        significant_levels = grouped[grouped['volume_pct'] > self.volume_threshold_pct].copy()
         significant_levels.sort_values('price', ascending=not is_bid, inplace=True)
         
         # Calcular fuerza relativa (vs. volumen promedio)
@@ -94,7 +102,7 @@ class OrderBookAnalyzer:
             'total_volume': total_volume,
             'mean_volume_pct': mean_volume,
             'price_reference': df['price'].iloc[0],
-            'dynamic_threshold': volume_threshold_pct
+            'dynamic_threshold': self.volume_threshold_pct
         }
 
     def calculate_volume_distribution(self, levels, base_price):
