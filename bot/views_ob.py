@@ -146,7 +146,6 @@ def panel(request):
                         size=sr['pct_adj'],
                         color=sr['pct_adj'],
                         colorscale="Aggrnyl", #ice
-                        #showscale=True,
                         line=dict(width=0,),
                         ),
             legendgroup = '1',
@@ -186,7 +185,7 @@ def panel(request):
             x=mi["timestamp"], y=mi["ma"], name=f'MI MA', mode="lines",  
             line={'width': 0.75},  
             marker=dict(color='white',),
-            legendgroup = '1',
+            legendgroup = '2',
             hovertemplate="%{x}<br>%{y}<extra></extra>",
         ),
         row=2,
