@@ -189,14 +189,23 @@ class OrderBookAnalyzer:
             
         return new_record
 
-    def get_summary_stats(self, last_n=24):
+    def load_data(self, df):
+        self.df = df
+        
+    def get_summary_stats(self, last_n=48):
         """Devuelve un resumen de los últimos `n` registros."""
         if len(self.df) < 1:
             return None
             
         last_records = self.df.tail(last_n)
+        high_price = self.df['base_price'].max()
+        mean_price = self.df['base_price'].mean()
+        low_price = self.df['base_price'].min()
         
         return {
+            'high_price': high_price,
+            'mean_price': mean_price,
+            'low_price': low_price,
             'mean_imbalance': last_records['market_imbalance'].apply(lambda x: x['imbalance_pct']).mean(),
             'mean_bid_dominance': last_records['market_imbalance'].apply(lambda x: x['bid_dominance_pct']).mean(),
             'support_levels': self.aggregate_levels(last_records, 'bid_supports'),
@@ -234,7 +243,7 @@ class OrderBookAnalyzer:
 
     def analyze_summary(self, summary, n_hours):
         """Muestra un análisis interpretable del resumen."""
-        print(f"\n=== Análisis de los últimos {n_hours} horas ===")
+        print(f"\n=== Análisis de los últimos {n_hours/2} horas ===")
         
         # 1. Tendencias
         imbalance = summary['mean_imbalance']

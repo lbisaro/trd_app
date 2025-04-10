@@ -6,16 +6,23 @@ import os
 dcm = ThreadedDepthCacheManager()
 dcm.start()
 print(f'Conectando al Exchange....', flush=True)
-depth = {'bids': [], 'asks': []}
-execution_time = 180  # segundos
+depth = {'bids_spot': [], 'asks_spot': [], 'bids_futures': [], 'asks_futures': []}
+execution_time = 30  # segundos
 symbol = 'BTCUSDT'
 
-def handle_dcm_message(depth_cache):
+def handle_spot_message(depth_cache):
     global depth
-    depth['bids'] = depth_cache.get_bids()
-    depth['asks'] = depth_cache.get_asks()
+    depth['bids_spot'] = depth_cache.get_bids()
+    depth['asks_spot'] = depth_cache.get_asks()
 
-dcm_name = dcm.start_depth_cache(callback=handle_dcm_message, symbol=symbol)
+def handle_futures_message(depth_cache):
+    global depth
+    depth['bids_futures'] = depth_cache.get_bids()
+    depth['asks_futures'] = depth_cache.get_asks()
+    
+
+spot_name = dcm.start_depth_cache(callback=handle_spot_message, symbol=symbol)
+futures_name = dcm.start_futures_depth_socket(callback=handle_futures_message, symbol=symbol)
 
 start_time = time.time()
 
@@ -24,14 +31,17 @@ try:
         progress = int(((time.time() - start_time)/execution_time)*100)
         if progress>100:
             progress = 100
-        print(f'\rObteniendo Bids y Asks [{progress} %]',end='', flush=True)
+        lens = [len(depth['bids_spot']),len(depth['asks_spot']),len(depth['bids_futures']),len(depth['asks_futures'])]
+        print(f'\rObteniendo Bids y Asks [{progress} %] {lens}',end='', flush=True)
         time.sleep(0.1)  
 finally:
     # Esto se ejecutará cuando termine el tiempo o si hay una interrupción
-    dcm.stop_socket(dcm_name)
+    dcm.stop_socket(spot_name)
+    dcm.stop_socket(futures_name)
     dcm.stop()
     time.sleep(3)
-    print(f'\rObteniendo Bids y Asks [100 %]',flush=True)
+    lens = [len(depth['bids_spot']),len(depth['asks_spot']),len(depth['bids_futures']),len(depth['asks_futures'])]
+    print(f'\rObteniendo Bids y Asks [100 %] {lens}',flush=True)
 
     #Almacenando la data del depth en un archivo de log
     LOG_DIR = os.path.join('..','log')
@@ -44,5 +54,3 @@ finally:
     with open(DATA_FILE, "wb") as archivo:
         pickle.dump(depth, archivo)
 
-    
-    
