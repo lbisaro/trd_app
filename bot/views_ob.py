@@ -137,8 +137,8 @@ def panel(request):
     fig.add_trace(
         go.Scatter(
             x=dfr["timestamp"], y=dfr["high_price"], name=f'{symbol}', mode="lines",
-            line={'width': 0, 'color': 'gray'},
-            marker=dict(color='gray',),
+            line={'width': 0.5, 'color': '#fd7e14'},
+            marker=dict(color='#fd7e14',),
             hovertemplate="%{x}<br>%{y}<extra></extra>",
             showlegend=False,
         ),
@@ -150,12 +150,12 @@ def panel(request):
     fig.add_trace(
         go.Scatter(
             x=dfr["timestamp"], y=dfr["low_price"], name=f'{symbol}', mode="lines",
-            line={'width': 0, 'color': 'gray'},
-            marker=dict(color='gray',),
+            line={'width': 0.5, 'color': '#fd7e14'},
+            marker=dict(color='#fd7e14',),
             hovertemplate="%{x}<br>%{y}<extra></extra>",
             showlegend=False,
             fill='tonexty',  # Rellena hacia la siguiente traza en el eje y
-            fillcolor='rgba(100,100,100,0.75)', # Color de relleno blanco (opcional, por defecto es el color de la traza anterior)
+            fillcolor='rgba(253, 126, 20, 0.25)', # Color de relleno blanco (opcional, por defecto es el color de la traza anterior)
         ),
         row=1,
         col=1,
