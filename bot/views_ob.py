@@ -179,17 +179,17 @@ def panel(request):
     def get_bar_color(value):
         if value == 0:
             return '#333333'  # Gris oscuro para 0
-        elif value > 25:
-            return '#0ecb81'
-        elif value > 10:
-            return 'rgba(14, 203, 129, 0.75)'
-        elif value > 0:
-            return 'rgba(14, 203, 129, 0.5)'
         elif value < -25:
-            return '#f6465d'
+            return '#0ecb81'
         elif value < -10:
-            return 'rgba(246, 70, 93, 0.75)'
+            return 'rgba(14, 203, 129, 0.75)'
         elif value < 0:
+            return 'rgba(14, 203, 129, 0.5)'
+        elif value > 25:
+            return '#f6465d'
+        elif value > 10:
+            return 'rgba(246, 70, 93, 0.75)'
+        elif value > 0:
             return 'rgba(246, 70, 93, 0.5)'
         else: 
             return '#333333'
