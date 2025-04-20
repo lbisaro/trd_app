@@ -57,7 +57,7 @@ def panel(request):
     reporte.append(f"El precio {direction} un {abs(change):.2f}% en las últimas {qty_recs/2} horas")
 
     reporte.append(f"📈 Resumen {qty_recs/2}h | Δ {summary['price_change_pct']:+.2f}%")
-    reporte.append(f"⚖️ Desbalance: {summary['mean_imbalance']:+.1f}%")
+    reporte.append(f"⚖️ Desbalance: {-summary['mean_imbalance']:+.1f}%")
     #reporte.append(f"🛡️ Soportes clave: {len(summary['support_levels'])}")
     #reporte.append(f"🚧 Resistencias: {len(summary['resistance_levels'])}")
 
