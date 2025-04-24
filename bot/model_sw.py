@@ -10,6 +10,9 @@ import pickle
 import os
 from django.conf import settings
 
+from collections import deque
+import math
+from datetime import datetime
 
 from scripts.Bot_Core_utils import Order as BotUtilsOrder
 from bot.models import Symbol
@@ -96,42 +99,153 @@ class Sw(models.Model):
 
         return list(orders)
 
-    def get_asset_brief(self, symbol, orders, precio_actual):
-        #Calcular el stock total
-        stock_compra = sum(o['qty'] for o in orders if (o['side']==0))
-        stock_venta  = sum(o['qty'] for o in orders if (o['side']==1))
-        stock_total = stock_compra - stock_venta
+    def get_asset_brief(self, symbol, orders, current_price):
+        """
+        Analiza un historial de órdenes para un activo específico usando FIFO.
 
-        #Controlando Stock en cero aproximado
-        if stock_total * precio_actual < 0.1: # Stock menor a 0.10 USD
-            stock_total = 0.0
+        Calcula P&L realizado, estado de la posición abierta, P&L total,
+        precio de break-even global y distancia porcentual al precio promedio.
 
-        #Calcular el valor del stock actual
-        valor_compras = sum(o['qty']*o['price'] for o in orders if (o['side']==0 ))
-        valor_ventas = sum(o['qty']*o['price'] for o in orders if (o['side']==1 ))
-        stock_quote = valor_ventas - valor_compras
+        Args:
+            symbol: Objeto Symbol que representa el activo.
+            orders (list): Lista de diccionarios de órdenes.
+            current_price (float): Precio actual de mercado del activo.
 
-        #Calcular las ganancias y el valor actual total
-        precio_promedio = valor_compras/stock_compra
-        ganancias_realizadas = sum(o['qty']* (o['price'] - precio_promedio) for o in orders if (o['side']==1))
+        Returns:
+            dict: Un diccionario con las métricas clave del análisis:
+                  'symbol_name': Identificador del símbolo.
+                  'realized_pnl': Ganancia/Pérdida total de operaciones cerradas.
+                  'open_quantity': Cantidad actual en posesión.
+                  'open_cost_basis': Costo total de la posición abierta.
+                  'average_buy_price': Precio promedio de compra de la posición abierta.
+                  'current_market_value': Valor de mercado actual de la posición abierta.
+                  'unrealized_pnl': Ganancia/Pérdida no realizada de la posición abierta.
+                  'total_pnl': P&L realizado + P&L no realizado.
+                  'break_even_price': Precio de venta para P&L total = 0 (None si no hay pos. abierta).
+                  'price_distance_percent': Distancia % entre precio actual y avg_buy_price (None si no aplica).
+        """
 
-        
-        valor_stock = stock_total * precio_actual
-        total_stock_en_usd = stock_quote + valor_stock
+        # --- 1. Validación y Preparación Inicial ---
+        if not orders:
+            return {
+                'symbol_name': getattr(symbol, 'name', str(symbol)),
+                'realized_pnl': 0.0,
+                'open_quantity': 0.0,
+                'open_cost_basis': 0.0,
+                'average_buy_price': 0.0,
+                'current_market_value': 0.0,
+                'unrealized_pnl': 0.0,
+                'total_pnl': 0.0,
+                'break_even_price': None,
+                'price_distance_percent': None, # Nuevo campo
+            }
 
-        ganancias_y_stock = ganancias_realizadas + total_stock_en_usd
-        
-        distancia_ppc     = (precio_actual / precio_promedio - 1) * 100
+        # --- 2. Procesamiento FIFO ---
+        open_positions = deque()
+        realized_pnl = 0.0
+        open_quantity = 0.0
+        open_cost_basis = 0.0
+        float_tolerance = 1e-9 # Ajustar si se necesita más/menos precisión
+
+        for order in orders:
+            qty = order['qty']
+            price = order['price']
+            side = order['side']
+
+            if not isinstance(qty, (int, float)) or not isinstance(price, (int, float)) or qty <= 0 or price <= 0:
+                print(f"Advertencia: Orden inválida encontrada y omitida en {order.get('datetime', 'N/A')} "
+                      f"(qty={qty}, price={price}).")
+                continue
+
+            if side == 0:
+                open_positions.append((qty, price))
+                open_quantity += qty
+                open_cost_basis += qty * price
+            elif side == 1:
+                qty_to_sell = qty
+                sell_price = price
+                while qty_to_sell > float_tolerance and open_positions:
+                    buy_qty, buy_price = open_positions[0]
+                    match_qty = min(qty_to_sell, buy_qty)
+                    pnl_contribution = match_qty * (sell_price - buy_price)
+                    realized_pnl += pnl_contribution
+                    open_quantity -= match_qty
+                    open_cost_basis -= match_qty * buy_price
+                    if abs(buy_qty - match_qty) < float_tolerance:
+                        open_positions.popleft()
+                    else:
+                        open_positions[0] = (buy_qty - match_qty, buy_price)
+                    qty_to_sell -= match_qty
+                # Omitido el warning de venta corta por brevedad
+
+        # --- 3. Cálculos Finales ---
+        if open_quantity < float_tolerance:
+            open_quantity = 0.0
+            open_cost_basis = 0.0
+
+        average_buy_price = 0.0
+        current_market_value = 0.0
+        unrealized_pnl = 0.0
+        break_even_price = None
+        price_distance_percent = None # Inicializar como None
+
+        if open_quantity > float_tolerance:
+            # Calcular métricas estándar de posición abierta
+            average_buy_price = open_cost_basis / open_quantity
+            current_market_value = current_price * open_quantity
+            unrealized_pnl = current_market_value - open_cost_basis
+
+            # Calcular Break-Even Price
+            try:
+                break_even_price = (open_cost_basis - realized_pnl) / open_quantity
+            except ZeroDivisionError:
+                 break_even_price = None # Seguridad, aunque no debería pasar aquí
+
+            # *** NUEVO: Calcular Distancia Porcentual ***
+            # Solo si average_buy_price es válido (no cero)
+            if abs(average_buy_price) > float_tolerance:
+                 try:
+                    price_distance_percent = (current_price / average_buy_price - 1) * 100
+                 except ZeroDivisionError:
+                    price_distance_percent = None # Seguridad adicional
+            else:
+                # Si avg buy price es 0, la distancia % no es significativa
+                price_distance_percent = None
+
+        else:
+            # No hay posición abierta, los valores por defecto (0 o None) se mantienen
+            pass
+
+        total_pnl = realized_pnl + unrealized_pnl
+
+        # --- 4. Devolver Resultados ---
+        # Usar los decimales definidos en el objeto symbol
+        qty_decs_qty = getattr(symbol, 'qty_decs_qty', 8) # Default 8 si no existe
+        qty_decs_price = getattr(symbol, 'qty_decs_price', 5) # Default 5 si no existe
 
         return {
-            'stock_total': round(stock_total,symbol.qty_decs_qty),
+            'symbol_id': symbol.id,
+            'realized_pnl': round(realized_pnl, 2),
+            'open_quantity': round(open_quantity, qty_decs_qty),
+            'open_cost_basis': round(open_cost_basis, 2),
+            'average_buy_price': round(average_buy_price, qty_decs_price) if average_buy_price is not None else 0.0,
+            'current_price': round(current_price, qty_decs_price),
+            'current_market_value': round(current_market_value, 2),
+            'unrealized_pnl': round(unrealized_pnl, 2),
+            'total_pnl': round(total_pnl, 2),
+            'break_even_price': round(break_even_price, qty_decs_price) if break_even_price is not None else None,
+            'price_distance_percent': round(price_distance_percent, 2) if price_distance_percent is not None else None, # Redondeado a 2 decimales para %
+        }
+
+        return {
+            'stock_total': round(total_qty_open,symbol.qty_decs_qty),
             'valor_stock': round(valor_stock,2),
-            'precio_promedio': round(precio_promedio,symbol.qty_decs_price),
-            'valor_compras': round(valor_compras,2),
-            'stock_quote': round(stock_quote,2),
-            'total_stock_en_usd': round(total_stock_en_usd,2),
+            'precio_promedio': round(average_buy_price,symbol.qty_decs_price),
+            'valor_compras': round(total_cost_open,2),
+            'stock_quote': round(total_qty_open,2),
+            'total_stock_en_usd': round(valor_stock,2),
             'precio_actual': round(precio_actual,symbol.qty_decs_price),
-            'ganancias_realizadas':  round(ganancias_realizadas,2),
+            'ganancias_realizadas':  round(realized_pnl,2),
             'distancia_ppc': round(distancia_ppc,2),
             'ganancias_y_stock': round(ganancias_y_stock,2),
             'symbol_id': symbol.id,

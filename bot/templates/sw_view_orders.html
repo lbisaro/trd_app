@@ -57,11 +57,11 @@
                     <th class="text-end">
                         Stock<br/>{{symbol.base_asset}}</th>
                     <th class="text-end">
-                        Stock<br/>{{symbol.quote_asset}}</th>
+                        Ganancias Realizadas<br/>{{symbol.quote_asset}}</th>
                     <th class="text-end">
-                        Ganancias<br/>{{symbol.quote_asset}}</th>
+                        Ganancias No Realizadas<br/>{{symbol.quote_asset}}</th>
                     <th class="text-end">
-                        Stock + Ganancias<br/>{{symbol.quote_asset}}</th>
+                        Ganancias Total<br/>{{symbol.quote_asset}}</th>
                     <th class="text-end" title="">
                         Precio/Precio promedio-1<br/>(%)</th>
 
@@ -77,19 +77,21 @@
                     <td class="{{data.row_class}} text-end">{{data.price}}</td>
                     <td class="{{data.row_class}} text-end">
                         {% if data.side == 0 %}-{% endif %}{{data.valor_orden}}</td>
-                    <td class="text-end {% if data.precio_promedio > data.price %} text-danger {% else %} text-success {% endif %}">
-                        {{data.precio_promedio}}</td>
+                    <td class="text-end {% if data.average_buy_price > data.price %} text-danger {% else %} text-success {% endif %}">
+                        {% if data.average_buy_price != 0 %} {{data.average_buy_price}} {% else %}-{% endif %}</td>
                     <td class="text-end">
-                        {% if data.stock_total != 0 %} {{data.stock_total}} {% else %}-{% endif %}</td>
-                    <td class="text-end">{{data.total_stock_en_usd}}</td>
-                    <td class="text-end {% if data.ganancias_realizadas < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.ganancias_realizadas}}
+                        {% if data.open_quantity != 0 %} {{data.open_quantity}} {% else %}-{% endif %}</td>
+                    <td class="text-end {% if data.realized_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.realized_pnl}}
                     </td>
-                    <td class="text-end {% if data.ganancias_y_stock < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.ganancias_y_stock}}
+                    <td class="text-end {% if data.unrealized_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.unrealized_pnl}}
                     </td>
-                    <td class="text-end {% if data.distancia_ppc < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.distancia_ppc}} %
+                    <td class="text-end {% if data.total_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.total_pnl}}
+                    </td>
+                    <td class="text-end {% if data.price_distance_percent < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{data.price_distance_percent}} %
                     </td>
                 </tr>
                 {% endfor %}
@@ -98,7 +100,7 @@
     </div>
 
 </div>
-<input type="text" id="sw_id" vallue="{{sw_id}}">
+<input type="hidden" id="sw_id" value="{{sw_id}}">
 {% endblock %}
 
 {% block script %}

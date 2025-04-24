@@ -8,6 +8,7 @@ from plotly.subplots import make_subplots
 
 import numpy as np
 
+
 from bot.models import *
 from bot.model_sw import *
 
@@ -72,9 +73,9 @@ def view(request, sw_id):
     assets = sw.get_assets()
 
     assets_brief = sw.get_assets_brief()
-    assets_brief_total_stock_en_usd = round(sum(data['total_stock_en_usd'] for data in assets_brief.values()),2)
-    assets_brief_ganancias_realizadas   = round(sum(data['ganancias_realizadas'] for data in assets_brief.values()),2)
-    assets_brief_total = round(assets_brief_total_stock_en_usd + assets_brief_ganancias_realizadas,2)
+    total_realized_pnl = round(sum(data['realized_pnl'] for data in assets_brief.values()),2)
+    total_unrealized_pnl = round(sum(data['unrealized_pnl'] for data in assets_brief.values()),2)
+    total_total_pnl = round(sum(data['total_pnl'] for data in assets_brief.values()),2)
 
     #Configurando el estado del SW en la DDBB de acuerdo a la informacion registrada
     act_estado = sw.estado
@@ -103,9 +104,9 @@ def view(request, sw_id):
         'can_activar': sw.can_activar(),
         'can_delete': sw.can_delete(),
         'assets_brief': assets_brief,
-        'assets_brief_total_stock_en_usd': assets_brief_total_stock_en_usd,
-        'assets_brief_ganancias_realizadas':   assets_brief_ganancias_realizadas,
-        'assets_brief_total':   assets_brief_total,
+        'total_realized_pnl': total_realized_pnl,
+        'total_unrealized_pnl': total_unrealized_pnl,
+        'total_total_pnl': total_total_pnl,
     }
 
     return render(request, 'sw.html', data)
@@ -167,7 +168,7 @@ def view_orders(request, sw_id, symbol_id):
         full_order['row_class'] = 'text-danger' if full_order['side'] == 1 else 'text-success'
         
         full_orders.append(full_order)
-
+    
     #Obteniendo las velas del Symbol desde el inicio de las operaciones para adjuntar las ordenes
     exchInfo = Exchange(type='info',exchange='bnc',prms=None)
     klines = exchInfo.get_klines(symbol=symbol.base_asset+symbol.quote_asset,
@@ -190,16 +191,21 @@ def view_orders(request, sw_id, symbol_id):
        
     #Ajustando valores del dataframe para charts
     #ffill
-    df["stock_total"] = df["stock_total"].fillna(method="ffill")
-    df["stock_quote"] = df["stock_quote"].fillna(method="ffill")
-    df["precio_promedio"] = df["precio_promedio"].fillna(method="ffill")
-    df["ganancias_realizadas"] = df["ganancias_realizadas"].fillna(method="ffill")
-    #Calculos
-    df["valor_stock"] = df["stock_total"]*df['price'] 
-    df['total_stock_en_usd'] = df['stock_quote'] + df['valor_stock']
-    df['ganancias_y_stock'] = df['total_stock_en_usd'] + df['ganancias_realizadas']
+    df["open_quantity"] = df["open_quantity"].fillna(method="ffill")
+    df["average_buy_price"] = df["average_buy_price"].fillna(method="ffill")
+    df["realized_pnl"] = df["realized_pnl"].fillna(method="ffill")
+    df["unrealized_pnl"] = df["unrealized_pnl"].fillna(method="ffill")
+    df["total_pnl"] = df["total_pnl"].fillna(method="ffill")
 
-    df["distancia_ppc"] = (df["price"] / df['precio_promedio'] - 1 )*100
+    #ajustes
+    df['average_buy_price'] = np.where(df['average_buy_price']!=0,df['average_buy_price'],None)
+
+    #Calculos
+    df["valor_stock"] = df["open_quantity"]*df['price'] 
+    #df['total_stock_en_usd'] = df['stock_quote'] + df['valor_stock']
+    #df['ganancias_y_stock'] = df['total_stock_en_usd'] + df['ganancias_realizadas']
+    df["distancia_ppc"] = (df["price"] / df['average_buy_price'] - 1 )*100
+
     #Eventos
     df['buy']  = np.where((df['side']==0),df['price'],None)
     df['sell'] = np.where((df['side']==1),df['price'],None)
@@ -233,7 +239,7 @@ def view_orders(request, sw_id, symbol_id):
         )  
     fig.add_trace(
             go.Scatter(
-                x=df["datetime"], y=df["precio_promedio"], name=f'Precio Promedio', mode="lines",  
+                x=df["datetime"], y=df["average_buy_price"], name=f'Precio Promedio', mode="lines",  
                 line={'width': 1},  
                 marker=dict(color='#f8b935'),
                 legendgroup = '1',
@@ -257,7 +263,7 @@ def view_orders(request, sw_id, symbol_id):
 
     fig.add_trace(
             go.Scatter(
-                x=df["datetime"], y=df["ganancias_realizadas"], name=f'Ganancias', mode="lines",  
+                x=df["datetime"], y=df["realized_pnl"], name=f'Ganancias Realizadas', mode="lines",  
                 line={'width': 0.75},  
                 marker=dict(color='#0dcaf0'),
                 legendgroup = '2',
@@ -268,7 +274,7 @@ def view_orders(request, sw_id, symbol_id):
 
     fig.add_trace(
             go.Scatter(
-                x=df["datetime"], y=df["total_stock_en_usd"], name=f'Stock', mode="lines",  
+                x=df["datetime"], y=df["unrealized_pnl"], name=f'Ganancias No Realizadas', mode="lines",  
                 line={'width': 0.75},  
                 marker=dict(color='#fcd535'),
                 legendgroup = '2',
@@ -279,7 +285,7 @@ def view_orders(request, sw_id, symbol_id):
 
     fig.add_trace(
             go.Scatter(
-                x=df["datetime"], y=df["ganancias_y_stock"], name=f'Stock + Ganancias', mode="lines",  
+                x=df["datetime"], y=df["total_pnl"], name=f'Ganancias Totales', mode="lines",  
                 line={'width': 1},  
                 marker=dict(color='green'),
                 legendgroup = '2',
