@@ -208,6 +208,17 @@ def panel(request):
             showlegend=False,
         ), row=2, col=1,
     )
+    fig.add_trace(
+        go.Scatter(
+            x=dfr["timestamp"], y=dfr["mi_ma"], name='', mode="lines",
+            line={'width': 0.5, 'color': 'white'},
+            marker=dict(color='white',),
+            hovertemplate="%{x}<br>%{y}<extra></extra>",
+            showlegend=False,
+        ),
+        row=2,
+        col=1,
+    )
 
     # Adjust layout for subplots
     fig.update_layout(
