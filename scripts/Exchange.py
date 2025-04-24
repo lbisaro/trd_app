@@ -8,12 +8,19 @@ from scripts.functions import get_intervals
 
 from bot.model_kline import Symbol,Kline 
 
+import asyncio
+
 class Exchange():
 
     start_klines_str = '2022-08-01 00:00:00 UTC-3'
     exchange = ''
     
     def __init__(self,type,exchange,prms):
+
+        #Este thread se crea para evitar errores de conexion con Binance
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
         self.exchange = exchange
         try:
             if exchange == 'bnc':
