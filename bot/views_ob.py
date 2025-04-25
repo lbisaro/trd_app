@@ -117,7 +117,7 @@ def panel(request):
 
     dfr = pd.DataFrame(data)
     dfr['mi_ma'] = dfr['mi'].rolling(window=int(48/resample_periods)).mean()
-    dfr['mi_ema'] = dfr['mi'].ewm(span=int(24/resample_periods)).mean()
+    
     sr = pd.DataFrame(sr)
     sr_pct_max = sr['pct'].max()
     sr_pct_min = sr['pct'].min()
@@ -220,18 +220,7 @@ def panel(request):
         row=2,
         col=1,
     )
-    fig.add_trace(
-        go.Scatter(
-            x=dfr["timestamp"], y=dfr["mi_ema"], name='', mode="lines",
-            line={'width': 0.5, 'color': 'yellow'},
-            marker=dict(color='white',),
-            hovertemplate="%{x}<br>%{y}<extra></extra>",
-            showlegend=False,
-        ),
-        row=2,
-        col=1,
-    )
-
+    
     # Adjust layout for subplots
     fig.update_layout(
         font=dict(color="#ffffff", family="Helvetica"),
