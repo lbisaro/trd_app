@@ -71,8 +71,8 @@ def panel(request):
 
     
 
-    resample_periods = 2
-    resample_str = '1H'
+    resample_periods = 2*4
+    resample_str = '4H'
 
 
     df_indexado = df.set_index('timestamp')
@@ -122,6 +122,8 @@ def panel(request):
     sr_pct_max = sr['pct'].max()
     sr_pct_min = sr['pct'].min()
     sr['pct_adj'] = fn.map(sr['pct'],sr_pct_min,sr_pct_max,1,10)
+    print(dfr.columns)
+    print(sr.columns)
 
     # Creando Chart 
     chart_rows = 2
