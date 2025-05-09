@@ -53,6 +53,7 @@ def run():
             #Almacenando la data del depth en un archivo de log
             LOG_DIR = os.path.join(settings.BASE_DIR,'log')
             DATA_FILE = os.path.join(LOG_DIR, f"order_book_{symbol}.pkl")
+            print(DATA_FILE)
             print('Registrando datos en: ',DATA_FILE)
 
             # Crear directorio de logs si no existe
