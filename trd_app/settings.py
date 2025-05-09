@@ -161,8 +161,8 @@ USE_L10N = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR,'trd_app','static'),)
 
 CSRF_TRUSTED_ORIGINS = ['http://*','https://*',]
