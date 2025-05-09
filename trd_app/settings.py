@@ -30,7 +30,7 @@ SECRET_KEY = local.DJANGO_SK
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = local.DEBUG
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = local.DJANGO_ALLOWED_HOSTS
 
 
 
