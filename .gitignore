@@ -10,3 +10,4 @@ backtest/results/*.json
 *.pkl
 *.csv
 backtest/test_tlgrm.py
+app.sock
