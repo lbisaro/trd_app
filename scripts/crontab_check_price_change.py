@@ -61,14 +61,12 @@ def get_pivots_alert(df,threshold=3):
             if pivots[-1]>pivots[-3] and pivots[-3]>pivots[-2] and pivots[-2]>pivots[-4]:
                 limit_price = pivots[-4] + ((pivots[-3]-pivots[-4])/3)
                 if pivots[-2] > limit_price and abs(percent_change) >= threshold:
-                    print(f'OK: {percent_change}%')
                     return 1,percent_change
             
             #Minimos en aumento, con intencion
             elif pivots[-3]>pivots[-2] and pivots[-2]>pivots[-4]:
                 limit_price = pivots[-2] + 2 * ((pivots[-3]-pivots[-2])/3)
                 if pivots[-1] > limit_price and abs(percent_change) >= threshold:
-                    print(f'OK: {percent_change}%')
                     return 2,percent_change
 
     return 0,0
