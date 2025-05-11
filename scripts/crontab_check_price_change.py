@@ -217,7 +217,7 @@ def run():
                             f'\nHigh 20 dias: {hlc_1h_high}'+\
                             f'\nUmbral de alerta: {hlc_1h_umbral}'
 
-                if symbol not in data['alerts']:
+                if symbol not in data['log_alerts']:
                     log.alert(alert_str)
                     print(alert_str)
                     data['log_alerts'][symbol] = {'datetime':proc_start, 'alert_str': alert_str,}                
@@ -242,7 +242,7 @@ def run():
 
                 alert_str = f'Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
                             f'\n {trend_msg}\nPrecio: {price}\nCHG % {percent_change:.2f}'
-                if f'{symbol}.{pivots_alert}' not in data['scan_pivots']:
+                if f'{symbol}.{pivots_alert}' not in data['log_alerts']:
                     log.alert(alert_str)
                 data['log_alerts'][f'{symbol}.{pivots_alert}'] = {'datetime':proc_start, 'alert_str': alert_str,}
 
