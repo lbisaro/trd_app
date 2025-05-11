@@ -199,6 +199,7 @@ def run():
         high = symbol_info['high']
         low = symbol_info['low']
         
+        """
         if hlc_1h['date'].count()==DIAS_HL: #Verifica que esten completas las 20hs de velas
 
             #Buscando precios que esten por sobre el humbral superior al max-high de 20hs
@@ -209,7 +210,7 @@ def run():
 
             volatility = ((hlc_1h_high/hlc_1h_low)-1)*100
             
-            """
+            
             if price > hlc_1h_umbral:
                 alert_str = f'Price Change <b>{symbol}</b>'+\
                             f'\nPrecio: {price}'+\
@@ -220,30 +221,30 @@ def run():
                     log.alert(alert_str)
                     print(alert_str)
                     data['log_alerts'][symbol] = {'datetime':proc_start, 'alert_str': alert_str,}                
-            """
+        """
 
-            #Escaneando precios para detectar tendencia
-            prices = data['symbols'][symbol]['c_1m']
-            resample_period = 15
-            if len(prices)>resample_period*4:
-                df = ohlc_from_prices(prices,resample_period)
-                pivots_alert,percent_change = get_pivots_alert(df,threshold = volatility/10)
-                if pivots_alert>0:
-                    print(symbol,percent_change)
-                if pivots_alert > 0:
+        #Escaneando precios para detectar tendencia
+        prices = data['symbols'][symbol]['c_1m']
+        resample_period = 15
+        if len(prices)>resample_period*4:
+            df = ohlc_from_prices(prices,resample_period)
+            pivots_alert,percent_change = get_pivots_alert(df)
+            if pivots_alert>0:
+                print(symbol,percent_change)
+            if pivots_alert > 0:
 
-                    if pivots_alert == 2:
-                        trend_msg = 'Maximos en aumento'
-                    elif pivots_alert == 1:
-                        trend_msg = 'Minimos en aumento, con intencion'
-                    else:
-                        trend_msg = 'Motivo desconocido'
+                if pivots_alert == 2:
+                    trend_msg = 'Maximos en aumento'
+                elif pivots_alert == 1:
+                    trend_msg = 'Minimos en aumento, con intencion'
+                else:
+                    trend_msg = 'Motivo desconocido'
 
-                    alert_str = f'Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
-                                f'\n {trend_msg}\nPrecio: {price}\nCHG % {percent_change:.2f}'
-                    if f'{symbol}.{pivots_alert}' not in data['scan_pivots']:
-                        log.alert(alert_str)
-                    data['log_alerts'][f'{symbol}.{pivots_alert}'] = {'datetime':proc_start, 'alert_str': alert_str,}
+                alert_str = f'Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
+                            f'\n {trend_msg}\nPrecio: {price}\nCHG % {percent_change:.2f}'
+                if f'{symbol}.{pivots_alert}' not in data['scan_pivots']:
+                    log.alert(alert_str)
+                data['log_alerts'][f'{symbol}.{pivots_alert}'] = {'datetime':proc_start, 'alert_str': alert_str,}
 
             
 
