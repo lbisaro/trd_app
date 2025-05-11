@@ -45,7 +45,7 @@ def ohlc_from_prices(prices,resample_period):
     df = resample(df,periods=resample_period)
     return df
 
-def get_pivots_alert(df,threshold=3):
+def get_pivots_alert(df,threshold=2):
     df = zigzag(df)
     last_close = df['close'].iloc[-1]
 
