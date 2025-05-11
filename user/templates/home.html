@@ -13,28 +13,16 @@
         <h4>Duracion del proceso: {{proc_duration}} segundos</h4>
     </div>
 
-    {% if alerts %}
+    {% if log_alerts %}
     <div class="container">
         <h2>Alertas</h2>
         <ul>
-            {% for symbol,alert in alerts.items %}
+            {% for symbol,alert in log_alerts.items %}
             <li>{{symbol}}: {{alert|safe}}</li>
             {% endfor%}
         </ul>
     </div>
     {% endif %}
-
-    {% if scan_pivots %}
-    <div class="container">
-        <h2>Scan Pivots</h2>
-        <ul>
-            {% for symbol,sp in scan_pivots.items %}
-            <li>{{symbol}}: {{sp|safe}}</li>
-            {% endfor%}
-        </ul>
-    </div>
-    {% endif %}
-
 
     {% else %}
     <div class="container text-center">
