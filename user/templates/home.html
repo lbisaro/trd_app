@@ -18,7 +18,7 @@
         <h2>Alertas</h2>
         <ul>
             {% for symbol,alert in log_alerts.items %}
-            <li>{{symbol}}: {{alert.datetime|safe}} {{alert.alert_str|safe}}</li>
+            <li>{{symbol}}: {{alert.alert_str|safe}} <span class="text-secondary">{{alert.datetime|safe}}</span></li>
             {% endfor%}
         </ul>
     </div>
