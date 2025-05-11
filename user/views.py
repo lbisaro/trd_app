@@ -23,8 +23,7 @@ def home(request):
         qty_symbols = len(data['symbols'])
         updated = data['updated']
         proc_duration = data['proc_duration']
-        alerts = data['alerts']
-        scan_pivots = data['scan_pivots']
+        log_alerts = data['log_alerts']
         if 'c_1m' in data['symbols']['BTCUSDT']:
             qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
         else:
@@ -35,8 +34,7 @@ def home(request):
             'qty_c_1m': qty_c_1m ,
             'updated': updated ,
             'proc_duration': proc_duration ,
-            'alerts': alerts ,
-            'scan_pivots': scan_pivots ,
+            'log_alerts': log_alerts ,
         })
     except:
         return render(request, 'home.html')
