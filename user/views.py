@@ -23,7 +23,10 @@ def home(request):
         qty_symbols = len(data['symbols'])
         updated = data['updated']
         proc_duration = data['proc_duration']
-        log_alerts = data['log_alerts']
+        
+        log_alerts = list(data['log_alerts'].items())
+        log_alerts.reverse()
+
         if 'c_1m' in data['symbols']['BTCUSDT']:
             qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
         else:
