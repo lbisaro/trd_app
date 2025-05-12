@@ -226,8 +226,6 @@ def run():
         if len(prices)>resample_period*4:
             df = ohlc_from_prices(prices,resample_period)
             pivots_alert,percent_change = get_pivots_alert(df)
-            if pivots_alert>0:
-                print(symbol,percent_change)
             if pivots_alert > 0:
 
                 if pivots_alert == 2:
@@ -238,7 +236,8 @@ def run():
                     trend_msg = 'Motivo desconocido'
 
                 alert_str = f'Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
-                            f'\n {trend_msg}\nPrecio: {price}\nCHG % {percent_change:.2f}'
+                            f' {trend_msg}\nPrecio: {price}'+\
+                            f' CHG % {percent_change:.2f}'
                 if f'{symbol}.{pivots_alert}' not in data['log_alerts']:
                     log.alert(alert_str)
                 data['log_alerts'][f'{symbol}.{pivots_alert}'] = {'datetime':proc_start, 'alert_str': alert_str,}
