@@ -182,13 +182,12 @@ def run():
     print('proc_date:',proc_date)
     
     #Limpiando el log de alertas
-    hora_limite = proc_start - timedelta(hours=5)
-    nuevas_alertas = {}
-    for simbolo, alerta in data['log_alerts'].items():
-        fecha_alerta = alerta['datetime']
-        if fecha_alerta >= hora_limite:
-            nuevas_alertas[simbolo] = alerta
-    
+    time_limit = proc_start - timedelta(hours=1)
+    log_alerts = {}
+    for symbol, alert in data['log_alerts'].items():
+        if alert['datetime'] >= time_limit:
+            log_alerts[symbol] = alert
+    data['log_alerts'] = log_alerts
     
     #Analisis de los datos
     for symbol, symbol_info in data['symbols'].items():
