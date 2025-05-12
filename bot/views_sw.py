@@ -194,18 +194,17 @@ def view_orders(request, sw_id, symbol_id):
     df["open_quantity"] = df["open_quantity"].fillna(method="ffill")
     df["average_buy_price"] = df["average_buy_price"].fillna(method="ffill")
     df["realized_pnl"] = df["realized_pnl"].fillna(method="ffill")
-    df["unrealized_pnl"] = df["unrealized_pnl"].fillna(method="ffill")
-    df["total_pnl"] = df["total_pnl"].fillna(method="ffill")
+    
+    df["unrealized_pnl"] = df["open_quantity"] * df["price"] - df["open_quantity"] * df["average_buy_price"]
+    
+    df["total_pnl"] = df["realized_pnl"] + df["unrealized_pnl"]
 
     #ajustes
     df['average_buy_price'] = np.where(df['average_buy_price']!=0,df['average_buy_price'],None)
 
     #Calculos
     df["valor_stock"] = df["open_quantity"]*df['price'] 
-    #df['total_stock_en_usd'] = df['stock_quote'] + df['valor_stock']
-    #df['ganancias_y_stock'] = df['total_stock_en_usd'] + df['ganancias_realizadas']
-    df["distancia_ppc"] = (df["price"] / df['average_buy_price'] - 1 )*100
-
+    
     #Eventos
     df['buy']  = np.where((df['side']==0),df['price'],None)
     df['sell'] = np.where((df['side']==1),df['price'],None)
@@ -218,8 +217,8 @@ def view_orders(request, sw_id, symbol_id):
             pickle.dump(df, archivo)
 
     #Creando Chart 
-    chart_rows = 3
-    row_heights=[250,250,100]
+    chart_rows = 2
+    row_heights=[250,250]
     total_height = sum(row_heights)
 
     fig = make_subplots(rows=chart_rows, 
@@ -293,18 +292,6 @@ def view_orders(request, sw_id, symbol_id):
             row=2,
             col=1,
         )  
-
-    fig.add_trace(
-            go.Scatter(
-                x=df["datetime"], y=df["distancia_ppc"], name=f'Precio / P.Promedio', mode="lines",  
-                line={'width': 1},  
-                marker=dict(color='#fcd535'),
-                legendgroup = '3',
-            ),
-            row=3,
-            col=1,
-        )  
-
 
     # Adjust layout for subplots
     fig.update_layout(
