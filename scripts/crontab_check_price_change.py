@@ -47,11 +47,11 @@ def ohlc_from_prices(prices,resample_period):
 
 def get_pivots_alert(df,threshold=3):
     df = zigzag(df)
-    last_close = df['close'].iloc[-1]
+    last_high = df['high'].iloc[-1]
 
     #Detectando pivots 
     pivots = df[df['ZigZag']>0]['ZigZag'].tolist()
-    pivots.append(last_close)
+    pivots.append(last_high)
     if len(pivots) > 0:
         if len(pivots) > 3:
 
@@ -59,13 +59,13 @@ def get_pivots_alert(df,threshold=3):
             
             #Maximos y Minimos en aumento
             if pivots[-1]>pivots[-3] and pivots[-3]>pivots[-2] and pivots[-2]>pivots[-4]:
-                limit_price = pivots[-4] + ((pivots[-3]-pivots[-4])/3)
+                limit_price = pivots[-2] + ((pivots[-3]-pivots[-4])/3)
                 if pivots[-2] > limit_price and abs(percent_change) >= threshold:
                     return 1,percent_change
             
             #Minimos en aumento, con intencion
             elif pivots[-3]>pivots[-2] and pivots[-2]>pivots[-4]:
-                limit_price = pivots[-2] + 2 * ((pivots[-3]-pivots[-2])/3)
+                limit_price = pivots[-2] + ((pivots[-3]-pivots[-4])/3)
                 if pivots[-1] > limit_price and abs(percent_change) >= threshold:
                     return 2,percent_change
 
@@ -241,7 +241,11 @@ def run():
                             f'\n{trend_msg}'
                 if f'{symbol}.{pivots_alert}' not in data['log_alerts']:
                     log.alert(alert_str)
-                data['log_alerts'][f'{symbol}.{pivots_alert}'] = {'datetime':proc_start, 'alert_str': alert_str,}
+                data['log_alerts'][f'{symbol}.{pivots_alert}'] = {'datetime':proc_start, 
+                                                                  'alert_str': alert_str,
+                                                                  'price': price,
+                                                                  'percent_change': percent_change,
+                                                                  }
 
             
 
