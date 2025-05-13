@@ -235,8 +235,12 @@ def run():
                     trend_msg = 'Minimos en aumento, con intencion'
                 else:
                     trend_msg = 'Motivo desconocido'
-
-                alert_str = f'Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
+                """
+                🟢📈 LONG
+                🔴📉 SHORT
+                🔔 ALERTA
+                """
+                alert_str = f'🟢📈 <b>LONG</b>Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
                             f'\nPrecio: {price} CHG % {percent_change:.2f}'+\
                             f'\n{trend_msg}'
                 if f'{symbol}.{pivots_alert}' not in data['log_alerts']:
