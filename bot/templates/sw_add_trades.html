@@ -21,24 +21,20 @@
 
 {% block content %}
 <div class="container">
-    {% if symbol_id %}
-    <div class="row pt-2">
-        <div class="col-sm ">
-            <span class="text-secondary">Par:</span>  
-            <span class="col ">{{symbol}}</span>
-        </div>
-    </div>
-    {% else %}
+
     <div class="row pt-2">
         <div class="col-sm form-group">
             <label class="form-label" for="symbol_id">Par</label>  
             <select id="symbol_id" class="form-control" onchange="get_orders()">
-            <option value="">Seleccionar</option>
-            {% for s in symbols %}
-                <option value="{{s.id}}">{{s.base_asset}} {{s.quote_asset}}</option>
-            {% endfor %}
+            {% if symbol_id %}
+                <option value="{{symbol_id}}">{{symbol}}</option>
+            {% else %}
+                <option value="">Seleccionar</option>
+                {% for s in symbols %}
+                    <option value="{{s.id}}">{{s.base_asset}} {{s.quote_asset}}</option>
+                {% endfor %}
+            {% endif %}
             </select>
-            <span class="col ">{{symbol}}</span>
         </div>
     </div>
     <div class="row pt-2">
@@ -83,7 +79,6 @@
             </table>
         </div>
     </div>
-    {% endif %}
     <div class="row pt-4">
 
     </div>
@@ -97,7 +92,14 @@
 
 let now = new Date();
 let now_str = date_to_str(now);
-$(document).ready( $('#datetime').val(now_str))
+$(document).ready( function () {
+    $('#datetime').val(now_str)
+    
+    {% if symbol_id %}
+    get_orders();
+    {% endif %}
+
+});
 
 function adjust_decs(id)
 {
