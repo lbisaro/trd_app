@@ -228,7 +228,7 @@ class Sw(models.Model):
             'symbol_id': symbol.id,
             'realized_pnl': round(realized_pnl, 2),
             'open_quantity': round(open_quantity, qty_decs_qty),
-            'open_quantity_in_usd': round(open_quantity*price, 2),
+            'open_quantity_in_usd': round(open_quantity*current_price, 2),
             'open_cost_basis': round(open_cost_basis, 2),
             'average_buy_price': round(average_buy_price, qty_decs_price) if average_buy_price is not None else 0.0,
             'current_price': round(current_price, qty_decs_price),
