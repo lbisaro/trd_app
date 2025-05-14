@@ -70,7 +70,7 @@ def get_pivots_alert(df,threshold=1):
                     data['perc_retroceso'] = retroceso
                     data['sl1'] = pivots[-1]
                     data['tp1'] = pivots[-2] 
-                    data['in_price'] = (pivots[-1]+pivots[-2])/2 
+                    data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
         
     return data
 
