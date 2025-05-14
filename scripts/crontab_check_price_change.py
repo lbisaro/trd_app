@@ -214,18 +214,21 @@ def run():
             if alert['alert'] == 1:
 
                 trend_msg = alert['alert_str']
+                alert_alert = alert['alert']
+                alert_in_price = alert['in_price']
+                alert_tp1 = alert['tp1']
+                alert_sl1 = alert['sl1']
 
                 alert_str = f'🟢📈 <b>LONG</b> Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
-                            f'\nPrecio de entrada: {alert['in_price']}'+\
-                            f'\nTake Profit: {alert['tp1']}'+\
-                            f'\nStop Loss: {alert['sl1']}'+\
+                            f'\nPrecio de entrada: {alert_in_price}'+\
+                            f'\nTake Profit: {alert_tp1}'+\
+                            f'\nStop Loss: {alert_sl1}'+\
                             f'\n{trend_msg}'
-                if f'{symbol}.{alert['alert']}' not in data['log_alerts']:
+                if f'{symbol}.{alert_alert}' not in data['log_alerts']:
                     log.alert(alert_str)
-                    
                 data['datetime'] = proc_start
                 data['price'] = price
-                data['log_alerts'][f'{symbol}.{alert['alert']}'] = data
+                data['log_alerts'][f'{symbol}.{alert_alert}'] = data
 
             
 
