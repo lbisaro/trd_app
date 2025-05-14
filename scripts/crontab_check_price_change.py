@@ -226,10 +226,11 @@ def run():
                             f'\n{trend_msg}'
                 if f'{symbol}.{alert_alert}' not in data['log_alerts']:
                     log.alert(alert_str)
-                data['alert_str'] = alert_str
-                data['datetime'] = proc_start
-                data['price'] = price
-                data['log_alerts'][f'{symbol}.{alert_alert}'] = data
+
+                alert['alert_str'] = alert_str
+                alert['datetime'] = proc_start
+                alert['price'] = price
+                data['log_alerts'][f'{symbol}.{alert_alert}'] = alert
 
             
 
