@@ -45,31 +45,34 @@ def ohlc_from_prices(prices,resample_period):
     df = resample(df,periods=resample_period)
     return df
 
-def get_pivots_alert(df,threshold=3):
-    df = zigzag(df)
-    last_high = df['high'].iloc[-1]
+def get_pivots_alert(df,threshold=1):
+    
+    data = {}
+    data['alert'] = 0
+    periods = 200
+    if df['close'].count() >= periods:
+        df = zigzag(df)
+        
+        pivots = df[df['ZigZag']>0]['ZigZag'].tolist()
 
-    #Detectando pivots 
-    pivots = df[df['ZigZag']>0]['ZigZag'].tolist()
-    pivots.append(last_high)
-    if len(pivots) > 0:
-        if len(pivots) > 3:
+        #pivots.append(last_close)
+        if len(pivots) > 0:
+            if len(pivots) >= 3:
 
-            percent_change = ((pivots[-1]/pivots[-3])-1)*100
-            
-            #Maximos y Minimos en aumento
-            if pivots[-1]>pivots[-3] and pivots[-3]>pivots[-2] and pivots[-2]>pivots[-4]:
-                limit_price = pivots[-2] + ((pivots[-3]-pivots[-4])/3)
-                if pivots[-2] > limit_price and abs(percent_change) >= threshold:
-                    return 1,percent_change
-            
-            #Minimos en aumento, con intencion
-            elif pivots[-3]>pivots[-2] and pivots[-2]>pivots[-4]:
-                limit_price = pivots[-2] + ((pivots[-3]-pivots[-4])/3)
-                if pivots[-1] > limit_price and abs(percent_change) >= threshold:
-                    return 2,percent_change
-
-    return 0,0
+                #Minimos en aumento
+                if pivots[-2]>pivots[-1]*(1+threshold/100) and pivots[-1]>pivots[-3]*(1+threshold/100):
+                    amplitud = (pivots[-2]/pivots[-3]-1)*100
+                    retroceso = (pivots[-2]/pivots[-1]-1)*100
+                    data['alert'] = 1
+                    data['side'] = 1
+                    data['alert_str'] = 'Minimos en aumento, con intencion'
+                    data['perc_amplitud'] = amplitud
+                    data['perc_retroceso'] = retroceso
+                    data['sl1'] = pivots[-1]
+                    data['tp1'] = pivots[-2] 
+                    data['in_price'] = (pivots[-1]+pivots[-2])/2 
+        
+    return data
 
 def run():
     print('Ejecución del script crontab_check_24hs_change.py')
@@ -195,61 +198,34 @@ def run():
         price = symbol_info['price']
         high = symbol_info['high']
         low = symbol_info['low']
-        
-        """
-        if hlc_1h['date'].count()==DIAS_HL: #Verifica que esten completas las 20hs de velas
-
-            #Buscando precios que esten por sobre el humbral superior al max-high de 20hs
-            hlc_1h_high = hlc_1h['high'].max()
-            hlc_1h_low = hlc_1h['low'].min()
-            hlc_1h_band = hlc_1h_high-hlc_1h_low
-            hlc_1h_umbral = hlc_1h_high+hlc_1h_band/10
-
-            volatility = ((hlc_1h_high/hlc_1h_low)-1)*100
-            
-            
-            if price > hlc_1h_umbral:
-                alert_str = f'Price Change <b>{symbol}</b>'+\
-                            f'\nPrecio: {price}'+\
-                            f'\nHigh 20 dias: {hlc_1h_high}'+\
-                            f'\nUmbral de alerta: {hlc_1h_umbral}'
-
-                if symbol not in data['log_alerts']:
-                    log.alert(alert_str)
-                    print(alert_str)
-                    data['log_alerts'][symbol] = {'datetime':proc_start, 'alert_str': alert_str,}                
-        """
 
         #Escaneando precios para detectar tendencia
         prices = data['symbols'][symbol]['c_1m']
         resample_period = 15
         if len(prices)>resample_period*4:
             df = ohlc_from_prices(prices,resample_period)
-            pivots_alert,percent_change = get_pivots_alert(df)
+            alert = get_pivots_alert(df)
 
-            if pivots_alert > 0:
+            """
+            🟢📈 LONG
+            🔴📉 SHORT
+            🔔 ALERTA
+            """
+            if alert['alert'] == 1:
 
-                if pivots_alert == 2:
-                    trend_msg = 'Maximos en aumento'
-                elif pivots_alert == 1:
-                    trend_msg = 'Minimos en aumento, con intencion'
-                else:
-                    trend_msg = 'Motivo desconocido'
-                """
-                🟢📈 LONG
-                🔴📉 SHORT
-                🔔 ALERTA
-                """
+                trend_msg = alert['alert_str']
+
                 alert_str = f'🟢📈 <b>LONG</b> Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
-                            f'\nPrecio: {price} CHG % {percent_change:.2f}'+\
+                            f'\nPrecio de entrada: {alert['in_price']}'+\
+                            f'\nTake Profit: {alert['tp1']}'+\
+                            f'\nStop Loss: {alert['sl1']}'+\
                             f'\n{trend_msg}'
-                if f'{symbol}.{pivots_alert}' not in data['log_alerts']:
+                if f'{symbol}.{alert['alert']}' not in data['log_alerts']:
                     log.alert(alert_str)
-                data['log_alerts'][f'{symbol}.{pivots_alert}'] = {'datetime':proc_start, 
-                                                                  'alert_str': alert_str,
-                                                                  'price': price,
-                                                                  'percent_change': percent_change,
-                                                                  }
+                    
+                data['datetime'] = proc_start
+                data['price'] = price
+                data['log_alerts'][f'{symbol}.{alert['alert']}'] = data
 
             
 
