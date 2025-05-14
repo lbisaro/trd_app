@@ -240,7 +240,7 @@ def run():
                 🔴📉 SHORT
                 🔔 ALERTA
                 """
-                alert_str = f'🟢📈 <b>LONG</b>Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
+                alert_str = f'🟢📈 <b>LONG</b> Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
                             f'\nPrecio: {price} CHG % {percent_change:.2f}'+\
                             f'\n{trend_msg}'
                 if f'{symbol}.{pivots_alert}' not in data['log_alerts']:
