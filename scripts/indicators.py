@@ -331,8 +331,9 @@ def fibonacci_extension(fb_a, fb_b, fb_c, level):
 def polyfit_trend(df, column='close',window=7,fwd=1, prefix='pf'):
     df[f'{prefix}_pred'] = df[column].rolling(window).apply(lambda x: predict_price(x,fwd))
     df[f'{prefix}_change']  = ((df[f'{prefix}_pred']/df[f'{prefix}_pred'].shift(1))-1)*100
-    df[f'{prefix}_trend']   = np.where(df[f'{prefix}_change'].rolling(window=window).max() == df[f'{prefix}_change'], 1 , 0)
+    df[f'{prefix}_trend']   = np.where(df[f'{prefix}_change'].rolling(window=window).max() == df[f'{prefix}_change'], 1 , None)
     df[f'{prefix}_trend']   = np.where(df[f'{prefix}_change'].rolling(window=window).min() == df[f'{prefix}_change'], -1 , df[f'{prefix}_trend'])
+    df[f'{prefix}_trend'].ffill(inplace=True)
     return df
 
 
