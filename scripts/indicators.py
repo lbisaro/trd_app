@@ -607,8 +607,8 @@ def get_pivots_alert(df,threshold=1):
                 #                -2
                 #
                 #Pullback SHORT
-                if pivots[-3]>pivots[-4]*(1+threshold/100) and pivots[-4]>pivots[-1]*(1+threshold/100) and\
-                   pivots[-1]>pivots[-2]*(1+threshold/100):
+                if pivots[-2]<pivots[-1]*(1-threshold/100) and pivots[-1]<pivots[-4]*(1-threshold/100) and\
+                   pivots[-4]<pivots[-3]*(1-threshold/100):
                     data['alert'] = -1
                     data['side'] = -1
                     data['alert_str'] = 'Pullback SHORT'

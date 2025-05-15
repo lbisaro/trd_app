@@ -158,7 +158,7 @@ def run():
     print("Cantidad de symbols:",len(data['symbols']))
     
     #Limpiando el log de alertas
-    time_limit = proc_start - timedelta(hours=1)
+    time_limit = proc_start - timedelta(minutes=1)
     log_alerts = {}
     for symbol, alert in data['log_alerts'].items():
         if alert['datetime'] >= time_limit:
