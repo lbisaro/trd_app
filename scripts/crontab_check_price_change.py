@@ -57,10 +57,18 @@ def get_pivots_alert(df,threshold=1):
 
         #pivots.append(last_close)
         if len(pivots) > 0:
-            if len(pivots) >= 3:
+            if len(pivots) >= 5:
+
+                #Busqueda de pivots con el siguiente formato (1% o mas entre ) 
+                #                -2
+                #                    -1
+                #        -4
+                #            -3
+                #    -5              
 
                 #Minimos en aumento
-                if pivots[-2]>pivots[-1]*(1+threshold/100) and pivots[-1]>pivots[-3]*(1+threshold/100):
+                if pivots[-2]>pivots[-1]*(1+threshold/100) and pivots[-1]>pivots[-4]*(1+threshold/100) and\
+                   pivots[-4]>pivots[-3]*(1+threshold/100) and pivots[-3]>pivots[-5]*(1+threshold/100) :
                     amplitud = (pivots[-2]/pivots[-3]-1)*100
                     retroceso = (pivots[-2]/pivots[-1]-1)*100
                     data['alert'] = 1
@@ -224,13 +232,16 @@ def run():
                             f'\nTake Profit: {alert_tp1}'+\
                             f'\nStop Loss: {alert_sl1}'+\
                             f'\n{trend_msg}'
-                if f'{symbol}.{alert_alert}' not in data['log_alerts']:
+                alert_key = f'{symbol}.{alert_alert}'
+                if alert_key not in data['log_alerts']:
                     log.alert(alert_str)
+                    alert['start'] = proc_start
 
                 alert['alert_str'] = alert_str
                 alert['datetime'] = proc_start
                 alert['price'] = price
-                data['log_alerts'][f'{symbol}.{alert_alert}'] = alert
+
+                data['log_alerts'][alert_key] = alert
 
             
 
