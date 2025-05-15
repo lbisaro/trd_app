@@ -3,10 +3,13 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 
+import plotly.graph_objects as go
+
 import numpy as np
 
-from scripts.crontab_check_price_change import DATA_FILE, load_data_file
-from scripts.functions import ohlc_chart
+from scripts.crontab_check_price_change import DATA_FILE, load_data_file, Exchange
+from scripts.functions import ohlc_chart, get_intervals
+from scripts.indicators import zigzag
 from bot.models import *
 from bot.model_sw import *
 
@@ -37,3 +40,71 @@ def list(request):
         })
     except:
         return render(request, 'alerts_list.html',{})
+
+@login_required
+def analyze(request, key):
+    data = load_data_file(DATA_FILE)
+    log_alerts = data['log_alerts']
+    if key in log_alerts:
+        alert = log_alerts[key]
+        alert['class'] = 'success' if alert['side']>0 else 'danger'
+        alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
+
+        interval_id = '0m15'
+        velas = 15
+        ahora = datetime.now()
+        diferencia = alert['start'] - ahora
+        diferencia_en_velas = abs(int(diferencia.total_seconds() / 60 / velas))
+        limit = diferencia_en_velas + 100
+        print('limit',limit)
+        exchInfo = Exchange(type='info',exchange='bnc',prms=None)
+        klines = exchInfo.get_klines(alert['symbol'],interval_id,limit=limit)
+        klines = zigzag(klines)
+
+        events = pd.DataFrame(data=[
+                                    {
+                                     'datetime': alert['start'],
+                                     'in_price': alert['in_price'],
+                                     'sl1': alert['sl1'],
+                                     'tp1': alert['tp1'],
+                                    },
+                                    {'datetime': ahora,
+                                     'in_price': alert['in_price'],
+                                     'sl1': alert['sl1'],
+                                     'tp1': alert['tp1'],
+                                    },
+                                    ])
+        indicators = [
+                {'col': 'ZigZag','color': 'white','row': 1, 'mode':'lines',},
+            ]
+        fig = ohlc_chart(klines,show_volume=False,show_pnl=False, indicators=indicators)
+        fig.add_trace(
+            go.Scatter(
+                x=events["datetime"], y=events["in_price"], name="Entrada", mode="lines", showlegend=True, 
+                line={'width': 1}, marker=dict(color='white'),
+            ),row=1,col=1,
+        ) 
+        fig.add_trace(
+            go.Scatter(
+                x=events["datetime"], y=events["sl1"], name="Stop Loss", mode="lines", showlegend=True, 
+                line={'width': 1}, marker=dict(color='red'),
+            ),row=1,col=1,
+        ) 
+        fig.add_trace(
+            go.Scatter(
+                x=events["datetime"], y=events["tp1"], name="Take Profit", mode="lines", showlegend=True, 
+                line={'width': 1}, marker=dict(color='green'),
+            ),row=1,col=1,
+        ) 
+
+        
+        return render(request, 'alerts_analyze.html',{
+            'DATA_FILE': DATA_FILE ,
+            'key': key,
+            'alert': alert,
+            'chart': fig.to_html(config = {'scrollZoom': True, }),
+        })
+
+
+    else:
+        return render(request, 'alerts_analyze.html',{}) 

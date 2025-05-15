@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Alerta {{alert.name}}{% endblock %}
+{% block nav_title %}Alerta {{alert.name}}{% endblock %}
+
+{% load static %}
+
+{% block css %}
+<style>
+</style>
+{% endblock %}
+
+{% block content %}
+{% if DATA_FILE %}
+
+    <div class="container ">
+        <div class="d-flex flex-wrap">
+            <div class="box">
+                <div class="text-{{alert.class}}">
+                    {{alert.origin}} <b>{{alert.symbol}}</b> {{alert.timeframe}} 
+                </div>
+                <div>Entrada: {{alert.in_price}}</div>
+                <div>Take Profit: {{alert.tp1}}</div>
+                <div>Stop Loss: {{alert.sl1}}</div>
+                <div class="text-secondary">
+                    {{alert.start|date:"d/m/Y H:i"}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="chart" class="container">
+        {{chart|safe}}
+    </div>
+
+
+{% else %}
+    <div class="container text-center">
+        <h6>No existe registro de datos</h6>
+    </div>
+{% endif %}
+
+
+{% endblock %}
+
+
+{% block script %}
+<script>
+
+    function alert_view(key) {
+        let url = '/bot/alerts/view/'+key+'/'; 
+        window.location.href = url;
+    }
+
+</script>
+
+{% endblock %}

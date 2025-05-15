@@ -13,6 +13,7 @@
         box-sizing: border-box;
         border-radius: 5px;
         border: 1px solid #444;
+        cursor: pointer;
     }
 </style>
 {% endblock %}
@@ -28,12 +29,12 @@
     </div>
 
     {% if log_alerts %}
-    <div class="container small">
+    <div class="container small  pt-3">
         <h4 class="text-info">Alertas</h4>
         <div class="d-flex flex-wrap">
-            {% for symbol,alert in log_alerts.items %}
+            {% for k,alert in log_alerts.items %}
 
-            <div class="box" >
+            <div class="box" onclick="alert_view('{{k}}');">
                 <div class="text-{{alert.class}}">
                     {{alert.origin}} <b>{{alert.symbol}}</b> {{alert.timeframe}} 
                 </div>
@@ -59,3 +60,15 @@
 
 {% endblock %}
 
+
+{% block script %}
+<script>
+
+    function alert_view(key) {
+        let url = '/bot/alerts/analyze/'+key+'/'; 
+        window.location.href = url;
+    }
+
+</script>
+
+{% endblock %}

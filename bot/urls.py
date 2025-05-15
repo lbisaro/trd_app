@@ -64,6 +64,7 @@ urlpatterns = [
     path('sw/add_order/<int:sw_id>/',sw.add_order,name='sw_add_order'),
 
     path('alerts/list/',alerts.list,name='alerts_list'),
+    path('alerts/analyze/<str:key>/',alerts.analyze,name='alerts_analyze'),
 
     path('chart/get/<str:symbol>',vgt.chart_get,name='chart_get'),
     path('chart/',vgt.chart,name='chart'),
