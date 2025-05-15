@@ -581,27 +581,39 @@ def get_pivots_alert(df,threshold=1):
 
         #pivots.append(last_close)
         if len(pivots) > 0:
-            if len(pivots) >= 5:
+            if len(pivots) >= 4:
 
                 #Busqueda de pivots con el siguiente formato (1% o mas entre ) 
                 #                -2
                 #                    -1
                 #        -4
                 #            -3
-                #    -5              
 
-                #Minimos en aumento
+                #Pullback LONG
                 if pivots[-2]>pivots[-1]*(1+threshold/100) and pivots[-1]>pivots[-4]*(1+threshold/100) and\
-                   pivots[-4]>pivots[-3]*(1+threshold/100) and pivots[-3]>pivots[-5]*(1+threshold/100) :
-                    amplitud = (pivots[-2]/pivots[-3]-1)*100
-                    retroceso = (pivots[-2]/pivots[-1]-1)*100
+                   pivots[-4]>pivots[-3]*(1+threshold/100):
                     data['alert'] = 1
                     data['side'] = 1
-                    data['alert_str'] = 'Minimos en aumento'
-                    data['perc_amplitud'] = amplitud
-                    data['perc_retroceso'] = retroceso
+                    data['alert_str'] = 'ullback LONG'
                     data['sl1'] = pivots[-1]
                     data['tp1'] = pivots[-2] 
                     data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
-        
+
+
+                #Busqueda de pivots con el siguiente formato (1% o mas entre ) 
+                #            -3
+                #        -4
+                #                    -1
+                #                -2
+                #
+                #Pullback SHORT
+                if pivots[-3]>pivots[-4]*(1+threshold/100) and pivots[-4]>pivots[-1]*(1+threshold/100) and\
+                   pivots[-1]>pivots[-2]*(1+threshold/100):
+                    data['alert'] = -1
+                    data['side'] = -1
+                    data['alert_str'] = 'Pullback SHORT'
+                    data['sl1'] = pivots[-1]
+                    data['tp1'] = pivots[-2] 
+                    data['in_price'] = data['sl1']-((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
+
     return data

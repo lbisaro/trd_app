@@ -192,7 +192,7 @@ def run():
                 alert_tp1 = alert['tp1']
                 alert_sl1 = alert['sl1']
 
-                alert_str = f'🟢📈 <b>LONG</b> Scanner Scalper {resample_period}m <b>{symbol}</b>'+\
+                alert_str = f'🟢📈 <b>LONG</b> Scanner {resample_period}m <b>{symbol}</b>'+\
                             f'\nPrecio de entrada: {alert_in_price}'+\
                             f'\nTake Profit: {alert_tp1}'+\
                             f'\nStop Loss: {alert_sl1}'+\
@@ -208,7 +208,29 @@ def run():
 
                 data['log_alerts'][alert_key] = alert
 
-            
+            if alert['alert'] == -1:
+
+                trend_msg = alert['alert_str']
+                alert_alert = alert['alert']
+                alert_in_price = alert['in_price']
+                alert_tp1 = alert['tp1']
+                alert_sl1 = alert['sl1']
+
+                alert_str = f'🔴📉 <b>SHORT</b> Scanner {resample_period}m <b>{symbol}</b>'+\
+                            f'\nPrecio de entrada: {alert_in_price}'+\
+                            f'\nTake Profit: {alert_tp1}'+\
+                            f'\nStop Loss: {alert_sl1}'+\
+                            f'\n{trend_msg}'
+                alert_key = f'{symbol}.{alert_alert}'
+                if alert_key not in data['log_alerts']:
+                    log.alert(alert_str)
+                    alert['start'] = proc_start
+
+                alert['alert_str'] = alert_str
+                alert['datetime'] = proc_start
+                alert['price'] = price
+
+                data['log_alerts'][alert_key] = alert
 
 
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
