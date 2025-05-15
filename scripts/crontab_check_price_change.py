@@ -190,7 +190,6 @@ def run():
     if 'BTCUSDT' in data['symbols']:
         print("Cantidad de precios 1m:",len(data['symbols']['BTCUSDT']['c_1m']))
     print("Cantidad de symbols:",len(data['symbols']))
-    print('proc_date:',proc_date)
     
     #Limpiando el log de alertas
     time_limit = proc_start - timedelta(hours=1)
