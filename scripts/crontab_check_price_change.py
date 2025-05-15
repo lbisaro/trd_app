@@ -204,7 +204,8 @@ def run():
                     log.alert(alert_str)
                     sent_alerts += 1 
                     alert['start'] = proc_start
-
+                else:
+                    alert['start'] = data['log_alerts'][alert_key]['start']
                 alert['origin'] = trend_msg
                 alert['symbol'] = symbol
                 alert['timeframe'] = f'{resample_period}m'
@@ -232,6 +233,8 @@ def run():
                     log.alert(alert_str)
                     sent_alerts += 1 
                     alert['start'] = proc_start
+                else:
+                    alert['start'] = data['log_alerts'][alert_key]['start']
 
                 alert['origin'] = trend_msg
                 alert['symbol'] = symbol

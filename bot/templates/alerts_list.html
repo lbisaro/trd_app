@@ -19,8 +19,20 @@
             {% for symbol,alert in log_alerts.items %}
 
             <div class="alert alert-{{alert.class}}" role="alert">
-                <span>{{alert.alert_str|safe}}</span>
-                <small>{{alert.datetime|date:"d/m/Y H:i"}}</small>
+                <div class="row">
+                    <div class="col-8">
+                        {{alert.origin}} <b>{{alert.symbol}}</b> {{alert.timeframe}} 
+                    </div>
+                    <div class="col-4 text-end">
+                        <small>{{alert.start|date:"d/m/Y H:i"}}</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4">Precio de entrada: {{alert.in_price}}</div>
+                    <div class="col-4">Take Profit: {{alert.tp1}}</div>
+                    <div class="col-4">Stop Loss: {{alert.sl1}}</div>
+                </div>
+                
             </div>
             {% endfor%}
         </div>

@@ -18,12 +18,13 @@ def list(request):
         qty_symbols = len(data['symbols'])
         updated = data['updated']
         proc_duration = data['proc_duration']
+
         log_alerts = data['log_alerts']
         for k in log_alerts:
             log_alerts[k]['class'] = 'success' if log_alerts[k]['side']>0 else 'danger'
             print(log_alerts[k]['class'])
             for i in log_alerts[k]:
-                print(i,log_alerts[k][i])
+                print(i,' -> ',log_alerts[k][i])
 
         if 'c_1m' in data['symbols']['BTCUSDT']:
             qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
