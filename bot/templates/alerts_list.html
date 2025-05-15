@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Alertas{% endblock %}
+{% block nav_title %}Alertas{% endblock %}
+
+{% load static %}
+{% block content %}
+{% if DATA_FILE %}
+    <div class="container">
+        <h4>Symbols: {{qty_symbols}}</h4>
+        <h4>Precios 1m: {{qty_c_1m}} minutos</h4>
+        <h4>Ultima Actualizacion: {{updated}}</h4>
+        <h4>Duracion del proceso: {{proc_duration}} segundos</h4>
+    </div>
+
+    {% if log_alerts %}
+    <div class="container">
+        <h2>Alertas</h2>
+        <div class="container">
+            {% for symbol,alert in log_alerts.items %}
+
+            <div class="alert alert-{{alert.class}}" role="alert">
+                <span>{{alert.alert_str|safe}}</span>
+                <small>{{alert.datetime|date:"d/m/Y H:i"}}</small>
+            </div>
+            {% endfor%}
+        </div>
+    </div>
+    {% endif %}
+
+{% else %}
+    <div class="container text-center">
+        <h6>No existe registro de datos</h6>
+    </div>
+{% endif %}
+
+
+{% endblock %}
+

@@ -15,29 +15,7 @@ from django.conf import settings
 
 @login_required
 def home(request):
-
-
-    from scripts.crontab_check_price_change import DATA_FILE,load_data_file
-    try:
-        data = load_data_file(DATA_FILE)
-        qty_symbols = len(data['symbols'])
-        updated = data['updated']
-        proc_duration = data['proc_duration']
-        log_alerts = data['log_alerts']
-        if 'c_1m' in data['symbols']['BTCUSDT']:
-            qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
-        else:
-            qty_c_1m = 0
-        return render(request, 'home.html',{
-            'DATA_FILE': DATA_FILE ,
-            'qty_symbols': qty_symbols ,
-            'qty_c_1m': qty_c_1m ,
-            'updated': updated ,
-            'proc_duration': proc_duration ,
-            'log_alerts': log_alerts ,
-        })
-    except:
-        return render(request, 'home.html')
+    return render(request, 'home.html')
 
 def signup(request):
     json_rsp = {}

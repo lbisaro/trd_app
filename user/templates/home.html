@@ -5,34 +5,15 @@
 {% load static %}
 {% block content %}
 <h1>Home</h1>
-{% if DATA_FILE %}
-    <div class="container">
-        <h4>Symbols: {{qty_symbols}}</h4>
-        <h4>Precios 1m: {{qty_c_1m}} minutos</h4>
-        <h4>Ultima Actualizacion: {{updated}}</h4>
-        <h4>Duracion del proceso: {{proc_duration}} segundos</h4>
-    </div>
 
-    {% if log_alerts %}
-    <div class="container">
-        <h2>Alertas</h2>
-        <ul>
-            {% for symbol,alert in log_alerts.items %}
-            <li>{{alert.alert_str|safe}} <span class="text-secondary">{{alert.datetime|date:"d/m/Y H:i"}}</span></li>
-            {% endfor%}
-        </ul>
-    </div>
-    {% endif %}
+<div class="container text-center">
+    <img src="{% static 'images/login.png' %}" height="100"/>
+</div>
 
-    {% else %}
-    <div class="container text-center">
-        <img src="{% static 'images/login.png' %}" height="100"/>
-    </div>
-    {% endif %}
 
-    <div class="container">
-        <img style="width: 300px;" src="https://alternative.me/crypto/fear-and-greed-index.png" alt="Latest Crypto Fear & Greed Index" />
-    </div>
+<div class="container">
+    <img style="width: 300px;" src="https://alternative.me/crypto/fear-and-greed-index.png" alt="Latest Crypto Fear & Greed Index" />
+</div>
 
 {% endblock %}
 

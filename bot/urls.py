@@ -10,6 +10,7 @@ from bot import views_graph_test as vgt
 from bot import views_indicator as vi
 from bot import views_sw as sw
 from bot import views_ob as ob
+from bot import views_alerts as alerts
 
 urlpatterns = [
     path('estrategias/',ve.estrategias,name='estrategias'),
@@ -61,6 +62,8 @@ urlpatterns = [
     path('sw/delete/<int:sw_id>/',sw.delete,name='sw_delete'),
     path('sw/get_orders/<int:symbol_id>/',sw.get_orders,name='sw_get_orders'),
     path('sw/add_order/<int:sw_id>/',sw.add_order,name='sw_add_order'),
+
+    path('alerts/list/',alerts.list,name='alerts_list'),
 
     path('chart/get/<str:symbol>',vgt.chart_get,name='chart_get'),
     path('chart/',vgt.chart,name='chart'),

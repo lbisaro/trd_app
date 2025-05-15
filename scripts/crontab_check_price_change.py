@@ -205,6 +205,9 @@ def run():
                     sent_alerts += 1 
                     alert['start'] = proc_start
 
+                alert['origin'] = trend_msg
+                alert['symbol'] = symbol
+                alert['timeframe'] = f'{resample_period}m'
                 alert['alert_str'] = alert_str
                 alert['datetime'] = proc_start
                 alert['price'] = price
@@ -230,6 +233,9 @@ def run():
                     sent_alerts += 1 
                     alert['start'] = proc_start
 
+                alert['origin'] = trend_msg
+                alert['symbol'] = symbol
+                alert['timeframe'] = f'{resample_period}m'
                 alert['alert_str'] = alert_str
                 alert['datetime'] = proc_start
                 alert['price'] = price
