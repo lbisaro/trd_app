@@ -50,13 +50,20 @@ def analyze(request, key):
         alert['class'] = 'success' if alert['side']>0 else 'danger'
         alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
 
+        if alert['side'] == 1: #LONG
+            alert['tp1_perc'] = round((alert['tp1']/alert['in_price']-1)*100,2)
+            alert['sl1_perc'] = round((alert['sl1']/alert['in_price']-1)*100,2)
+        else:   #SHORT
+            alert['tp1_perc'] = round((alert['in_price']/alert['tp1']-1)*100,2)
+            alert['sl1_perc'] = round((alert['in_price']/alert['sl1']-1)*100,2)
+
         interval_id = '0m15'
         velas = 15
         ahora = datetime.now()
         diferencia = alert['start'] - ahora
         diferencia_en_velas = abs(int(diferencia.total_seconds() / 60 / velas))
         limit = diferencia_en_velas + 100
-        print('limit',limit)
+        
         exchInfo = Exchange(type='info',exchange='bnc',prms=None)
         klines = exchInfo.get_klines(alert['symbol'],interval_id,limit=limit)
         klines = zigzag(klines)
