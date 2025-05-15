@@ -588,10 +588,11 @@ def get_pivots_alert(df,threshold=1):
                 #                    -1
                 #        -4
                 #            -3
+                #   -5
 
                 #Pullback LONG
                 if pivots[-2]>pivots[-1]*(1+threshold/100) and pivots[-1]>pivots[-4]*(1+threshold/100) and\
-                   pivots[-4]>pivots[-3]*(1+threshold/100):
+                   pivots[-4]>pivots[-3]*(1+threshold/100) and pivots[-3]>pivots[-5]*(1+threshold/100):
                     data['alert'] = 1
                     data['side'] = 1
                     data['alert_str'] = 'ullback LONG'
@@ -601,6 +602,7 @@ def get_pivots_alert(df,threshold=1):
 
 
                 #Busqueda de pivots con el siguiente formato (1% o mas entre ) 
+                #   -5
                 #            -3
                 #        -4
                 #                    -1
@@ -608,7 +610,7 @@ def get_pivots_alert(df,threshold=1):
                 #
                 #Pullback SHORT
                 if pivots[-2]<pivots[-1]*(1-threshold/100) and pivots[-1]<pivots[-4]*(1-threshold/100) and\
-                   pivots[-4]<pivots[-3]*(1-threshold/100):
+                   pivots[-4]<pivots[-3]*(1-threshold/100) and pivots[-3]<pivots[-5]*(1-threshold/100):
                     data['alert'] = -1
                     data['side'] = -1
                     data['alert_str'] = 'Pullback SHORT'
