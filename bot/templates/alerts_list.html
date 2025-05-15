@@ -3,6 +3,20 @@
 {% block nav_title %}Alertas{% endblock %}
 
 {% load static %}
+
+{% block css %}
+<style>
+    .box {
+        width: 22%;  /* 1/3 del ancho */
+        padding: 0.5rem;
+        margin: 0.5rem;
+        box-sizing: border-box;
+        border-radius: 5px;
+        border: 1px solid #444;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 {% if DATA_FILE %}
     <div class="container">
@@ -15,24 +29,20 @@
     {% if log_alerts %}
     <div class="container">
         <h2>Alertas</h2>
-        <div class="container">
+        <div class="d-flex flex-wrap">
             {% for symbol,alert in log_alerts.items %}
 
-            <div class="alert alert-{{alert.class}}" role="alert">
-                <div class="row">
-                    <div class="col-8">
-                        {{alert.origin}} <b>{{alert.symbol}}</b> {{alert.timeframe}} 
-                    </div>
-                    <div class="col-4 text-end">
-                        <small>{{alert.start|date:"d/m/Y H:i"}}</small>
-                    </div>
+            <div class="box" >
+                <div class="text-{{alert.class}}">
+                    {{alert.origin}} <b>{{alert.symbol}}</b> {{alert.timeframe}} 
                 </div>
-                <div class="row">
-                    <div class="col-4">Precio de entrada: {{alert.in_price}}</div>
-                    <div class="col-4">Take Profit: {{alert.tp1}}</div>
-                    <div class="col-4">Stop Loss: {{alert.sl1}}</div>
-                </div>
+                <div>Entrada: {{alert.in_price}}</div>
+                <div>Take Profit: {{alert.tp1}}</div>
+                <div>Stop Loss: {{alert.sl1}}</div>
                 
+                <div class="text-end text-secondary">
+                    <small>{{alert.start|date:"d/m/Y H:i"}}</small>
+                </div>
             </div>
             {% endfor%}
         </div>
