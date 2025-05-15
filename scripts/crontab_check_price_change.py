@@ -166,6 +166,7 @@ def run():
     data['log_alerts'] = log_alerts
     
     #Analisis de los datos
+    sent_alerts = 0
     for symbol, symbol_info in data['symbols'].items():
         hlc_1h = symbol_info['hlc_1h']
         price = symbol_info['price']
@@ -200,6 +201,7 @@ def run():
                 alert_key = f'{symbol}.{alert_alert}'
                 if alert_key not in data['log_alerts']:
                     log.alert(alert_str)
+                    sent_alerts += 1 
                     alert['start'] = proc_start
 
                 alert['alert_str'] = alert_str
@@ -224,6 +226,7 @@ def run():
                 alert_key = f'{symbol}.{alert_alert}'
                 if alert_key not in data['log_alerts']:
                     log.alert(alert_str)
+                    sent_alerts += 1 
                     alert['start'] = proc_start
 
                 alert['alert_str'] = alert_str
@@ -231,6 +234,9 @@ def run():
                 alert['price'] = price
 
                 data['log_alerts'][alert_key] = alert
+
+        if sent_alerts > 5:
+            break
 
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
