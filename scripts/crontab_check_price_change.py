@@ -208,6 +208,7 @@ def run():
 
                 data['log_alerts'][alert_key] = alert
 
+            """
             if alert['alert'] == -1:
 
                 trend_msg = alert['alert_str']
@@ -231,7 +232,7 @@ def run():
                 alert['price'] = price
 
                 data['log_alerts'][alert_key] = alert
-
+            """
 
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
