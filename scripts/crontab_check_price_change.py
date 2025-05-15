@@ -176,8 +176,9 @@ def run():
         #Escaneando precios para detectar tendencia
         prices = data['symbols'][symbol]['c_1m']
         resample_period = 15
-        if len(prices)>resample_period*4:
+        if len(prices)>=250:
             df = ohlc_from_prices(prices,resample_period)
+            df = df[-250:]
             alert = get_pivots_alert(df)
 
             """
