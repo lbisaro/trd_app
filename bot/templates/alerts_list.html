@@ -20,15 +20,16 @@
 {% block content %}
 {% if DATA_FILE %}
     <div class="container">
-        <h4>Symbols: {{qty_symbols}}</h4>
-        <h4>Precios 1m: {{qty_c_1m}} minutos</h4>
-        <h4>Ultima Actualizacion: {{updated}}</h4>
-        <h4>Duracion del proceso: {{proc_duration}} segundos</h4>
+        <h4 class="text-info">Estado del archivo de datos</h4>
+        <div>Symbols: {{qty_symbols}}</div>
+        <div>Precios 1m: {{qty_c_1m}} minutos</div>
+        <div>Ultima Actualizacion: {{updated}}</div>
+        <div>Duracion del proceso: {{proc_duration}} segundos</div>
     </div>
 
     {% if log_alerts %}
-    <div class="container">
-        <h2>Alertas</h2>
+    <div class="container small">
+        <h4 class="text-info">Alertas</h4>
         <div class="d-flex flex-wrap">
             {% for symbol,alert in log_alerts.items %}
 
@@ -41,7 +42,7 @@
                 <div>Stop Loss: {{alert.sl1}}</div>
                 
                 <div class="text-end text-secondary">
-                    <small>{{alert.start|date:"d/m/Y H:i"}}</small>
+                    {{alert.start|date:"d/m/Y H:i"}}
                 </div>
             </div>
             {% endfor%}
