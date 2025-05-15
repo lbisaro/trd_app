@@ -581,7 +581,7 @@ def get_pivots_alert(df,threshold=1):
 
         #pivots.append(last_close)
         if len(pivots) > 0:
-            if len(pivots) >= 4:
+            if len(pivots) >= 5:
 
                 #Busqueda de pivots con el siguiente formato (1% o mas entre ) 
                 #                -2
@@ -595,7 +595,7 @@ def get_pivots_alert(df,threshold=1):
                    pivots[-4]>pivots[-3]*(1+threshold/100) and pivots[-3]>pivots[-5]*(1+threshold/100):
                     data['alert'] = 1
                     data['side'] = 1
-                    data['alert_str'] = 'ullback LONG'
+                    data['alert_str'] = 'Pullback LONG'
                     data['sl1'] = pivots[-1]
                     data['tp1'] = pivots[-2] 
                     data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
@@ -616,6 +616,6 @@ def get_pivots_alert(df,threshold=1):
                     data['alert_str'] = 'Pullback SHORT'
                     data['sl1'] = pivots[-1]
                     data['tp1'] = pivots[-2] 
-                    data['in_price'] = data['sl1']-((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
+                    data['in_price'] = data['sl1']-((data['sl1']-data['tp1'])/3) #Genera un ratio 2:1
 
     return data
