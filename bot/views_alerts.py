@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 import plotly.graph_objects as go
 
 import numpy as np
+from datetime import datetime, timedelta
 
 from scripts.crontab_check_price_change import DATA_FILE, load_data_file, Exchange
 from scripts.functions import ohlc_chart, get_intervals
@@ -75,7 +76,7 @@ def analyze(request, key):
                                      'sl1': alert['sl1'],
                                      'tp1': alert['tp1'],
                                     },
-                                    {'datetime': ahora,
+                                    {'datetime': ahora+timedelta(minutes=30),
                                      'in_price': alert['in_price'],
                                      'sl1': alert['sl1'],
                                      'tp1': alert['tp1'],
