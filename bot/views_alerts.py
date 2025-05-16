@@ -25,7 +25,14 @@ def list(request):
 
         log_alerts = data['log_alerts']
         for k in log_alerts:
-            log_alerts[k]['class'] = 'success' if log_alerts[k]['side']>0 else 'danger'
+            if log_alerts[k]['side'] == 1: #LONG
+                log_alerts[k]['class'] = 'success'
+                log_alerts[k]['tp1_perc'] = round((log_alerts[k]['tp1']/log_alerts[k]['in_price']-1)*100,2)
+                log_alerts[k]['sl1_perc'] = round((log_alerts[k]['sl1']/log_alerts[k]['in_price']-1)*100,2)
+            else:   #SHORT
+                log_alerts[k]['class'] = 'danger'
+                log_alerts[k]['tp1_perc'] = round((log_alerts[k]['in_price']/log_alerts[k]['tp1']-1)*100,2)
+                log_alerts[k]['sl1_perc'] = round((log_alerts[k]['in_price']/log_alerts[k]['sl1']-1)*100,2)
 
         if 'c_1m' in data['symbols']['BTCUSDT']:
             qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
@@ -48,13 +55,14 @@ def analyze(request, key):
     log_alerts = data['log_alerts']
     if key in log_alerts:
         alert = log_alerts[key]
-        alert['class'] = 'success' if alert['side']>0 else 'danger'
         alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
 
         if alert['side'] == 1: #LONG
+            alert['class'] = 'success'
             alert['tp1_perc'] = round((alert['tp1']/alert['in_price']-1)*100,2)
             alert['sl1_perc'] = round((alert['sl1']/alert['in_price']-1)*100,2)
         else:   #SHORT
+            alert['class'] = 'danger'
             alert['tp1_perc'] = round((alert['in_price']/alert['tp1']-1)*100,2)
             alert['sl1_perc'] = round((alert['in_price']/alert['sl1']-1)*100,2)
 

@@ -39,8 +39,8 @@
                     {{alert.origin}} <b>{{alert.symbol}}</b> {{alert.timeframe}} 
                 </div>
                 <div>Entrada: {{alert.in_price}}</div>
-                <div>Take Profit: {{alert.tp1}}</div>
-                <div>Stop Loss: {{alert.sl1}}</div>
+                <div>Take Profit: {{alert.tp1}} <span class="text-success">({{alert.tp1_perc}} %)</div>
+                <div>Stop Loss: {{alert.sl1}} <span class="text-danger">({{alert.sl1_perc}} %)</div>
                 
                 <div class="text-end text-secondary">
                     {{alert.start|date:"d/m/Y H:i"}}
