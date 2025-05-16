@@ -568,7 +568,7 @@ def HeikinAshi(df):
     df.drop(['HA_vela_indecision','HA_cuerpo','HA_sombra_inferior','HA_sombra_superior'], axis=1, inplace=True)
     return df
 
-def get_pivots_alert(df,threshold=1):
+def get_pivots_alert(df,threshold=1.5):
     
     def contar_decimales(f):
         s = str(f)
@@ -599,7 +599,7 @@ def get_pivots_alert(df,threshold=1):
                 #Pullback LONG
                 if pivots[-2]>pivots[-1] and pivots[-1]>pivots[-4] and\
                    pivots[-4]>pivots[-3] and pivots[-3]>pivots[-5] and\
-                   pivots[-2]>pivots[-4]*(1+threshold/100):
+                   pivots[-2]>pivots[-1]*(1+threshold/100):
                     data['alert'] = 1
                     data['side'] = 1
                     data['alert_str'] = 'Pullback LONG'
@@ -618,7 +618,7 @@ def get_pivots_alert(df,threshold=1):
                 #Pullback SHORT
                 if pivots[-2]<pivots[-1] and pivots[-1]<pivots[-4] and\
                    pivots[-4]<pivots[-3] and pivots[-3]<pivots[-5] and\
-                   pivots[-1]<pivots[-3]*(1-threshold/100):
+                   pivots[-1]<pivots[-2]*(1-threshold/100):
                     data['alert'] = -1
                     data['side'] = -1
                     data['alert_str'] = 'Pullback SHORT'
