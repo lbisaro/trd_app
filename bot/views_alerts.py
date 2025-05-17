@@ -70,7 +70,7 @@ def analyze(request, key):
         interval_id = '0m15'
         velas = 15
         ahora = datetime.now()
-        diferencia = alert['start'] - ahora
+        diferencia = ahora - alert['start']
         diferencia_en_velas = abs(int(diferencia.total_seconds() / 60 / velas))
         limit = diferencia_en_velas + KLINES_TO_GET_ALERTS
         
