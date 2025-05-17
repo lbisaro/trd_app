@@ -8,8 +8,9 @@ import plotly.graph_objects as go
 import numpy as np
 from datetime import datetime, timedelta
 
-from scripts.crontab_check_price_change import DATA_FILE, load_data_file, Exchange
-from scripts.functions import ohlc_chart, get_intervals
+from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, load_data_file
+from scripts.Exchange import Exchange
+from scripts.functions import ohlc_chart
 from scripts.indicators import zigzag
 from bot.models import *
 from bot.model_sw import *
@@ -71,7 +72,7 @@ def analyze(request, key):
         ahora = datetime.now()
         diferencia = alert['start'] - ahora
         diferencia_en_velas = abs(int(diferencia.total_seconds() / 60 / velas))
-        limit = diferencia_en_velas + 100
+        limit = diferencia_en_velas + KLINES_TO_GET_ALERTS
         
         exchInfo = Exchange(type='info',exchange='bnc',prms=None)
         klines = exchInfo.get_klines(alert['symbol'],interval_id,limit=limit)
