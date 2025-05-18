@@ -135,9 +135,6 @@ def run():
                 break
             df = df[-KLINES_TO_GET_ALERTS:]
             alert = get_pivots_alert(df)
-            if symbol == 'BTCUSDT':
-                print(df.head())
-                print(df.tail())
             if alert['alert'] != 0:
                 qty_check_alert += 1
             # 🟢📈 LONG
