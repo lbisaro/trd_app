@@ -118,19 +118,25 @@ def run():
 
     #Analisis de los datos para alertas
     sent_alerts = 0
+    qty_len_ok = 0
+    qty_df = 0
+    qty_check_alert = 0
     for symbol, symbol_info in data['symbols'].items():
 
         #Escaneando precios para detectar alertas
         prices = data['symbols'][symbol]['c_1m']
         resample_period = 15
         if len(data['datetime'])>=KLINES_TO_GET_ALERTS*resample_period:
+            qty_len_ok += 1
             try:
                 df = ohlc_from_prices(data['datetime'],prices,resample_period)
+                qty_df += 1
             except:
                 break
             df = df[-KLINES_TO_GET_ALERTS:]
             alert = get_pivots_alert(df)
-
+            if alert != 0:
+                qty_check_alert += 1
             # 🟢📈 LONG
             # 🔴📉 SHORT
             # 🔔 ALERTA
@@ -200,6 +206,10 @@ def run():
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
     
+
+    print('qty_len_ok:',qty_len_ok)
+    print('qty_df:',qty_df)
+    print('qty_check_alert:',qty_check_alert)
     # Guardar data actualizados en binario
     save_data_file(DATA_FILE, data)
 
