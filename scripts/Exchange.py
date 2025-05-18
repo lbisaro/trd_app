@@ -118,7 +118,25 @@ class Exchange():
         df['volume'] = df['volume'].astype('float')
         df['datetime'] = pd.to_datetime(df['datetime'], unit='ms') - pd.Timedelta('3 hr')
         return df
+    
         
+    def get_futures_klines(self,symbol,interval_id,start_str,end_str=None):
+        interval = get_intervals(interval_id,'binance')
+        klines = self.client.futures_historical_klines(symbol=symbol, 
+                                                   interval=interval,
+                                                   start_str=start_str,
+                                                   end_str=end_str)
+        df = pd.DataFrame(klines)
+        df = df.iloc[:, :6]
+        df.columns = ["datetime", "open", "high", "low", "close", "volume"]
+        df['open'] = df['open'].astype('float')
+        df['high'] = df['high'].astype('float')
+        df['low'] = df['low'].astype('float')
+        df['close'] = df['close'].astype('float')
+        df['volume'] = df['volume'].astype('float')
+        df['datetime'] = pd.to_datetime(df['datetime'], unit='ms') - pd.Timedelta('3 hr')
+        return df
+    
     def update_klines(self,symbol='ALL'):
         MINUTES_TO_GET = 1440 # 60 minutos * 24 horas = 1 dia
         res = {}

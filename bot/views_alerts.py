@@ -70,12 +70,10 @@ def analyze(request, key):
         interval_id = '0m15'
         velas = 15
         ahora = datetime.now()
-        diferencia = ahora - alert['start']
-        diferencia_en_velas = abs(int(diferencia.total_seconds() / 60 / velas))
-        limit = diferencia_en_velas + KLINES_TO_GET_ALERTS
+        start_str = (datetime.now() - timedelta(minutes=15*101)).strftime("%Y-%m-%d")
         
         exchInfo = Exchange(type='info',exchange='bnc',prms=None)
-        klines = exchInfo.get_klines(alert['symbol'],interval_id,limit=limit)
+        klines = exchInfo.get_futures_klines(alert['symbol'],interval_id,start_str=start_str)
         klines = zigzag(klines)
 
         events = pd.DataFrame(data=[
