@@ -16,7 +16,7 @@ LOG_DIR = os.path.join(settings.BASE_DIR,'log')
 DATA_FILE = os.path.join(LOG_DIR, "futures_alerts_data.pkl")
 USDT_PAIR = "USDT"
 LIMIT_MINUTES = 3000
-KLINES_TO_GET_ALERTS = 200
+KLINES_TO_GET_ALERTS = 100
 
 # Crear directorio de logs si no existe
 os.makedirs(LOG_DIR, exist_ok=True)
