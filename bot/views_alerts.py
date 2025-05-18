@@ -18,37 +18,43 @@ from bot.model_sw import *
 @login_required
 def list(request):
 
-    try:
-        data = load_data_file(DATA_FILE)
-        qty_symbols = len(data['symbols'])
-        updated = data['updated']
-        proc_duration = data['proc_duration']
+    data = load_data_file(DATA_FILE)
+    qty_symbols = len(data['symbols'])
+    updated = data['updated']
+    proc_duration = data['proc_duration']
+    log_alerts = data['log_alerts']
+    # Ordenar por 'start' descendente y reconstruir el diccionario
+    log_alerts = dict(
+        sorted(
+            log_alerts.items(),
+            key=lambda item: item[1]['start'],
+            reverse=True
+        )
+    )
+    
+    for k in log_alerts:
+        if log_alerts[k]['side'] == 1: #LONG
+            log_alerts[k]['class'] = 'success'
+            log_alerts[k]['tp1_perc'] = round((log_alerts[k]['tp1']/log_alerts[k]['in_price']-1)*100,2)
+            log_alerts[k]['sl1_perc'] = round((log_alerts[k]['sl1']/log_alerts[k]['in_price']-1)*100,2)
+        else:   #SHORT
+            log_alerts[k]['class'] = 'danger'
+            log_alerts[k]['tp1_perc'] = round((log_alerts[k]['in_price']/log_alerts[k]['tp1']-1)*100,2)
+            log_alerts[k]['sl1_perc'] = round((log_alerts[k]['in_price']/log_alerts[k]['sl1']-1)*100,2)
 
-        log_alerts = data['log_alerts']
-        for k in log_alerts:
-            if log_alerts[k]['side'] == 1: #LONG
-                log_alerts[k]['class'] = 'success'
-                log_alerts[k]['tp1_perc'] = round((log_alerts[k]['tp1']/log_alerts[k]['in_price']-1)*100,2)
-                log_alerts[k]['sl1_perc'] = round((log_alerts[k]['sl1']/log_alerts[k]['in_price']-1)*100,2)
-            else:   #SHORT
-                log_alerts[k]['class'] = 'danger'
-                log_alerts[k]['tp1_perc'] = round((log_alerts[k]['in_price']/log_alerts[k]['tp1']-1)*100,2)
-                log_alerts[k]['sl1_perc'] = round((log_alerts[k]['in_price']/log_alerts[k]['sl1']-1)*100,2)
+    if 'c_1m' in data['symbols']['BTCUSDT']:
+        qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
+    else:
+        qty_c_1m = 0
+    return render(request, 'alerts_list.html',{
+        'DATA_FILE': DATA_FILE ,
+        'qty_symbols': qty_symbols ,
+        'qty_c_1m': qty_c_1m ,
+        'updated': updated ,
+        'proc_duration': proc_duration ,
+        'log_alerts': log_alerts ,
+    })
 
-        if 'c_1m' in data['symbols']['BTCUSDT']:
-            qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
-        else:
-            qty_c_1m = 0
-        return render(request, 'alerts_list.html',{
-            'DATA_FILE': DATA_FILE ,
-            'qty_symbols': qty_symbols ,
-            'qty_c_1m': qty_c_1m ,
-            'updated': updated ,
-            'proc_duration': proc_duration ,
-            'log_alerts': log_alerts ,
-        })
-    except:
-        return render(request, 'alerts_list.html',{})
 
 @login_required
 def analyze(request, key):
