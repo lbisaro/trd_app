@@ -578,7 +578,7 @@ def get_pivots_alert(df,threshold=1.5):
 
     data = {}
     data['alert'] = 0
-    periods = 200
+    periods = 100
     if df['close'].count() >= periods:
         
         df = zigzag(df)
