@@ -135,7 +135,7 @@ def run():
                 break
             df = df[-KLINES_TO_GET_ALERTS:]
             alert = get_pivots_alert(df)
-            if alert != 0:
+            if alert['alert'] != 0:
                 qty_check_alert += 1
             # 🟢📈 LONG
             # 🔴📉 SHORT
