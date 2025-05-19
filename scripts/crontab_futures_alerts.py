@@ -7,6 +7,7 @@ import json
 import os
 from datetime import datetime, timedelta
 from scripts.app_log import app_log as Log
+from scripts.functions import get_intervals
 from django.conf import settings
 
 from scripts.indicators import resample
@@ -17,6 +18,7 @@ DATA_FILE = os.path.join(LOG_DIR, "futures_alerts_data.pkl")
 USDT_PAIR = "USDT"
 LIMIT_MINUTES = 3000
 KLINES_TO_GET_ALERTS = 100
+INTERVAL_ID = '0m15'
 
 # Crear directorio de logs si no existe
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -34,7 +36,7 @@ def load_data_file(ruta):
         print(f"Error al cargar el archivo {ruta}: {e}")
     return {}
 
-def ohlc_from_prices(datetime, prices,resample_period):
+def ohlc_from_prices(datetime, prices,interval_minutes):
 
     df = pd.DataFrame({'datetime': datetime, 'close': prices, })
     df['high'] = df['close']
@@ -42,8 +44,8 @@ def ohlc_from_prices(datetime, prices,resample_period):
     df['open'] = df['close'].shift() 
     df['volume'] = 0.0
     df.at[0,'open'] = prices[0]
-    if resample_period > 1:
-        df = resample(df,periods=resample_period)
+    if interval_minutes > 1:
+        df = resample(df,periods=interval_minutes)
     return df
 
 def run():
@@ -118,25 +120,21 @@ def run():
 
     #Analisis de los datos para alertas
     sent_alerts = 0
-    qty_len_ok = 0
-    qty_df = 0
-    qty_check_alert = 0
     for symbol, symbol_info in data['symbols'].items():
 
         #Escaneando precios para detectar alertas
         prices = data['symbols'][symbol]['c_1m']
-        resample_period = 15
-        if len(data['datetime'])>=KLINES_TO_GET_ALERTS*resample_period:
-            qty_len_ok += 1
+        interval_minutes = get_intervals(INTERVAL_ID,'minutes')
+        interval_binance = get_intervals(INTERVAL_ID,'binance')
+
+        if len(data['datetime'])>=KLINES_TO_GET_ALERTS*interval_minutes:
             try:
-                df = ohlc_from_prices(data['datetime'],prices,resample_period)
-                qty_df += 1
+                df = ohlc_from_prices(data['datetime'],prices,interval_minutes)
             except:
                 break
             df = df[-KLINES_TO_GET_ALERTS:]
             alert = get_pivots_alert(df)
-            if alert['alert'] != 0:
-                qty_check_alert += 1
+            
             # 🟢📈 LONG
             # 🔴📉 SHORT
             # 🔔 ALERTA
@@ -149,7 +147,7 @@ def run():
                 alert_tp1 = alert['tp1']
                 alert_sl1 = alert['sl1']
 
-                alert_str = f'🟢📈 <b>LONG</b> Scanner {resample_period}m <b>{symbol}</b>'+\
+                alert_str = f'🟢 <b>LONG</b> Scanner {interval_binance} <b>{symbol}</b>'+\
                             f'\nPrecio de entrada: {alert_in_price}'+\
                             f'\nTake Profit: {alert_tp1}'+\
                             f'\nStop Loss: {alert_sl1}'+\
@@ -163,7 +161,7 @@ def run():
                     alert['start'] = data['log_alerts'][alert_key]['start']
                 alert['origin'] = trend_msg
                 alert['symbol'] = symbol
-                alert['timeframe'] = f'{resample_period}m'
+                alert['timeframe'] = f'{interval_binance}'
                 alert['alert_str'] = alert_str
                 alert['datetime'] = proc_start
                 alert['price'] = price
@@ -178,7 +176,7 @@ def run():
                 alert_tp1 = alert['tp1']
                 alert_sl1 = alert['sl1']
 
-                alert_str = f'🔴📉 <b>SHORT</b> Scanner {resample_period}m <b>{symbol}</b>'+\
+                alert_str = f'🔴 <b>SHORT</b> Scanner {interval_binance} <b>{symbol}</b>'+\
                             f'\nPrecio de entrada: {alert_in_price}'+\
                             f'\nTake Profit: {alert_tp1}'+\
                             f'\nStop Loss: {alert_sl1}'+\
@@ -193,7 +191,7 @@ def run():
 
                 alert['origin'] = trend_msg
                 alert['symbol'] = symbol
-                alert['timeframe'] = f'{resample_period}m'
+                alert['timeframe'] = f'{interval_binance}'
                 alert['alert_str'] = alert_str
                 alert['datetime'] = proc_start
                 alert['price'] = price
@@ -207,9 +205,6 @@ def run():
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
     
 
-    print('qty_len_ok:',qty_len_ok)
-    print('qty_df:',qty_df)
-    print('qty_check_alert:',qty_check_alert)
     # Guardar data actualizados en binario
     save_data_file(DATA_FILE, data)
 

@@ -582,50 +582,46 @@ def get_pivots_alert(df,threshold=1.5):
     if df['close'].count() >= periods:
         
         df = zigzag(df)
-        
         pivots = df[df['ZigZag']>0]['ZigZag'].tolist()
+        if len(pivots) >= 5:
 
-        #pivots.append(last_close)
-        if len(pivots) > 0:
-            if len(pivots) >= 5:
+            #Busqueda de pivots con el siguiente formato (1% o mas entre ) 
+            #                -2
+            #                    -1
+            #        -4
+            #            -3
+            #   -5
 
-                #Busqueda de pivots con el siguiente formato (1% o mas entre ) 
-                #                -2
-                #                    -1
-                #        -4
-                #            -3
-                #   -5
-
-                #Pullback LONG
-                if pivots[-2]>pivots[-1] and pivots[-1]>pivots[-4] and\
-                   pivots[-4]>pivots[-3] and pivots[-3]>pivots[-5] and\
-                   pivots[-2]>pivots[-1]*(1+threshold/100):
-                    data['alert'] = 1
-                    data['side'] = 1
-                    data['alert_str'] = 'Pullback LONG'
-                    data['sl1'] = pivots[-1]
-                    data['tp1'] = pivots[-2] 
-                    data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
-                    decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
-                    data['in_price'] = round(data['in_price'],decs)
-                #Busqueda de pivots con el siguiente formato (1% o mas entre ) 
-                #   -5
-                #            -3
-                #        -4
-                #                    -1
-                #                -2
-                #
-                #Pullback SHORT
-                if pivots[-2]<pivots[-1] and pivots[-1]<pivots[-4] and\
-                   pivots[-4]<pivots[-3] and pivots[-3]<pivots[-5] and\
-                   pivots[-1]<pivots[-2]*(1-threshold/100):
-                    data['alert'] = -1
-                    data['side'] = -1
-                    data['alert_str'] = 'Pullback SHORT'
-                    data['sl1'] = pivots[-1]
-                    data['tp1'] = pivots[-2] 
-                    data['in_price'] = data['sl1']-((data['sl1']-data['tp1'])/3) #Genera un ratio 2:1
-                    decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
-                    data['in_price'] = round(data['in_price'],decs)
+            #Pullback LONG
+            if pivots[-2]>pivots[-1] and pivots[-1]>pivots[-4] and\
+                pivots[-4]>pivots[-3] and pivots[-3]>pivots[-5] and\
+                pivots[-2]>pivots[-1]*(1+threshold/100):
+                data['alert'] = 1
+                data['side'] = 1
+                data['alert_str'] = 'Pullback LONG'
+                data['sl1'] = pivots[-1]
+                data['tp1'] = pivots[-2] 
+                data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
+                decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
+                data['in_price'] = round(data['in_price'],decs)
+            #Busqueda de pivots con el siguiente formato (1% o mas entre ) 
+            #   -5
+            #            -3
+            #        -4
+            #                    -1
+            #                -2
+            #
+            #Pullback SHORT
+            if pivots[-2]<pivots[-1] and pivots[-1]<pivots[-4] and\
+                pivots[-4]<pivots[-3] and pivots[-3]<pivots[-5] and\
+                True: #pivots[-1]<pivots[-2]*(1-threshold/100):
+                data['alert'] = -1
+                data['side'] = -1
+                data['alert_str'] = 'Pullback SHORT'
+                data['sl1'] = pivots[-1]
+                data['tp1'] = pivots[-2] 
+                data['in_price'] = data['sl1']-((data['sl1']-data['tp1'])/3) #Genera un ratio 2:1
+                decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
+                data['in_price'] = round(data['in_price'],decs)
 
     return data
