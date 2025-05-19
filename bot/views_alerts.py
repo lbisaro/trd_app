@@ -8,10 +8,10 @@ import plotly.graph_objects as go
 import numpy as np
 from datetime import datetime, timedelta
 
-from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, load_data_file
+from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, INTERVAL_ID, load_data_file, ohlc_from_prices
 from scripts.Exchange import Exchange
-from scripts.functions import ohlc_chart
-from scripts.indicators import zigzag
+from scripts.functions import ohlc_chart, get_intervals
+from scripts.indicators import get_pivots_alert
 from bot.models import *
 from bot.model_sw import *
 
@@ -73,14 +73,21 @@ def analyze(request, key):
             alert['tp1_perc'] = round((alert['in_price']/alert['tp1']-1)*100,2)
             alert['sl1_perc'] = round((alert['in_price']/alert['sl1']-1)*100,2)
 
-        interval_id = '0m15'
-        velas = 15
+        interval_id = INTERVAL_ID
+        interval_minutes = get_intervals(interval_id,'minutes')
         ahora = datetime.now()
-        start_str = (datetime.now() - timedelta(minutes=15*101)).strftime("%Y-%m-%d")
-        
-        exchInfo = Exchange(type='info',exchange='bnc',prms=None)
-        klines = exchInfo.get_futures_klines(alert['symbol'],interval_id,start_str=start_str)
-        klines = zigzag(klines)
+
+        #td_minutes = int(interval_minutes*(KLINES_TO_GET_ALERTS+1))
+        #start_str = (datetime.now() - timedelta(minutes=td_minutes)).strftime("%Y-%m-%d")
+        #exchInfo = Exchange(type='info',exchange='bnc',prms=None)
+        #klines = exchInfo.get_futures_klines(alert['symbol'],interval_id,start_str=start_str)
+        #klines = zigzag(klines)
+        symbol = alert['symbol']
+        prices = data['symbols'][symbol]['c_1m']
+        interval_minutes = get_intervals(INTERVAL_ID,'minutes')
+        df = ohlc_from_prices(data['datetime'],prices,interval_minutes)
+        pivot_alert = get_pivots_alert(df)
+        klines = pivot_alert['df']
 
         events = pd.DataFrame(data=[
                                     {

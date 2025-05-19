@@ -624,4 +624,7 @@ def get_pivots_alert(df,threshold=1.5):
                 decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
                 data['in_price'] = round(data['in_price'],decs)
 
+            data['df'] = df
+            data['pivots'] = pivots
+
     return data
