@@ -614,7 +614,7 @@ def get_pivots_alert(df,threshold=1.5):
             #Pullback SHORT
             if pivots[-2]<pivots[-1] and pivots[-1]<pivots[-4] and\
                 pivots[-4]<pivots[-3] and pivots[-3]<pivots[-5] and\
-                pivots[-2]<pivots[-1]*(1-threshold/100):
+                pivots[-1]>pivots[-2]*(1+threshold/100):
                 data['alert'] = -1
                 data['side'] = -1
                 data['alert_str'] = 'Pullback SHORT'
