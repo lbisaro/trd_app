@@ -19,6 +19,7 @@ USDT_PAIR = "USDT"
 LIMIT_MINUTES = 3000
 KLINES_TO_GET_ALERTS = 100
 INTERVAL_ID = '0m15'
+ALERT_THRESHOLD = 1.5
 
 # Crear directorio de logs si no existe
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -133,7 +134,7 @@ def run():
             except:
                 break
             df = df[-KLINES_TO_GET_ALERTS:]
-            alert = get_pivots_alert(df)
+            alert = get_pivots_alert(df,threshold=ALERT_THRESHOLD)
             
             # 🟢📈 LONG
             # 🔴📉 SHORT

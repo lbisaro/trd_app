@@ -125,7 +125,7 @@ def analyze(request, key):
                                     },
                                     ])
         indicators = [
-                {'col': 'ZigZag','color': 'white','row': 1, 'mode':'lines',},
+                {'col': 'ZigZag','name': 'Pivots', 'color': 'white','row': 1, 'mode':'lines',},
             ]
         fig = ohlc_chart(klines,show_volume=False,show_pnl=False, indicators=indicators)
         fig.add_trace(
