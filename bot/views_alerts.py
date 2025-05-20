@@ -15,6 +15,29 @@ from scripts.indicators import get_pivots_alert
 from bot.models import *
 from bot.model_sw import *
 
+def alert_add_data(alert, actual_price):
+    alert['actual_price_legend'] = ''
+    alert['actual_price_class'] = ''  
+    if alert['side'] == 1: #LONG
+        alert['class'] = 'success'
+        alert['tp1_perc'] = round((alert['tp1']/alert['in_price']-1)*100,2)
+        alert['sl1_perc'] = round((alert['sl1']/alert['in_price']-1)*100,2)
+        alert['actual_price_perc'] = round((actual_price/alert['in_price']-1)*100,2)
+        if actual_price > alert['tp1'] or actual_price < alert['sl1']:
+            alert['actual_price_legend'] = 'Fuera de alcance'
+            alert['actual_price_class'] = 'text-danger'
+
+    else:   #SHORT
+        alert['class'] = 'danger'
+        alert['tp1_perc'] = round((alert['in_price']/alert['tp1']-1)*100,2)
+        alert['sl1_perc'] = round((alert['in_price']/alert['sl1']-1)*100,2)
+        alert['actual_price_perc'] = round((alert['in_price']/actual_price-1)*100,2)
+        if actual_price < alert['tp1'] or actual_price > alert['sl1']:
+            alert['actual_price_legend'] = 'Fuera de alcance'
+            alert['actual_price_class'] = 'text-danger'
+
+    return alert
+
 @login_required
 def list(request):
 
@@ -31,16 +54,18 @@ def list(request):
             reverse=True
         )
     )
+
+    exchInfo = Exchange(type='info', exchange='bnc', prms=None)
+
+    # Obtener prices actuales
+    actual_prices = {}
+    tickers = exchInfo.client.futures_symbol_ticker()
+    for ticker in tickers:
+        symbol = ticker['symbol']
+        actual_prices[symbol] = float(ticker['price'])
     
     for k in log_alerts:
-        if log_alerts[k]['side'] == 1: #LONG
-            log_alerts[k]['class'] = 'success'
-            log_alerts[k]['tp1_perc'] = round((log_alerts[k]['tp1']/log_alerts[k]['in_price']-1)*100,2)
-            log_alerts[k]['sl1_perc'] = round((log_alerts[k]['sl1']/log_alerts[k]['in_price']-1)*100,2)
-        else:   #SHORT
-            log_alerts[k]['class'] = 'danger'
-            log_alerts[k]['tp1_perc'] = round((log_alerts[k]['in_price']/log_alerts[k]['tp1']-1)*100,2)
-            log_alerts[k]['sl1_perc'] = round((log_alerts[k]['in_price']/log_alerts[k]['sl1']-1)*100,2)
+        log_alerts[k] = alert_add_data(log_alerts[k],actual_prices[log_alerts[k]['symbol']])
 
     if 'c_1m' in data['symbols']['BTCUSDT']:
         qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
@@ -63,7 +88,6 @@ def analyze(request, key):
     if key in log_alerts:
         alert = log_alerts[key]
 
-
         interval_id = INTERVAL_ID
         interval_minutes = get_intervals(interval_id,'minutes')
         ahora = datetime.now()
@@ -74,28 +98,8 @@ def analyze(request, key):
 
         alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
 
+        alert = alert_add_data(alert, actual_price=exchPrice)
         
-        alert['actual_price_legend'] = ''
-        alert['actual_price_class'] = ''  
-        if alert['side'] == 1: #LONG
-            alert['class'] = 'success'
-            alert['tp1_perc'] = round((alert['tp1']/alert['in_price']-1)*100,2)
-            alert['sl1_perc'] = round((alert['sl1']/alert['in_price']-1)*100,2)
-            alert['actual_price_perc'] = round((exchPrice/alert['in_price']-1)*100,2)
-            if exchPrice > alert['tp1'] or exchPrice < alert['sl1']:
-                alert['actual_price_legend'] = 'Fuera de alcance'
-                alert['actual_price_class'] = 'text-danger'
-
-        else:   #SHORT
-            alert['class'] = 'danger'
-            alert['tp1_perc'] = round((alert['in_price']/alert['tp1']-1)*100,2)
-            alert['sl1_perc'] = round((alert['in_price']/alert['sl1']-1)*100,2)
-            alert['actual_price_perc'] = round((alert['in_price']/exchPrice-1)*100,2)
-            if exchPrice < alert['tp1'] or exchPrice > alert['sl1']:
-                alert['actual_price_legend'] = 'Fuera de alcance'
-                alert['actual_price_class'] = 'text-danger'
-        
-        #klines = zigzag(klines)
         symbol = alert['symbol']
         prices = data['symbols'][symbol]['c_1m']
         interval_minutes = get_intervals(INTERVAL_ID,'minutes')

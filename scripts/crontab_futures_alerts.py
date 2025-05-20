@@ -56,11 +56,11 @@ def run():
     proc_start = (datetime.now().strftime('%Y-%m-%d %H:%M'))
     proc_start = datetime.strptime(proc_start, "%Y-%m-%d %H:%M")
     # Inicializar cliente
-    exch = Exchange(type='info', exchange='bnc', prms=None)
+    exchInfo = Exchange(type='info', exchange='bnc', prms=None)
 
     # Obtener prices actuales
     actual_prices = {}
-    tickers = exch.client.futures_symbol_ticker()
+    tickers = exchInfo.client.futures_symbol_ticker()
     for ticker in tickers:
         symbol = ticker['symbol']
         if symbol.endswith(USDT_PAIR):
