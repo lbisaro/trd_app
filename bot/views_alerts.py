@@ -62,6 +62,116 @@ def analyze(request, key):
     log_alerts = data['log_alerts']
     if key in log_alerts:
         alert = log_alerts[key]
+
+
+        interval_id = INTERVAL_ID
+        interval_minutes = get_intervals(interval_id,'minutes')
+        ahora = datetime.now()
+
+        exchInfo = Exchange(type='info',exchange='bnc',prms=None)
+        exchPrice = exchInfo.client.futures_mark_price(symbol=alert['symbol'])
+        exchPrice = float(exchPrice['markPrice'])
+
+        alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
+
+        
+        alert['actual_price_legend'] = ''
+        alert['actual_price_class'] = ''  
+        if alert['side'] == 1: #LONG
+            alert['class'] = 'success'
+            alert['tp1_perc'] = round((alert['tp1']/alert['in_price']-1)*100,2)
+            alert['sl1_perc'] = round((alert['sl1']/alert['in_price']-1)*100,2)
+            alert['actual_price_perc'] = round((exchPrice/alert['in_price']-1)*100,2)
+            if exchPrice > alert['tp1'] or exchPrice < alert['sl1']:
+                alert['actual_price_legend'] = 'Fuera de alcance'
+                alert['actual_price_class'] = 'text-danger'
+
+        else:   #SHORT
+            alert['class'] = 'danger'
+            alert['tp1_perc'] = round((alert['in_price']/alert['tp1']-1)*100,2)
+            alert['sl1_perc'] = round((alert['in_price']/alert['sl1']-1)*100,2)
+            alert['actual_price_perc'] = round((alert['in_price']/exchPrice-1)*100,2)
+            if exchPrice < alert['tp1'] or exchPrice > alert['sl1']:
+                alert['actual_price_legend'] = 'Fuera de alcance'
+                alert['actual_price_class'] = 'text-danger'
+        
+        #klines = zigzag(klines)
+        symbol = alert['symbol']
+        prices = data['symbols'][symbol]['c_1m']
+        interval_minutes = get_intervals(INTERVAL_ID,'minutes')
+        df = ohlc_from_prices(data['datetime'],prices,interval_minutes)
+        pivot_alert = get_pivots_alert(df)
+        klines = pivot_alert['df']
+    
+        events = pd.DataFrame(data=[
+                                    {
+                                     'datetime': alert['start'],
+                                     'in_price': alert['in_price'],
+                                     'sl1': alert['sl1'],
+                                     'tp1': alert['tp1'],
+                                     'actual_price': None,
+                                    },
+                                    {'datetime': ahora+timedelta(minutes=30),
+                                     'in_price': alert['in_price'],
+                                     'sl1': alert['sl1'],
+                                     'tp1': alert['tp1'],
+                                     'actual_price': None,
+                                    },
+                                    {'datetime': ahora,
+                                     'in_price': alert['in_price'],
+                                     'sl1': alert['sl1'],
+                                     'tp1': alert['tp1'],
+                                     'actual_price': exchPrice,
+                                    },
+                                    ])
+        indicators = [
+                {'col': 'ZigZag','color': 'white','row': 1, 'mode':'lines',},
+            ]
+        fig = ohlc_chart(klines,show_volume=False,show_pnl=False, indicators=indicators)
+        fig.add_trace(
+            go.Scatter(
+                x=events["datetime"], y=events["in_price"], name="Entrada", mode="lines", showlegend=True, 
+                line={'width': 1}, marker=dict(color='white'),
+            ),row=1,col=1,
+        ) 
+        fig.add_trace(
+            go.Scatter(
+                x=events["datetime"], y=events["sl1"], name="Stop Loss", mode="lines", showlegend=True, 
+                line={'width': 1}, marker=dict(color='red'),
+            ),row=1,col=1,
+        ) 
+        fig.add_trace(
+            go.Scatter(
+                x=events["datetime"], y=events["tp1"], name="Take Profit", mode="lines", showlegend=True, 
+                line={'width': 1}, marker=dict(color='green'),
+            ),row=1,col=1,
+        ) 
+        fig.add_trace(
+            go.Scatter(
+                x=events["datetime"], y=events["actual_price"], name="Precio Actual", mode="markers", showlegend=True, 
+                line={'width': 1}, marker=dict(color='yellow'),
+            ),row=1,col=1,
+        ) 
+
+        
+        return render(request, 'alerts_analyze.html',{
+            'DATA_FILE': DATA_FILE ,
+            'key': key,
+            'alert': alert,
+            'chart': fig.to_html(config = {'scrollZoom': True, }),
+        })
+
+
+    else:
+        return render(request, 'alerts_analyze.html',{}) 
+
+
+@login_required
+def execute(request, key):
+    data = load_data_file(DATA_FILE)
+    log_alerts = data['log_alerts']
+    if key in log_alerts:
+        alert = log_alerts[key]
         alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
 
         if alert['side'] == 1: #LONG

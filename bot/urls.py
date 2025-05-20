@@ -65,6 +65,7 @@ urlpatterns = [
 
     path('alerts/list/',alerts.list,name='alerts_list'),
     path('alerts/analyze/<str:key>/',alerts.analyze,name='alerts_analyze'),
+    path('alerts/execute/<str:key>/',alerts.execute,name='alerts_execute'),
 
     path('chart/get/<str:symbol>',vgt.chart_get,name='chart_get'),
     path('chart/',vgt.chart,name='chart'),
