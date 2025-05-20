@@ -22,19 +22,34 @@ def alert_add_data(alert, actual_price):
         alert['class'] = 'success'
         alert['tp1_perc'] = round((alert['tp1']/alert['in_price']-1)*100,2)
         alert['sl1_perc'] = round((alert['sl1']/alert['in_price']-1)*100,2)
-        alert['actual_price_perc'] = round((actual_price/alert['in_price']-1)*100,2)
+        actual_price_perc = round((actual_price/alert['in_price']-1)*100,2)
         if actual_price > alert['tp1'] or actual_price < alert['sl1']:
-            alert['actual_price_legend'] = 'Fuera de alcance'
+            alert['actual_price_legend'] = 'El precio actual se encuentra fuera de rango'
             alert['actual_price_class'] = 'text-danger'
+        elif abs(actual_price_perc) < alert['tp1_perc']/3:
+            alert['actual_price_legend'] = f'Precio a {actual_price_perc}% de la entrada'
+            alert['actual_price_class'] = 'text-success'
+        else:
+            alert['actual_price_legend'] = f'Precio a {actual_price_perc}% de la entrada'
+            alert['actual_price_class'] = 'text-warning'
 
     else:   #SHORT
         alert['class'] = 'danger'
         alert['tp1_perc'] = round((alert['in_price']/alert['tp1']-1)*100,2)
         alert['sl1_perc'] = round((alert['in_price']/alert['sl1']-1)*100,2)
-        alert['actual_price_perc'] = round((alert['in_price']/actual_price-1)*100,2)
+        actual_price_perc = round((alert['in_price']/actual_price-1)*100,2)
         if actual_price < alert['tp1'] or actual_price > alert['sl1']:
-            alert['actual_price_legend'] = 'Fuera de alcance'
+            alert['actual_price_legend'] = 'El precio actual se encuentra fuera de rango'
             alert['actual_price_class'] = 'text-danger'
+        elif abs(actual_price_perc) < alert['tp1_perc']/3:
+            alert['actual_price_legend'] = f'Precio a {actual_price_perc}% de la entrada'
+            alert['actual_price_class'] = 'text-success'
+        else:
+            alert['actual_price_legend'] = f'Precio a {actual_price_perc}% de la entrada'
+            alert['actual_price_class'] = 'text-warning'
+
+            
+        
 
     return alert
 

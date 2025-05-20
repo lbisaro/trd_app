@@ -39,17 +39,11 @@
                     {{alert.origin}} <b>{{alert.symbol}}</b> {{alert.timeframe}} 
                 </div>
                 <div>Entrada: {{alert.in_price}}</div>
-                <div>Precio actual: 
-                    {% if alert.actual_price_legend %}
-                    <b class="{{alert.actual_price_class}}">
-                        {{alert.actual_price_legend}}
-                    </b>
-                    {% else %}
-                    {{alert.actual_price_perc}}% 
-                    {% endif %}
-                </div>
-                <div>Take Profit: {{alert.tp1}} <span class="text-success">({{alert.tp1_perc}} %)</div>
-                <div>Stop Loss: {{alert.sl1}} <span class="text-danger">({{alert.sl1_perc}} %)</div>
+                <div>Take Profit: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</div>
+                <div>Stop Loss: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</div>
+                {% if alert.actual_price_legend %}
+                <div class="{{alert.actual_price_class}}">{{alert.actual_price_legend}}</div>
+                {% endif %}
                 
                 <div class="text-end text-secondary">
                     {{alert.start|date:"d/m/Y H:i"}}
