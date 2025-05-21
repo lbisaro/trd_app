@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, INTERVAL_ID, load_data_file, ohlc_from_prices
 from scripts.Exchange import Exchange
 from scripts.functions import ohlc_chart, get_intervals
-from scripts.indicators import get_pivots_alert
+from scripts.indicators import get_pivots_alert, supertrend
 from bot.models import *
 from bot.model_sw import *
 
@@ -121,6 +121,7 @@ def analyze(request, key):
         df = ohlc_from_prices(data['datetime'],prices,interval_minutes)
         pivot_alert = get_pivots_alert(df)
         klines = pivot_alert['df']
+        klines = supertrend(klines)
     
         events = pd.DataFrame(data=[
                                     {
@@ -145,6 +146,8 @@ def analyze(request, key):
                                     ])
         indicators = [
                 {'col': 'ZigZag','name': 'Pivots', 'color': 'white','row': 1, 'mode':'lines',},
+                {'col': 'st_high','name': 'Trend H','color': 'red','row': 1, 'mode':'markers',},
+                {'col': 'st_low' ,'name': 'Trend L','color': 'green','row': 1, 'mode':'markers',},
             ]
         fig = ohlc_chart(klines,show_volume=False,show_pnl=False, indicators=indicators)
         fig.add_trace(
