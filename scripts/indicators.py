@@ -582,47 +582,54 @@ def get_pivots_alert(df,threshold=1.5):
     if df['close'].count() >= periods:
         
         df = zigzag(df)
+        df = supertrend(df)
         pivots = df[df['ZigZag']>0]['ZigZag'].tolist()
-        if len(pivots) >= 5:
+        trend = -1 if df.iloc[-1]['st_high']>0 else 1
 
-            #Busqueda de pivots con el siguiente formato (1% o mas entre ) 
-            #                -2
-            #                    -1
-            #        -4
-            #            -3
-            #   -5
+        if len(pivots) >= 6: #Se busca que existan mas pivots de lo necesario par apoder formarlos
 
-            #Pullback LONG
-            if pivots[-2]>pivots[-1] and pivots[-1]>pivots[-4] and\
-                pivots[-4]>pivots[-3] and pivots[-3]>pivots[-5] and\
-                pivots[-2]>pivots[-1]*(1+threshold/100):
-                data['alert'] = 1
-                data['side'] = 1
-                data['alert_str'] = 'Pullback LONG'
-                data['sl1'] = pivots[-1]
-                data['tp1'] = pivots[-2] 
-                data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
-                decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
-                data['in_price'] = round(data['in_price'],decs)
-            #Busqueda de pivots con el siguiente formato (1% o mas entre ) 
-            #   -5
-            #            -3
-            #        -4
-            #                    -1
-            #                -2
-            #
-            #Pullback SHORT
-            if pivots[-2]<pivots[-1] and pivots[-1]<pivots[-4] and\
-                pivots[-4]<pivots[-3] and pivots[-3]<pivots[-5] and\
-                pivots[-1]>pivots[-2]*(1+threshold/100):
-                data['alert'] = -1
-                data['side'] = -1
-                data['alert_str'] = 'Pullback SHORT'
-                data['sl1'] = pivots[-1]
-                data['tp1'] = pivots[-2] 
-                data['in_price'] = data['sl1']-((data['sl1']-data['tp1'])/3) #Genera un ratio 2:1
-                decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
-                data['in_price'] = round(data['in_price'],decs)
+            if trend > 0:
+                #Alertas en LONG
+
+                #Busqueda de pivots con el siguiente formato 
+                #                -2
+                #                    -1
+                #        -4
+                #            -3
+                alert_type = 'Dual Pullback LONG'
+                valid_pivots_type = pivots[-2]>pivots[-1] and pivots[-1]>pivots[-4] and pivots[-4]>pivots[-3]
+                valid_pivot_delta = pivots[-2]>pivots[-1]*(1+threshold/100)
+                if valid_pivots_type and valid_pivot_delta:
+
+                    data['alert'] = 1
+                    data['side'] = 1
+                    data['alert_str'] = alert_type
+                    data['sl1'] = pivots[-1]
+                    data['tp1'] = pivots[-2] 
+                    data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
+                    decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
+                    data['in_price'] = round(data['in_price'],decs)
+            
+            else: 
+                # Alertas en SHORT
+
+                #Busqueda de pivots con el siguiente formato 
+                #            -3
+                #        -4
+                #                    -1
+                #                -2
+                alert_type = 'Dual Pullback SHORT'
+                valid_pivots_type = pivots[-2]<pivots[-1] and pivots[-1]<pivots[-4] and pivots[-4]<pivots[-3] 
+                valid_pivot_delta = pivots[-1]>pivots[-2]*(1+threshold/100)
+                if valid_pivots_type and valid_pivot_delta:
+                    data['alert'] = -1
+                    data['side'] = -1
+                    data['alert_str'] = alert_type
+                    data['sl1'] = pivots[-1]
+                    data['tp1'] = pivots[-2] 
+                    data['in_price'] = data['sl1']-((data['sl1']-data['tp1'])/3) #Genera un ratio 2:1
+                    decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
+                    data['in_price'] = round(data['in_price'],decs)
 
             data['df'] = df
             data['pivots'] = pivots

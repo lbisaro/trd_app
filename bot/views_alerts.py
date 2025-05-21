@@ -102,27 +102,22 @@ def analyze(request, key):
     log_alerts = data['log_alerts']
     if key in log_alerts:
         alert = log_alerts[key]
+        alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
 
         interval_id = INTERVAL_ID
         interval_minutes = get_intervals(interval_id,'minutes')
         ahora = datetime.now()
 
         exchInfo = Exchange(type='info',exchange='bnc',prms=None)
-        exchPrice = exchInfo.client.futures_mark_price(symbol=alert['symbol'])
-        exchPrice = float(exchPrice['markPrice'])
-
-        alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
+        start_str = (alert['start'] - timedelta(minutes=15*(KLINES_TO_GET_ALERTS+1))).strftime("%Y-%m-%d")
+        df = exchInfo.get_futures_klines(alert['symbol'],interval_id,start_str=start_str)
+        exchPrice = df.iloc[-1]['close']
 
         alert = alert_add_data(alert, actual_price=exchPrice)
         
-        symbol = alert['symbol']
-        prices = data['symbols'][symbol]['c_1m']
-        interval_minutes = get_intervals(INTERVAL_ID,'minutes')
-        df = ohlc_from_prices(data['datetime'],prices,interval_minutes)
         pivot_alert = get_pivots_alert(df)
         klines = pivot_alert['df']
-        klines = supertrend(klines)
-    
+            
         events = pd.DataFrame(data=[
                                     {
                                      'datetime': alert['start'],
