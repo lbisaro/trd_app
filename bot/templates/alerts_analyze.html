@@ -16,7 +16,11 @@
         <div class="d-flex flex-wrap">
             <div class="box">
                 <div class="text-{{alert.class}}">
-                    {{alert.origin}} <b>{{alert.symbol}}</b> {{alert.timeframe}} 
+                    {{alert.origin}} 
+                    <a href="https://www.binance.com/es-LA/futures/{{alert.symbol}}" class="text-{{alert.class}} text-decoration-none font-weight-bold" target="_bnc">
+                        {{alert.symbol}}
+                    </a> 
+                    {{alert.timeframe}} 
                 </div>
                 <div>Precio de entrada: {{alert.in_price}}</div>
                 <div>Take Profit: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
