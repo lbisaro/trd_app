@@ -13,29 +13,33 @@
 {% if DATA_FILE %}
 
     <div class="container ">
-        <div class="d-flex flex-wrap">
-            <div class="box">
-                <div class="text-{{alert.class}}">
-                    {{alert.origin}} 
-                    <a href="https://www.binance.com/es-LA/futures/{{alert.symbol}}" class="text-{{alert.class}} text-decoration-none font-weight-bold" target="_bnc">
-                        {{alert.symbol}}
-                    </a> 
-                    {{alert.timeframe}} 
-                </div>
-                <div>Precio de entrada: {{alert.in_price}}</div>
+        <div class="row">
+            <div class="col text-{{alert.class}}">
+                {{alert.origin}} -{{alert.symbol}}- {{alert.timeframe}}
+                
+            </div>
+            <div class="col text-end">
+                <a href="https://www.binance.com/es-LA/futures/{{alert.symbol}}" class="btn btn-primary" target="_bnc">
+                    <i class="bi bi-link"></i> Ver en Binance 
+                </a>  
+            </div>
+        </div>
+        <div class="row">
+                <div>Precio de entrada: {{alert.in_price}}</div>    
                 <div>Take Profit: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
                 <div>Stop Loss: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
                 {% if alert.actual_price_legend %}
                 <div class="{{alert.actual_price_class}}">{{alert.actual_price_legend}}</div>
                 {% endif %}
-                <div class="text-secondary">{{alert.start|date:"d/m/Y H:i"}}</div>
-            </div>
         </div>
     </div>
     <div id="chart" class="container">
         {{chart|safe}}
     </div>
-
+    <div class="container text-end text-bottom text-secondary">
+        Iniciada: {{alert.start|date:"d/m/Y H:i"}}
+    </div>
+    
 
 {% else %}
     <div class="container text-center">
