@@ -579,6 +579,7 @@ def get_pivots_alert(df,threshold=1.5):
     data = {}
     data['alert'] = 0
     periods = 100
+    price = df.iloc[-1]['close']
     if df['close'].count() >= periods:
         
         df = zigzag(df)
@@ -593,12 +594,15 @@ def get_pivots_alert(df,threshold=1.5):
 
                 #Busqueda de pivots con el siguiente formato 
                 #        -2
+                #                  Precio
                 #            -1
                 #    -3
                 alert_type = 'Dual Pullback LONG'
-                valid_pivots_type = pivots[-2]>pivots[-1] and pivots[-1]>pivots[-3] 
-                valid_pivot_delta = pivots[-2]>pivots[-1]*(1+threshold/100) and pivots[-1]>pivots[-3]*(1+(threshold/5)/100)
-                if valid_pivots_type and valid_pivot_delta:
+                last_pivots_diff = pivots[-2]-pivots[-1]
+                valid_pivots_type = pivots[-2] > pivots[-1] and pivots[-1] > pivots[-3] 
+                valid_price = price > pivots[-1] and price < pivots[-1]+last_pivots_diff/3
+                valid_pivot_delta = pivots[-2] > pivots[-1]*(1+threshold/100) and pivots[-1] > pivots[-3]*(1+(threshold/5)/100)
+                if valid_pivots_type and valid_price and valid_pivot_delta:
 
                     data['alert'] = 1
                     data['side'] = 1
@@ -615,11 +619,14 @@ def get_pivots_alert(df,threshold=1.5):
                 #Busqueda de pivots con el siguiente formato 
                 #    -3
                 #            -1
+                #                   Precio
                 #        -2
                 alert_type = 'Dual Pullback SHORT'
-                valid_pivots_type = pivots[-2]<pivots[-1] and pivots[-1]<pivots[-3] 
-                valid_pivot_delta = pivots[-1]>pivots[-2]*(1+threshold/100) and pivots[-3]>pivots[-1]*(1+(threshold/5)/100) 
-                if valid_pivots_type and valid_pivot_delta:
+                last_pivots_diff = pivots[-1]-pivots[-2]
+                valid_pivots_type = pivots[-2] < pivots[-1] and pivots[-1] < pivots[-3] 
+                valid_price = price < pivots[-1] and price > pivots[-1]-last_pivots_diff/3
+                valid_pivot_delta = pivots[-1] > pivots[-2]*(1+threshold/100) and pivots[-3] > pivots[-1]*(1+(threshold/5)/100) 
+                if valid_pivots_type and valid_price and valid_pivot_delta:
                     data['alert'] = -1
                     data['side'] = -1
                     data['alert_str'] = alert_type
