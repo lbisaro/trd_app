@@ -592,13 +592,12 @@ def get_pivots_alert(df,threshold=1.5):
                 #Alertas en LONG
 
                 #Busqueda de pivots con el siguiente formato 
-                #                -2
-                #                    -1
-                #        -4
-                #            -3
+                #        -2
+                #            -1
+                #    -3
                 alert_type = 'Dual Pullback LONG'
-                valid_pivots_type = pivots[-2]>pivots[-1] and pivots[-1]>pivots[-4] and pivots[-4]>pivots[-3]
-                valid_pivot_delta = pivots[-2]>pivots[-1]*(1+threshold/100)
+                valid_pivots_type = pivots[-2]>pivots[-1] and pivots[-1]>pivots[-3] 
+                valid_pivot_delta = pivots[-2]>pivots[-1]*(1+threshold/100) and pivots[-1]>pivots[-3]*(1+(threshold/5)/100)
                 if valid_pivots_type and valid_pivot_delta:
 
                     data['alert'] = 1
@@ -614,13 +613,12 @@ def get_pivots_alert(df,threshold=1.5):
                 # Alertas en SHORT
 
                 #Busqueda de pivots con el siguiente formato 
-                #            -3
-                #        -4
-                #                    -1
-                #                -2
+                #    -3
+                #            -1
+                #        -2
                 alert_type = 'Dual Pullback SHORT'
-                valid_pivots_type = pivots[-2]<pivots[-1] and pivots[-1]<pivots[-4] and pivots[-4]<pivots[-3] 
-                valid_pivot_delta = pivots[-1]>pivots[-2]*(1+threshold/100)
+                valid_pivots_type = pivots[-2]<pivots[-1] and pivots[-1]<pivots[-3] 
+                valid_pivot_delta = pivots[-1]>pivots[-2]*(1+threshold/100) and pivots[-3]>pivots[-1]*(1+(threshold/5)/100) 
                 if valid_pivots_type and valid_pivot_delta:
                     data['alert'] = -1
                     data['side'] = -1
