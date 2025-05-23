@@ -31,10 +31,10 @@
     {% if log_alerts %}
     <div class="container small  pt-3">
         <h4 class="text-info">Alertas</h4>
-        <div class="d-flex flex-wrap">
+        <div class="d-flex flex-wrap" id="alerts_ok">
             {% for k,alert in log_alerts.items %}
 
-            <div class="box" onclick="alert_view('{{k}}');">
+            <div class="box {{alert.status_class}}" onclick="alert_view('{{k}}');">
                 <div class="text-{{alert.class}}">
                     {{alert.origin}} <b>{{alert.symbol}}</b> {{alert.timeframe}} 
                 </div>
@@ -50,6 +50,8 @@
                 </div>
             </div>
             {% endfor%}
+        </div>
+        <div class="d-flex flex-wrap" id="alerts_out">
         </div>
     </div>
     {% endif %}
@@ -67,6 +69,11 @@
 {% block script %}
 <script>
 
+    $(document).ready( function () {
+        $('#alerts_ok .status_out').each( function () {
+            $(this).appendTo('#alerts_out');
+        });
+    });
     function alert_view(key) {
         let url = '/bot/alerts/analyze/'+key+'/'; 
         window.location.href = url;
