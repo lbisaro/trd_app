@@ -19,18 +19,24 @@
                 
             </div>
             <div class="col text-end">
-                <a href="https://www.binance.com/es-LA/futures/{{alert.symbol}}" class="btn btn-primary" target="_bnc">
+                <a href="https://www.binance.com/es-LA/futures/{{alert.symbol}}" class="btn btn-primary btn-sm" target="_bnc">
                     <i class="bi bi-link"></i> Ver en Binance 
                 </a>  
             </div>
         </div>
         <div class="row">
+            <div class="col-3">
                 <div>Precio de entrada: {{alert.in_price}}</div>    
                 <div>Take Profit: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
                 <div>Stop Loss: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
                 {% if alert.actual_price_legend %}
                 <div class="{{alert.actual_price_class}}">{{alert.actual_price_legend}}</div>
                 {% endif %}
+            </div>
+            <div class="col-9">
+                <h6 class="text-info">IA Prompt</h6>
+                {{ia_prompt}}
+            </div>
         </div>
     </div>
     <div id="chart" class="container">

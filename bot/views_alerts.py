@@ -5,6 +5,9 @@ from django.core.exceptions import ValidationError
 
 import plotly.graph_objects as go
 
+
+#import google.generativeai as genai
+
 import numpy as np
 from datetime import datetime, timedelta
 
@@ -12,6 +15,7 @@ from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, INTE
 from scripts.Exchange import Exchange
 from scripts.functions import ohlc_chart, get_intervals
 from scripts.indicators import get_pivots_alert, supertrend
+from local__config import DEEPSEEK_APK, GENAI_APK
 from bot.models import *
 from bot.model_sw import *
 
@@ -120,6 +124,10 @@ def analyze(request, key):
         exchPrice = df.iloc[-1]['close']
 
         alert = alert_add_data(alert, actual_price=exchPrice)
+
+        ia_prompt = get_ia_prompt(alert)
+        
+
         
         pivot_alert = get_pivots_alert(df)
         klines = pivot_alert['df']
@@ -180,6 +188,7 @@ def analyze(request, key):
         return render(request, 'alerts_analyze.html',{
             'DATA_FILE': DATA_FILE ,
             'key': key,
+            'ia_prompt': ia_prompt,
             'alert': alert,
             'chart': fig.to_html(config = {'scrollZoom': True, }),
         })
@@ -188,6 +197,81 @@ def analyze(request, key):
     else:
         return render(request, 'alerts_analyze.html',{}) 
 
+def get_ia_prompt(alert):
+    """
+    alert keys
+        alert
+            side
+        alert_str
+        sl1
+        tp1
+            in_price
+        df
+        pivots
+        start
+        origin
+        symbol
+            timeframe
+        datetime
+        price
+        name
+        actual_price_legend
+        actual_price_class
+        status_class
+        class
+        tp1_perc
+        sl1_perc
+    """
+    df = alert['df'][['high', 'low', 'close']]
+    df = df[-50:]
+    df_json = df.to_json(orient='records')
+    
+    str_side = 'LONG' if alert['side']>0 else 'SHORT'
+    trade_symbol = alert['symbol']
+    timeframe = alert['timeframe']
+    entry_price = str(alert['in_price'])
+    stop_loss = str(alert['sl1'])
+    take_profit = str(alert['tp1'])
+    price_data_json = df_json
+
+    prompt = f"""
+    Experto en trading.
+    Analizar probabilidad de éxito para un trade en Binance Futures {str_side}. Símbolo: {trade_symbol}, TF: {timeframe}.
+    EP: {entry_price}
+    SL: {stop_loss}
+    TP: {take_profit}
+
+    Considera: tests recientes TP/SL, RRR (Short: (EP-TP)/(SL-EP)), acción de precio, volatilidad reciente, tendencia general.
+    Evalúa la probabilidad de éxito de este trade y responde en la primera linea con un número entero del 1 al 10, donde 1 significa 'éxito altamente improbable' y 10 significa 'éxito altamente probable'.
+    En la segunda linea, responde con un testo que describa la probabilidad calculada en no mas de 100 caracteres
+    """
+    #genai.configure(api_key=GENAI_APK)
+    #model = genai.GenerativeModel('gemini-1.5-flash-latest') # o 'gemini-pro'
+    #response = model.generate_content(prompt)
+    
+    #respuesta_texto = response.text.strip()
+    #print(f"Respuesta cruda del modelo: '{respuesta_texto}'")
+
+    #es_viable = None
+    #if respuesta_texto.lower() == "true": # Hacemos la comparación insensible a mayúsculas/minúsculas
+    #    es_viable = True
+    #elif respuesta_texto.lower() == "false":
+    #    es_viable = False
+    #else:
+    #    print(f"Respuesta inesperada del modelo: '{respuesta_texto}'. No se pudo convertir a booleano.")
+    #    # Aquí podrías decidir qué hacer, por ejemplo, asumir False o reintentar.
+    #    # También puedes revisar response.prompt_feedback si la respuesta no es la esperada
+    #    if response.prompt_feedback:
+    #        print(f"Feedback del prompt: {response.prompt_feedback}")
+#
+#
+    #if es_viable is not None:
+    #    print(f"\n¿El trade es viable según Gemini?: {es_viable}")
+    #else:
+    #    print("\nNo se pudo determinar la viabilidad del trade a partir de la respuesta del modelo.")
+#
+    #return response
+    return prompt
 
 @login_required
 def execute(request, key):
