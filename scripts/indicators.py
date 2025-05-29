@@ -2,8 +2,6 @@ import pandas as pd
 import pandas_ta
 import numpy as np
 
-from crontab_futures_alerts import KLINES_TO_GET_ALERTS
-
 def resample(df,periods,reset_index=True):
     """
     Genera un dataframe resampleado de acuerdo a la cantidad de periodos establecidos
@@ -580,7 +578,7 @@ def get_pivots_alert(df,threshold=1.5):
 
     data = {}
     data['alert'] = 0
-    periods = KLINES_TO_GET_ALERTS
+    periods = 60
     price = df.iloc[-1]['close']
     if df['close'].count() >= periods:
         
