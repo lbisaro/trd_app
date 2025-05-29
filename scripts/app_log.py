@@ -9,9 +9,9 @@ class app_log:
     date_format = '%Y-%m-%d %H:%M:%S'
 
     def __init__(self,filename='bot'):
-       if not filename.strip():
-          filename = 'bot'
-       self.filename = os.path.join(settings.BASE_DIR,f'log/{filename}')
+        if not filename.strip():
+            filename = 'bot'
+        self.filename = os.path.join(settings.BASE_DIR,f'log/{filename}')
 
     def write(self,type,msg):
         dt = datetime.now()
@@ -19,6 +19,10 @@ class app_log:
         filename_add = dt.strftime('%Y%m%d')
         with open(self.filename+'_'+filename_add+'.log', 'a') as file:
             file.write(line + '\n')
+        if type=='ERROR':
+            filename_add = '.error'
+            with open(self.filename+'_'+filename_add+'.log', 'a') as file:
+                file.write(line + '\n')
         if type=='ALERT':
             fn.telegram_send(msg) 
 
