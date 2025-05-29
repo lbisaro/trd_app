@@ -5,9 +5,6 @@ from django.core.exceptions import ValidationError
 
 import plotly.graph_objects as go
 
-
-#import google.generativeai as genai
-
 import numpy as np
 from datetime import datetime, timedelta
 
@@ -15,7 +12,6 @@ from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, INTE
 from scripts.Exchange import Exchange
 from scripts.functions import ohlc_chart, get_intervals
 from scripts.indicators import get_pivots_alert, supertrend
-from local__config import DEEPSEEK_APK, GENAI_APK
 from bot.models import *
 from bot.model_sw import *
 
@@ -245,32 +241,7 @@ def get_ia_prompt(alert):
     Evalúa la probabilidad de éxito de este trade y responde en la primera linea con un número entero del 1 al 10, donde 1 significa 'éxito altamente improbable' y 10 significa 'éxito altamente probable'.
     En la segunda linea, responde con un testo que describa la probabilidad calculada en no mas de 100 caracteres
     """
-    #genai.configure(api_key=GENAI_APK)
-    #model = genai.GenerativeModel('gemini-1.5-flash-latest') # o 'gemini-pro'
-    #response = model.generate_content(prompt)
     
-    #respuesta_texto = response.text.strip()
-    #print(f"Respuesta cruda del modelo: '{respuesta_texto}'")
-
-    #es_viable = None
-    #if respuesta_texto.lower() == "true": # Hacemos la comparación insensible a mayúsculas/minúsculas
-    #    es_viable = True
-    #elif respuesta_texto.lower() == "false":
-    #    es_viable = False
-    #else:
-    #    print(f"Respuesta inesperada del modelo: '{respuesta_texto}'. No se pudo convertir a booleano.")
-    #    # Aquí podrías decidir qué hacer, por ejemplo, asumir False o reintentar.
-    #    # También puedes revisar response.prompt_feedback si la respuesta no es la esperada
-    #    if response.prompt_feedback:
-    #        print(f"Feedback del prompt: {response.prompt_feedback}")
-#
-#
-    #if es_viable is not None:
-    #    print(f"\n¿El trade es viable según Gemini?: {es_viable}")
-    #else:
-    #    print("\nNo se pudo determinar la viabilidad del trade a partir de la respuesta del modelo.")
-#
-    #return response
     return prompt
 
 @login_required
