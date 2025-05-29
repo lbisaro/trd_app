@@ -16,15 +16,17 @@ class app_log:
     def write(self,type,msg):
         dt = datetime.now()
         line = dt.strftime(self.date_format)+' - '+type+' - '+msg
-        filename_add = dt.strftime('%Y%m%d')
-        with open(self.filename+'_'+filename_add+'.log', 'a') as file:
-            file.write(line + '\n')
-        if type=='ERROR':
-            filename_add = '.error'
+        if type=='ALERT':
+            fn.telegram_send(msg)
+        else: 
+            filename_add = dt.strftime('%Y%m%d')
             with open(self.filename+'_'+filename_add+'.log', 'a') as file:
                 file.write(line + '\n')
-        if type=='ALERT':
-            fn.telegram_send(msg) 
+            if type=='ERROR':
+                filename_add = '.error'
+                with open(self.filename+'_'+filename_add+'.log', 'a') as file:
+                    file.write(line + '\n')
+
 
     def info(self,msg):
        self.write(type='INFO',msg=msg)
