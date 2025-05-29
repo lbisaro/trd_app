@@ -69,12 +69,13 @@ def run():
     # Cargar data previos
     data = load_data_file(DATA_FILE)
     
-    #datetime almacena la fecha y hora del proces en minutos
+    #datetime almacena la fecha y hora del proceso en minutos
     if 'datetime' not in data:
         data['datetime'] = [proc_start]
     else:
         #Verifica si el ultimo registro generado tiene diferencia de 1 minuto
-        if proc_start-data['datetime'][-1] > timedelta(minutes=1):
+        if proc_start-data['datetime'][-1] > timedelta(minutes=3):
+            log.error('LOST DATA - '+proc_start.strftime('%Y-%m-%d %H:%M')+' '+data['datetime'][-1].strftime('%Y-%m-%d %H:%M'))
             print('Existe mas de 1 minuto entre el ultimo registro y el actual. Se reinicia el archivo de datos')
             data = {}
             data['datetime'] = [proc_start]
