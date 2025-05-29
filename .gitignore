@@ -11,3 +11,4 @@ backtest/results/*.json
 *.csv
 backtest/test_tlgrm.py
 app.sock
+/.venv
