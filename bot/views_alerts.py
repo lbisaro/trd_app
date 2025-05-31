@@ -110,7 +110,7 @@ def analyze(request, key):
                                     },
                                     ])
         indicators = [
-                {'col': 'ZigZag','name': 'ZigZag', 'color': 'gray','row': 1, 'mode':'lines',},
+                {'col': 'ZigZag','name': 'ZigZag', 'color': 'thite','row': 1, 'mode':'lines',},
             ]
         fig = ohlc_chart(klines,show_volume=False,show_pnl=False, indicators=indicators)
 
@@ -124,7 +124,7 @@ def analyze(request, key):
         )         
         fig.add_trace(go.Scatter(
                 x=stored_df["datetime"], y=stored_df["ZigZag"], name="Pivots", mode="markers", showlegend=True, 
-                line={'width': 1}, marker=dict(color='white', size=2,),),row=1,col=1,
+                line={'width': 1}, marker=dict(color='white', size=4,),),row=1,col=1,
         )         
        
 
