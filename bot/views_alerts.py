@@ -111,6 +111,7 @@ def analyze(request, key):
                                      'actual_price': exchPrice,
                                     },
                                     ])
+                                    
         indicators = [
                 {'col': 'ZigZag','name': 'ZigZag', 'color': 'white','row': 1, 'mode':'lines',},
             ]
