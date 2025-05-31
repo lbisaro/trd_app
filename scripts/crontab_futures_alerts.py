@@ -190,6 +190,8 @@ def run():
             # 🔴📉 SHORT
             # 🔔 ALERTA
 
+
+            binance_link = f'<a href="https://www.binance.com/es-LA/futures/{symbol}">Ir a Binance Futures</a>'
             if alert['alert'] != 0:
                 alert = alert_add_data(alert,actual_prices[symbol])
             
@@ -210,7 +212,8 @@ def run():
                             f'\nTake Profit: {alert_tp1} ({alert_tp1_perc}%)'+\
                             f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
                             f'\n{trend_msg}'+\
-                            f'\n{alert_actual_price_legend}'
+                            f'\n{alert_actual_price_legend}'+\
+                            '\n'+binance_link
                 alert_key = f'{symbol}.{alert_alert}'
                 if alert_key not in data['log_alerts']:
                     log.alert(alert_str)
@@ -240,7 +243,8 @@ def run():
                             f'\nTake Profit: {alert_tp1} ({alert_tp1_perc}%)'+\
                             f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
                             f'\n{trend_msg}'+\
-                            f'\n{alert_actual_price_legend}'
+                            f'\n{alert_actual_price_legend}'+\
+                            '\n'+binance_link
                 alert_key = f'{symbol}.{alert_alert}'
                 if alert_key not in data['log_alerts']:
                     log.alert(alert_str)
