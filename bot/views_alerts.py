@@ -79,6 +79,7 @@ def analyze(request, key):
         exchPrice = df.iloc[-1]['close']
 
         alert = alert_add_data(alert, actual_price=exchPrice)
+        stored_df = alert['df']
 
         ia_response = genai_get_response(alert)
         print(ia_response)
@@ -109,33 +110,47 @@ def analyze(request, key):
                                     },
                                     ])
         indicators = [
-                {'col': 'ZigZag','name': 'Pivots', 'color': 'white','row': 1, 'mode':'lines',},
-                {'col': 'st_high','name': 'Trend H','color': 'red','row': 1, 'mode':'markers',},
-                {'col': 'st_low' ,'name': 'Trend L','color': 'green','row': 1, 'mode':'markers',},
+                {'col': 'ZigZag','name': 'ZigZag', 'color': 'gray','row': 1, 'mode':'lines',},
             ]
         fig = ohlc_chart(klines,show_volume=False,show_pnl=False, indicators=indicators)
+
+        fig.add_trace(go.Scatter(
+                x=stored_df["datetime"], y=stored_df["st_high"], name="st_high", mode="lines", showlegend=True, 
+                line={'width': 2}, marker=dict(color='red'),),row=1,col=1,
+        )         
+        fig.add_trace(go.Scatter(
+                x=stored_df["datetime"], y=stored_df["st_low"], name="st_low", mode="lines", showlegend=True, 
+                line={'width': 2    }, marker=dict(color='green'),),row=1,col=1,
+        )         
+        fig.add_trace(go.Scatter(
+                x=stored_df["datetime"], y=stored_df["ZigZag"], name="Pivots", mode="markers", showlegend=True, 
+                line={'width': 1}, marker=dict(color='white', size=2,),),row=1,col=1,
+        )         
+       
+
+
         fig.add_trace(
             go.Scatter(
-                x=events["datetime"], y=events["in_price"], name="Entrada", mode="lines", showlegend=True, 
-                line={'width': 1}, marker=dict(color='white'),
+                x=events["datetime"], y=events["in_price"], name="Entrada", mode="markers", showlegend=True, 
+                line={'width': 0.5}, marker=dict(color='white', size=2,),
             ),row=1,col=1,
         ) 
         fig.add_trace(
             go.Scatter(
-                x=events["datetime"], y=events["sl1"], name="Stop Loss", mode="lines", showlegend=True, 
-                line={'width': 1}, marker=dict(color='red'),
+                x=events["datetime"], y=events["sl1"], name="Stop Loss", mode="markers", showlegend=True, 
+                line={'width': 0.5}, marker=dict(color='red', size=2,),
             ),row=1,col=1,
         ) 
         fig.add_trace(
             go.Scatter(
-                x=events["datetime"], y=events["tp1"], name="Take Profit", mode="lines", showlegend=True, 
-                line={'width': 1}, marker=dict(color='green'),
+                x=events["datetime"], y=events["tp1"], name="Take Profit", mode="markers", showlegend=True, 
+                line={'width': 0.5}, marker=dict(color='green', size=2,),
             ),row=1,col=1,
         ) 
         fig.add_trace(
             go.Scatter(
-                x=events["datetime"], y=events["actual_price"], name="Precio Actual", mode="markers", showlegend=True, 
-                line={'width': 1}, marker=dict(color='yellow'),
+                x=events["datetime"], y=events["actual_price"], name="Precio Actual", mode="markers",showlegend=True, 
+                line={'width': 1}, marker=dict(color='yellow', size=4, ),
             ),row=1,col=1,
         ) 
 
