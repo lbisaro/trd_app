@@ -16,9 +16,6 @@
         cursor: pointer;
     }
 
-    #alerts_ok  {
-        border-bottom: 1px solid #444;
-    }
 </style>
 {% endblock %}
 
@@ -55,8 +52,6 @@
             </div>
             {% endfor%}
         </div>
-        <div class="d-flex flex-wrap" id="alerts_out">
-        </div>
     </div>
     {% endif %}
 
@@ -73,11 +68,6 @@
 {% block script %}
 <script>
 
-    $(document).ready( function () {
-        $('#alerts_ok .status_out').each( function () {
-            $(this).appendTo('#alerts_out');
-        });
-    });
     function alert_view(key) {
         let url = '/bot/alerts/analyze/'+key+'/'; 
         window.location.href = url;
