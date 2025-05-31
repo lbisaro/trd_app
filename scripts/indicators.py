@@ -578,7 +578,7 @@ def get_pivots_alert(df,threshold=1.5):
 
     data = {}
     data['alert'] = 0
-    min_periods = 60
+    min_periods = 50
     price = df.iloc[-1]['close']
     if df['close'].count() >= min_periods:
         
