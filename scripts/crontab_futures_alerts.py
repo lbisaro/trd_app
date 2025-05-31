@@ -17,7 +17,7 @@ LOG_DIR = os.path.join(settings.BASE_DIR,'log')
 DATA_FILE = os.path.join(LOG_DIR, "futures_alerts_data.pkl")
 USDT_PAIR = "USDT"
 LIMIT_MINUTES = 3000
-KLINES_TO_GET_ALERTS = 60
+KLINES_TO_GET_ALERTS = 50
 INTERVAL_ID = '0m15'
 ALERT_THRESHOLD = 1.5
 
