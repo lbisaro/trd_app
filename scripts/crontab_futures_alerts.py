@@ -37,6 +37,10 @@ def load_data_file(ruta):
         print(f"Error al cargar el archivo {ruta}: {e}")
     return {}
 
+def timedelta_a_minutos(delta):
+    """Convierte timedelta a minutos con precisión"""
+    return delta.total_seconds() / 60
+
 def ohlc_from_prices(datetime, prices,interval_minutes):
 
     df = pd.DataFrame({'datetime': datetime, 'close': prices, })
@@ -70,19 +74,21 @@ def run():
     data = load_data_file(DATA_FILE)
     
     #datetime almacena la fecha y hora del proceso en minutos
+    lost_minutes = 0
     if 'datetime' not in data:
         data['datetime'] = [proc_start]
     else:
         #Verifica si el ultimo registro generado tiene diferencia de 1 minuto
-        if proc_start-data['datetime'][-1] > timedelta(minutes=3):
-            log.error('LOST DATA - '+proc_start.strftime('%Y-%m-%d %H:%M')+' '+data['datetime'][-1].strftime('%Y-%m-%d %H:%M'))
-            print('Existe mas de 3 minutos entre el ultimo registro y el actual. Se reinicia el archivo de datos')
+        lost_minutes_ok = 30
+        lost_minutes = timedelta_a_minutos(proc_start-data['datetime'][-1])-1
+        if lost_minutes > timedelta_a_minutos(timedelta(minutes=lost_minutes_ok)):
+            log.error(f'LOST DATA - Period {lost_minutes} minutes - From '+proc_start.strftime('%Y-%m-%d %H:%M')+' to '+data['datetime'][-1].strftime('%Y-%m-%d %H:%M'))
+            print(f'Existe mas de {lost_minutes_ok} minutos entre el ultimo registro y el actual. Se reinicia el archivo de datos')
             data = {}
             data['datetime'] = [proc_start]
         else:
             data['datetime'].append(proc_start)
             data['datetime'] = data['datetime'][-LIMIT_MINUTES:]
-            
     #symbols almacena el precio de cada symbol en minutos 
     if 'symbols' not in data:
         data['symbols'] = {} 

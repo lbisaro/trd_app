@@ -578,9 +578,9 @@ def get_pivots_alert(df,threshold=1.5):
 
     data = {}
     data['alert'] = 0
-    periods = 60
+    min_periods = 60
     price = df.iloc[-1]['close']
-    if df['close'].count() >= periods:
+    if df['close'].count() >= min_periods:
         
         df = zigzag(df)
         df = supertrend(df)

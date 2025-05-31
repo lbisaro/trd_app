@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, INTERVAL_ID, load_data_file, ohlc_from_prices
 from scripts.Exchange import Exchange
 from scripts.functions import ohlc_chart, get_intervals
-from scripts.indicators import get_pivots_alert, supertrend
+from scripts.indicators import get_pivots_alert
 from bot.models import *
 from bot.model_sw import *
 
@@ -121,8 +121,8 @@ def analyze(request, key):
 
         alert = alert_add_data(alert, actual_price=exchPrice)
 
-        ia_prompt = get_ia_prompt(alert)
-        
+        ia_response = genai_get_response(alert)
+        print(ia_response)
 
         
         pivot_alert = get_pivots_alert(df)
@@ -184,7 +184,6 @@ def analyze(request, key):
         return render(request, 'alerts_analyze.html',{
             'DATA_FILE': DATA_FILE ,
             'key': key,
-            'ia_prompt': ia_prompt,
             'alert': alert,
             'chart': fig.to_html(config = {'scrollZoom': True, }),
         })
@@ -193,7 +192,7 @@ def analyze(request, key):
     else:
         return render(request, 'alerts_analyze.html',{}) 
 
-def get_ia_prompt(alert):
+def genai_get_response(alert):
     """
     alert keys
         alert
@@ -238,8 +237,8 @@ def get_ia_prompt(alert):
     TP: {take_profit}
 
     Considera: tests recientes TP/SL, RRR (Short: (EP-TP)/(SL-EP)), acción de precio, volatilidad reciente, tendencia general.
-    Evalúa la probabilidad de éxito de este trade y responde en la primera linea con un número entero del 1 al 10, donde 1 significa 'éxito altamente improbable' y 10 significa 'éxito altamente probable'.
-    En la segunda linea, responde con un testo que describa la probabilidad calculada en no mas de 100 caracteres
+    Evalúa la probabilidad de éxito de este trade y responde en la primera linea con un número entero del -10 al +10, donde -10 significa 'éxito altamente improbable' y +10 significa 'éxito altamente probable'.
+    No incluyas ninguna otra explicación, justificación o texto adicional. Tu respuesta debe ser solo el número.
     """
     
     return prompt
