@@ -585,7 +585,7 @@ def get_pivots_alert(df,threshold=1.5):
         df = zigzag(df)
         df = supertrend(df)
         pivots = df[df['ZigZag']>0]['ZigZag'].tolist()
-        trend = -1 if df.iloc[-1]['st_high']>0 else 1
+        trend = int(df.iloc[-1]['st_trend'])
 
         if len(pivots) >= 6: #Se busca que existan mas pivots de lo necesario par apoder formarlos
 
