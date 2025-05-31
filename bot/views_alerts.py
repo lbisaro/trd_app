@@ -84,8 +84,11 @@ def analyze(request, key):
         ia_prompt = get_ia_prompt(alert)
          
         pivot_alert = get_pivots_alert(df)
-        klines = pivot_alert['df']
-            
+        if 'df' in pivot_alert:
+            klines = pivot_alert['df']
+        else:
+            klines = df
+            klines['ZigZag'] = None
         events = pd.DataFrame(data=[
                                     {
                                      'datetime': alert['start'],
