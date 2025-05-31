@@ -43,8 +43,14 @@ def list(request):
         symbol = ticker['symbol']
         actual_prices[symbol] = float(ticker['price'])
     
+    k_to_delete = []
     for k in log_alerts:
         log_alerts[k] = alert_add_data(log_alerts[k],actual_prices[log_alerts[k]['symbol']])
+        if 'status_class' in log_alerts[k] and log_alerts[k]['status_class'] != 'status_ok':
+            k_to_delete.append(k)
+    #Eliminando Alertas que estan fuera de rango
+    for k in k_to_delete:
+        del(log_alerts[k])
 
     if 'c_1m' in data['symbols']['BTCUSDT']:
         qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
