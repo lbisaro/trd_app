@@ -81,10 +81,8 @@ def analyze(request, key):
         alert = alert_add_data(alert, actual_price=exchPrice)
         stored_df = alert['df']
 
-        ia_response = genai_get_response(alert)
-        print(ia_response)
-
-        
+        ia_prompt = get_ia_prompt(alert)
+         
         pivot_alert = get_pivots_alert(df)
         klines = pivot_alert['df']
             
@@ -159,6 +157,7 @@ def analyze(request, key):
             'DATA_FILE': DATA_FILE ,
             'key': key,
             'alert': alert,
+            'ia_prompt': ia_prompt,
             'chart': fig.to_html(config = {'scrollZoom': True, }),
         })
 
@@ -166,31 +165,8 @@ def analyze(request, key):
     else:
         return render(request, 'alerts_analyze.html',{}) 
 
-def genai_get_response(alert):
-    """
-    alert keys
-        alert
-            side
-        alert_str
-        sl1
-        tp1
-            in_price
-        df
-        pivots
-        start
-        origin
-        symbol
-            timeframe
-        datetime
-        price
-        name
-        actual_price_legend
-        actual_price_class
-        status_class
-        class
-        tp1_perc
-        sl1_perc
-    """
+def get_ia_prompt(alert):
+
     df = alert['df'][['high', 'low', 'close']]
     df = df[-50:]
     df_json = df.to_json(orient='records')
