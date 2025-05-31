@@ -194,18 +194,16 @@ def run():
             binance_link = f'<a href="https://www.binance.com/es-LA/futures/{symbol}">Ir a Binance Futures</a>'
             if alert['alert'] != 0:
                 alert = alert_add_data(alert,actual_prices[symbol])
-            
-            if alert['alert'] == 1:
-
                 trend_msg = alert['alert_str']
                 alert_alert = alert['alert']
                 alert_in_price = alert['in_price']
                 alert_tp1 = alert['tp1']
                 alert_sl1 = alert['sl1']
-
                 alert_tp1_perc = alert['tp1_perc']
                 alert_sl1_perc = alert['sl1_perc']
                 alert_actual_price_legend = alert['actual_price_legend']
+            
+            if alert['alert'] == 1:
 
                 alert_str = f'🟢 <b>LONG</b> Scanner {interval_binance} <b>{symbol}</b>'+\
                             f'\nPrecio de entrada: {alert_in_price}'+\
@@ -231,13 +229,6 @@ def run():
                 data['log_alerts'][alert_key] = alert
 
             elif alert['alert'] == -1:
-
-                trend_msg = alert['alert_str']
-                alert_alert = alert['alert']
-                alert_in_price = alert['in_price']
-                alert_tp1 = alert['tp1']
-                alert_sl1 = alert['sl1']
-
                 alert_str = f'🔴 <b>SHORT</b> Scanner {interval_binance} <b>{symbol}</b>'+\
                             f'\nPrecio de entrada: {alert_in_price}'+\
                             f'\nTake Profit: {alert_tp1} ({alert_tp1_perc}%)'+\
