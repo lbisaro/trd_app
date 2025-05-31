@@ -211,7 +211,7 @@ def run():
                             f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
                             f'\n{trend_msg}'+\
                             f'\n{alert_actual_price_legend}'+\
-                            '\n'+binance_link
+                            #'\n'+binance_link
                 alert_key = f'{symbol}.{alert_alert}'
                 if alert_key not in data['log_alerts']:
                     log.alert(alert_str)
@@ -235,7 +235,7 @@ def run():
                             f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
                             f'\n{trend_msg}'+\
                             f'\n{alert_actual_price_legend}'+\
-                            '\n'+binance_link
+                            #'\n'+binance_link
                 alert_key = f'{symbol}.{alert_alert}'
                 if alert_key not in data['log_alerts']:
                     log.alert(alert_str)
