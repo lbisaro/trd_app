@@ -610,8 +610,6 @@ def get_pivots_alert(df,threshold=1.5):
                     data['sl1'] = pivots[-1]
                     data['tp1'] = pivots[-2] 
                     data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
-                    decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
-                    data['in_price'] = round(data['in_price'],decs)
             
             else: 
                 # Alertas en SHORT
@@ -633,9 +631,11 @@ def get_pivots_alert(df,threshold=1.5):
                     data['sl1'] = pivots[-1]
                     data['tp1'] = pivots[-2] 
                     data['in_price'] = data['sl1']-((data['sl1']-data['tp1'])/3) #Genera un ratio 2:1
-                    decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
-                    data['in_price'] = round(data['in_price'],decs)
 
+
+        if data['alert'] != 0:
+            decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
+            data['in_price'] = round(data['in_price'],decs)
             data['df'] = df
             data['pivots'] = pivots
 
