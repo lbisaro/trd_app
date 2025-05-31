@@ -117,11 +117,11 @@ def analyze(request, key):
         fig = ohlc_chart(klines,show_volume=False,show_pnl=False, indicators=indicators)
 
         fig.add_trace(go.Scatter(
-                x=stored_df["datetime"], y=stored_df["st_high"], name="st_high", mode="lines", showlegend=True, 
+                x=stored_df["datetime"], y=stored_df["st_high"], name="ST Bajista", mode="lines", showlegend=True, 
                 line={'width': 2}, marker=dict(color='red'),),row=1,col=1,
         )         
         fig.add_trace(go.Scatter(
-                x=stored_df["datetime"], y=stored_df["st_low"], name="st_low", mode="lines", showlegend=True, 
+                x=stored_df["datetime"], y=stored_df["st_low"], name="ST Alcista", mode="lines", showlegend=True, 
                 line={'width': 2    }, marker=dict(color='green'),),row=1,col=1,
         )         
         fig.add_trace(go.Scatter(
