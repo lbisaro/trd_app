@@ -89,6 +89,7 @@ def analyze(request, key):
         else:
             klines = df
             klines['ZigZag'] = None
+
         events = pd.DataFrame(data=[
                                     {
                                      'datetime': alert['start'],
@@ -132,20 +133,20 @@ def analyze(request, key):
 
         fig.add_trace(
             go.Scatter(
-                x=events["datetime"], y=events["in_price"], name="Entrada", mode="markers", showlegend=True, 
-                line={'width': 0.5}, marker=dict(color='white', size=2,),
+                x=events["datetime"], y=events["in_price"], name="Entrada", mode="lines", showlegend=True, 
+                line={'width': 1}, marker=dict(color='white', size=2,),
             ),row=1,col=1,
         ) 
         fig.add_trace(
             go.Scatter(
-                x=events["datetime"], y=events["sl1"], name="Stop Loss", mode="markers", showlegend=True, 
-                line={'width': 0.5}, marker=dict(color='red', size=2,),
+                x=events["datetime"], y=events["sl1"], name="Stop Loss", mode="lines", showlegend=True, 
+                line={'width': 1}, marker=dict(color='red', size=2,),
             ),row=1,col=1,
         ) 
         fig.add_trace(
             go.Scatter(
-                x=events["datetime"], y=events["tp1"], name="Take Profit", mode="markers", showlegend=True, 
-                line={'width': 0.5}, marker=dict(color='green', size=2,),
+                x=events["datetime"], y=events["tp1"], name="Take Profit", mode="lines", showlegend=True, 
+                line={'width': 1}, marker=dict(color='green', size=2,),
             ),row=1,col=1,
         ) 
         fig.add_trace(
@@ -229,19 +230,26 @@ def execute(request, key):
         pivot_alert = get_pivots_alert(df)
         klines = pivot_alert['df']
 
-        events = pd.DataFrame(data=[
-                                    {
-                                     'datetime': alert['start'],
-                                     'in_price': alert['in_price'],
-                                     'sl1': alert['sl1'],
-                                     'tp1': alert['tp1'],
-                                    },
-                                    {'datetime': ahora+timedelta(minutes=30),
-                                     'in_price': alert['in_price'],
-                                     'sl1': alert['sl1'],
-                                     'tp1': alert['tp1'],
-                                    },
-                                    ])
+        events = klines[klines['datetime']>=alert['start']]['datetime']
+        events['in_price'] = alert['in_price']
+        events['sl1'] = alert['sl1']
+        events['tp1'] = alert['tp1']
+        print(events)
+
+        #events = pd.DataFrame(data=[
+        #                            {
+        #                             'datetime': alert['start'],
+        #                             'in_price': alert['in_price'],
+        #                             'sl1': alert['sl1'],
+        #                             'tp1': alert['tp1'],
+        #                            },
+        #                            {'datetime': ahora+timedelta(minutes=30),
+        #                             'in_price': alert['in_price'],
+        #                             'sl1': alert['sl1'],
+        #                             'tp1': alert['tp1'],
+        #                            },
+        #                            ])
+        
         indicators = [
                 {'col': 'ZigZag','color': 'white','row': 1, 'mode':'lines',},
             ]
@@ -249,19 +257,19 @@ def execute(request, key):
         fig.add_trace(
             go.Scatter(
                 x=events["datetime"], y=events["in_price"], name="Entrada", mode="lines", showlegend=True, 
-                line={'width': 1}, marker=dict(color='white'),
+                line={'width': 1}, 
             ),row=1,col=1,
         ) 
         fig.add_trace(
             go.Scatter(
                 x=events["datetime"], y=events["sl1"], name="Stop Loss", mode="lines", showlegend=True, 
-                line={'width': 1}, marker=dict(color='red'),
+                line={'width': 1}, 
             ),row=1,col=1,
         ) 
         fig.add_trace(
             go.Scatter(
                 x=events["datetime"], y=events["tp1"], name="Take Profit", mode="lines", showlegend=True, 
-                line={'width': 1}, marker=dict(color='green'),
+                line={'width': 1}, 
             ),row=1,col=1,
         ) 
 
