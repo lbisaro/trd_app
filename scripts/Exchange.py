@@ -104,7 +104,6 @@ class Exchange():
                     symbol_info['qty_decs_quote'] = 2
                 else:
                     symbol_info['qty_decs_quote'] = 8
-                #symbol_info['data'] = item
         
         return symbol_info
 
