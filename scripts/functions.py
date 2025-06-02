@@ -331,15 +331,27 @@ def ohlc_chart(klines,**kwargs):
         for ind in indicators_out:
             if not 'name' in ind:
                 ind['name'] = ind['col']
-            fig.append_trace(
-                go.Scatter(
-                    x=klines["datetime"], y=klines[ind['col']], name=ind['name'], mode="lines", 
-                    line={'width': 0.5},  
-                    marker=dict(color=ind['color']),
-                ),
-                row= 1 + vol_rows + pnl_rows + ind['row'],
-                col=1,
-            )
+
+            if ind['mode'] == 'bars':
+                fig.append_trace(
+                    go.Bar(
+                        x=klines["datetime"], y=klines[ind['col']], name=ind['name'],  
+                        marker=dict(color=ind['color']),
+                        marker_line_width=0,
+                    ),
+                    row= 1 + vol_rows + pnl_rows + ind['row'],
+                    col=1,
+                )
+            else:
+                fig.append_trace(
+                    go.Scatter(
+                        x=klines["datetime"], y=klines[ind['col']], name=ind['name'], mode="lines", 
+                        line={'width': 0.5},  
+                        marker=dict(color=ind['color']),
+                    ),
+                    row= 1 + vol_rows + pnl_rows + ind['row'],
+                    col=1,
+                )
 
     # Adjust layout for subplots
     fig.update_layout(
