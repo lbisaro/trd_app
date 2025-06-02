@@ -86,6 +86,28 @@ class Exchange():
         
         return symbol_info
 
+    def get_futures_symbol_info(self,symbol):
+        symbol = symbol.upper()
+
+        fei = self.client.futures_exchange_info()
+        for item in fei['symbols']:
+            if item['symbol'] == symbol:
+                symbol_info={} 
+                
+                qty_decs_qty   = item['quantityPrecision'] #self.calcular_decimales(float(item['quantityPrecision']))
+                qty_decs_price = item['pricePrecision'] #self.calcular_decimales(float(item['pricePrecision']))
+                symbol_info['qty_decs_price'] = qty_decs_price
+                symbol_info['qty_decs_qty'] = qty_decs_qty
+                symbol_info['quote_asset'] = item['marginAsset']
+                symbol_info['base_asset'] = item['baseAsset']
+                if symbol_info['quote_asset'] == 'USDT' or symbol_info['quote_asset'] == 'FDUSD' or symbol_info['quote_asset'] == 'USDC':
+                    symbol_info['qty_decs_quote'] = 2
+                else:
+                    symbol_info['qty_decs_quote'] = 8
+                #symbol_info['data'] = item
+        
+        return symbol_info
+
     def get_all_prices(self):
         all_prices = {}
         exch_prices = self.client.get_all_tickers()

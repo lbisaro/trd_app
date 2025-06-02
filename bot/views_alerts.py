@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 
 import numpy as np
 from datetime import datetime, timedelta
+import time
 
 from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, INTERVAL_ID, load_data_file, ohlc_from_prices, alert_add_data
 from scripts.Exchange import Exchange
@@ -14,6 +15,7 @@ from scripts.functions import ohlc_chart, get_intervals
 from scripts.indicators import get_pivots_alert
 from bot.models import *
 from bot.model_sw import *
+from binance.exceptions import BinanceAPIException, BinanceOrderException
 
 
 
@@ -192,102 +194,174 @@ def get_ia_prompt(alert):
 
     prompt = f"""
     Experto en trading.
-    Analizar probabilidad de éxito para un trade en Binance Futures {str_side}. Símbolo: {trade_symbol}, TF: {timeframe}.
+    Analizar probabilidad de éxito para un trade de scalping en Binance Futures {str_side}. Símbolo: {trade_symbol}, TF: {timeframe}.
     EP: {entry_price}
     SL: {stop_loss}
     TP: {take_profit}
 
-    Considera: tests recientes TP/SL, RRR (Short: (EP-TP)/(SL-EP)), acción de precio, volatilidad reciente, tendencia general.
-    Evalúa la probabilidad de éxito de este trade y responde en la primera linea con un número entero del -10 al +10, donde -10 significa 'éxito altamente improbable' y +10 significa 'éxito altamente probable'.
-    No incluyas ninguna otra explicación, justificación o texto adicional. Tu respuesta debe ser solo el número.
+    Considera: Los pivots generados por el Parabolic SAR, RRR (Short: (EP-TP)/(SL-EP)), acción de precio, tendencia general basado en el Supertrend.
+    Evalúa la probabilidad de éxito de este trade y responde con un porcentaje de exito de 0 a 100%, donde 0% significa 'éxito altamente improbable' y 100% significa 'éxito altamente probable'.
+    No incluyas ninguna otra explicación, justificación o texto adicional. Tu respuesta debe ser solo el porcentaje.
     """
     
     return prompt
 
 @login_required
-def execute(request, key):
-    data = load_data_file(DATA_FILE)
-    log_alerts = data['log_alerts']
-    if key in log_alerts:
-        alert = log_alerts[key]
-        alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
+def execute(request):
+    json_rsp = {}
 
-        if alert['side'] == 1: #LONG
-            alert['class'] = 'success'
-            alert['tp1_perc'] = round((alert['tp1']/alert['in_price']-1)*100,2)
-            alert['sl1_perc'] = round((alert['sl1']/alert['in_price']-1)*100,2)
-        else:   #SHORT
-            alert['class'] = 'danger'
-            alert['tp1_perc'] = round((alert['in_price']/alert['tp1']-1)*100,2)
-            alert['sl1_perc'] = round((alert['in_price']/alert['sl1']-1)*100,2)
+    symbol = request.POST['symbol']
+    side = int(request.POST['side'])
+    in_price = float(request.POST['in_price'])
+    tp1 = float(request.POST['tp1'])
+    sl1 = float(request.POST['sl1'])
+    quote_qty = round(float(request.POST['quote_qty']),2)
+    leverage = 1
+    margin_type = 'ISOLATED'
+    
+    
+    #Preparando el trade
+    usuario=request.user
+    usuario_id = usuario.id
+    profile = UserProfile.objects.get(user_id=usuario_id)
+    profile_config = profile.parse_config()
+    prms = {}
+    prms['bnc_apk'] = profile_config['bnc']['bnc_apk']
+    prms['bnc_aps'] = profile_config['bnc']['bnc_aps']
+    prms['bnc_env'] = profile_config['bnc']['bnc_env']
+    exch = Exchange(type='user_apikey',exchange='bnc',prms=prms)
+    client = exch.client
 
-        interval_id = INTERVAL_ID
-        interval_minutes = get_intervals(interval_id,'minutes')
-        ahora = datetime.now()
+    #Configura margen y apalancamiento.
+    print(f"\n--- Configurando Entorno para {symbol} ---")
+    try:
+        client.futures_change_margin_type(symbol=symbol, marginType=margin_type)
+        print(f"Tipo de Margen para {symbol} configurado a {margin_type}.")
+    except BinanceAPIException as e:
+        if e.code == -4046: print(f"Margen ya estaba configurado a {margin_type}.")
+        else: raise # Re-lanzar la excepción para ser capturada por el bloque try principal    
+    client.futures_change_leverage(symbol=symbol, leverage=leverage)
 
-        #td_minutes = int(interval_minutes*(KLINES_TO_GET_ALERTS+1))
-        #start_str = (datetime.now() - timedelta(minutes=td_minutes)).strftime("%Y-%m-%d")
-        #exchInfo = Exchange(type='info',exchange='bnc',prms=None)
-        #klines = exchInfo.get_futures_klines(alert['symbol'],interval_id,start_str=start_str)
-        #klines = zigzag(klines)
-        symbol = alert['symbol']
-        prices = data['symbols'][symbol]['c_1m']
-        interval_minutes = get_intervals(INTERVAL_ID,'minutes')
-        df = ohlc_from_prices(data['datetime'],prices,interval_minutes)
-        pivot_alert = get_pivots_alert(df)
-        klines = pivot_alert['df']
+    #Obtiene información del símbolo (precisiones, mínimos).
+    symbol_info = exch.get_futures_symbol_info(symbol)
+    qd_price = symbol_info['qty_decs_price']
+    qd_qty = symbol_info['qty_decs_qty']
+    qd_quote = symbol_info['qty_decs_quote']
+    #json_rsp['symbol_info'] = symbol_info
 
-        events = klines[klines['datetime']>=alert['start']]['datetime']
-        events['in_price'] = alert['in_price']
-        events['sl1'] = alert['sl1']
-        events['tp1'] = alert['tp1']
-        print(events)
-
-        #events = pd.DataFrame(data=[
-        #                            {
-        #                             'datetime': alert['start'],
-        #                             'in_price': alert['in_price'],
-        #                             'sl1': alert['sl1'],
-        #                             'tp1': alert['tp1'],
-        #                            },
-        #                            {'datetime': ahora+timedelta(minutes=30),
-        #                             'in_price': alert['in_price'],
-        #                             'sl1': alert['sl1'],
-        #                             'tp1': alert['tp1'],
-        #                            },
-        #                            ])
-        
-        indicators = [
-                {'col': 'ZigZag','color': 'white','row': 1, 'mode':'lines',},
-            ]
-        fig = ohlc_chart(klines,show_volume=False,show_pnl=False, indicators=indicators)
-        fig.add_trace(
-            go.Scatter(
-                x=events["datetime"], y=events["in_price"], name="Entrada", mode="lines", showlegend=True, 
-                line={'width': 1}, 
-            ),row=1,col=1,
-        ) 
-        fig.add_trace(
-            go.Scatter(
-                x=events["datetime"], y=events["sl1"], name="Stop Loss", mode="lines", showlegend=True, 
-                line={'width': 1}, 
-            ),row=1,col=1,
-        ) 
-        fig.add_trace(
-            go.Scatter(
-                x=events["datetime"], y=events["tp1"], name="Take Profit", mode="lines", showlegend=True, 
-                line={'width': 1}, 
-            ),row=1,col=1,
-        ) 
-
-        
-        return render(request, 'alerts_analyze.html',{
-            'DATA_FILE': DATA_FILE ,
-            'key': key,
-            'alert': alert,
-            'chart': fig.to_html(config = {'scrollZoom': True, }),
-        })
-
-
+    #Calcula la cantidad para la orden MARKET de 100 USDT.
+    ticker = client.futures_symbol_ticker(symbol=symbol)
+    current_price = float(ticker['price'])
+    json_rsp['current_price'] = current_price
+    if current_price <= 0:
+        json_rsp['error'] = "No fue posible obtener el precio actual"
+        return json_rsp
+    base_qty = round(quote_qty / current_price, qd_qty)
+    if base_qty*current_price < 10:
+        json_rsp['error'] = "El monto a comprar debe ser mayor a 10 USDT"
+        return json_rsp
+    
+    #Verificando el precio actual vs SL y TP
+    if side > 0:
+        if current_price > tp1 or current_price < sl1:
+            json_rsp['error'] = f'El precio actual ({current_price}) se encuentra fuera del rango del TakeProfit y el StopLoss'
+            return json_rsp
     else:
-        return render(request, 'alerts_analyze.html',{}) 
+        if current_price < tp1 or current_price > sl1:
+            json_rsp['error'] = f'El precio actual ({current_price}) se encuentra fuera del rango del TakeProfit y el StopLoss'
+            return json_rsp
+            
+    #Coloca la orden MARKET.
+    print(f"\nColocando orden MARKET")
+    market_order = client.futures_create_order(
+        symbol=symbol,
+        side=client.SIDE_BUY if side > 0 else client.SIDE_SELL,
+        type=client.FUTURE_ORDER_TYPE_MARKET,
+        quantity=base_qty
+    )
+    order_id = market_order['orderId']
+    json_rsp['order_id'] = order_id
+    json_rsp['base_qty'] = base_qty
+
+    #Espera a que la orden MARKET se llene y obtiene el precio de entrada y cantidad ejecutada.
+    order_filled = False
+    start_time = time.time()
+    timeout_seconds = 60
+    while time.time() - start_time < timeout_seconds:
+        order_status = client.futures_get_order(symbol=symbol, orderId=order_id)
+        if order_status['status'] == 'FILLED':
+            entry_price = float(order_status['avgPrice'])
+            executed_qty_str = order_status['executedQty'] # Usar la cantidad real ejecutada
+            executed_qty = round(float(executed_qty_str),qd_qty)
+            json_rsp['executed_qty'] = executed_qty_str
+            if entry_price == 0 and float(order_status['cumQuote']) > 0 and float(executed_qty_str) > 0:
+                    entry_price = float(order_status['cumQuote']) / float(executed_qty_str)
+            
+            print(f"\n¡Orden MARKET [{order_id}] ejecutada!")
+            print(f"  Cantidad Ejecutada: {executed_qty_str} {symbol[:-4]}")
+            print(f"  Precio Promedio Entrada: {round(entry_price, qd_price)} USDT")
+            order_filled = True
+            break
+        elif order_status['status'] in ['CANCELED', 'EXPIRED', 'REJECTED', 'PARTIALLY_CANCELED']:
+            print(f"Error: Orden MARKET [{order_id}] no completada. Status: {order_status['status']}")
+            return json_rsp
+        print(f"Esperando ejecución de la orden MARKET [{order_id}]... Status: {order_status['status']}")
+        time.sleep(2)
+    
+    if not order_filled or entry_price is None or entry_price <= 0 or executed_qty_str is None or float(executed_qty_str) <= 0:
+        print(f"Error: Orden MARKET [{order_id}] no se confirmó como FILLED o datos inválidos.")
+        # Considerar cancelar si aún está pendiente
+        try:
+            status_check = client.futures_get_order(symbol=symbol, orderId=order_id)
+            if status_check['status'] == 'NEW' or status_check['status'] == 'PARTIALLY_FILLED':
+                client.futures_cancel_order(symbol=symbol, orderId=order_id)
+                print(f"Orden MARKET [{order_id}] pendiente cancelada.")
+        except Exception as e_cancel:
+            print(f"Error al intentar cancelar orden MARKET pendiente: {e_cancel}")
+        return json_rsp
+    
+    #Coloca una orden LIMIT para el Take Profit
+    tp_order = client.futures_create_order(
+        symbol=symbol, 
+        side=client.SIDE_SELL if side > 0 else client.SIDE_BUY, 
+        type=client.FUTURE_ORDER_TYPE_TAKE_PROFIT_MARKET,
+        quantity=executed_qty, 
+        stopPrice=tp1,    
+        workingType='MARK_PRICE',
+        timeInForce=client.TIME_IN_FORCE_GTC, 
+        reduceOnly=True
+    )
+    tp_order_id = tp_order['orderId']
+    json_rsp['tp_order_id'] = tp_order_id
+
+    #Coloca una orden STOP_MARKET para el Stop Loss
+    sl_order = client.futures_create_order(
+        symbol=symbol, 
+        side=client.SIDE_SELL if side > 0 else client.SIDE_BUY, 
+        type=client.FUTURE_ORDER_TYPE_STOP_MARKET,
+        quantity=executed_qty, 
+        stopprice=sl1, 
+        workingType='CONTRACT_PRICE',
+        reduceOnly=True
+    )
+    sl_order_id = sl_order['orderId']
+    json_rsp['sl_order_id'] = sl_order_id
+    
+    #Entra en un bucle de monitoreo:
+    #Cada 10 segundos, revisa el estado de las órdenes TP y SL.
+    #Si una se llena (FILLED), intenta cancelar la otra.
+    #Si una es cancelada/rechazada/expirada, deja de monitorearla.
+    #El bucle termina cuando ambas órdenes (TP y SL) ya no están en un estado que requiera monitoreo (ej. una se llenó y la otra se canceló, o ambas fueron canceladas/rechazadas).
+
+
+    json_rsp['symbol'] = symbol
+    json_rsp['side'] = side
+    json_rsp['in_price'] = in_price
+    json_rsp['tp1'] = tp1
+    json_rsp['sl1'] = sl1
+    json_rsp['quote_qty'] = quote_qty
+    
+    if not 'error' in json_rsp:
+        json_rsp['ok'] = 1
+
+    return JsonResponse(json_rsp)

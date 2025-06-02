@@ -13,12 +13,8 @@
 {% if DATA_FILE %}
 
     <div class="container ">
-        <div class="row">
-            <div class="col text-{{alert.class}}">
-                {{alert.origin}} -{{alert.symbol}}- {{alert.timeframe}}
-                
-            </div>
-            <div class="col text-end">
+        <div class="text-end  p-2">
+            <div class="col btn-group" role="group">
                 <a class="btn btn-secondary btn-sm" href="{% url 'alerts_list' %}">
                     Alertas
                 </a>                  
@@ -28,19 +24,54 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-3">
-                <div>Precio de entrada: {{alert.in_price}}</div>    
-                <div>Take Profit: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
-                <div>Stop Loss: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
-                {% if alert.actual_price_legend %}
-                <div class="{{alert.actual_price_class}}">{{alert.actual_price_legend}}</div>
-                {% endif %}
-            </div>
+
             <div class="col-6">
+                <div class="mb-3 p-2">
+                    <h6 class="text-{{alert.class}}">{{alert.origin}} -{{alert.symbol}}- {{alert.timeframe}}</h6>
+                    <div class="row">
+                        <div class="col">Precio de entrada: {{alert.in_price}}</div>    
+                        <div class="col">Take Profit: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
+                        <div class="col">Stop Loss: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
+
+                    </div>
+                    {% if alert.actual_price_legend %}
+                    <div class="{{alert.actual_price_class}}">{{alert.actual_price_legend}}</div>
+                    {% endif %}
+                </div>
+                <div class="border border-secondary rounded p-2">
+                    <h6 class="text-info">Ejecucion del trade</h6>
+                    
+                    <div class="row" id="trade_parameters">
+                        <div class="form-group col-6">
+                            <div class="input-group ">
+                                <span class="input-group-text" >USDT</span>                                    
+                                <input type="text" id="quote_qty" class="form-control" value="{{quote_qty}}" placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="form-group col-6">
+                            <div class="input-group ">
+                                {% if alert.side > 0 %}
+                                <button class="btn btn-success btn-block" onclick="execute_trade();">Abrir trade LONG</button>
+                                {% else %}
+                                <button class="btn btn-danger btn-block"  onclick="execute_trade();">Abrir trade SHORT</button>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row" id="trade_log">
+                    </div>
+
+
+                </div>
+            </div>
+
+            <div class="col-6 p-2">
                 <h6 class="text-info">IA Prompt</h6>
                 {{ia_prompt}}
             </div>
         </div>
+
     </div>
     <div id="chart" class="container">
         {{chart|safe}}
@@ -66,6 +97,44 @@
     function alert_view(key) {
         let url = '/bot/alerts/view/'+key+'/'; 
         window.location.href = url;
+    }
+
+    function execute_trade() {
+
+        var quote_qty = 1*($('#quote_qty').val());
+        if ($('#quote_qty').val() > 10)
+        {
+            $('#trade_parameters').hide();
+            $('#trade_log').html('Procesando el trade. Aguarde un instante...')
+            $('#trade_log').show();
+
+            data = {
+                symbol: '{{alert.symbol}}',
+                quote_qty: quote_qty,
+                side: {{alert.side}},
+                in_price: {{alert.in_price}},
+                tp1: {{alert.tp1}},
+                sl1: {{alert.sl1}},
+            }
+            
+            url = '{% url "alerts_execute" %}'
+            get_ajax(url,data).done( function (rsp) {
+                if (rsp)
+                {
+                    $('#trade_log').html('');
+                    for (const clave in rsp) {
+                        if (rsp.hasOwnProperty(clave)) {
+                            $('#trade_log').append('<div>'+clave+': '+rsp[clave]+"</div>");
+                        }
+                    } 
+                    console.log(rsp)
+                }
+            }); 
+        }
+        else
+        {
+            alert('Se debe especificar una cantidad de USDT mayor a 10.00!');
+        }
     }
 
 </script>
