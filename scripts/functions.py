@@ -449,6 +449,7 @@ def telegram_send(MESSAGE):
         'chat_id': LOC_TLGRM_CHATID,
         'text': MESSAGE,
         'parse_mode': 'HTML',
+        'disable_web_page_preview': True,
     }
     response = requests.post(url, data=payload)
     return response
