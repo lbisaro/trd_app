@@ -76,27 +76,21 @@ def analyze(request, key):
     if key in log_alerts:
         alert = log_alerts[key]
         alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
-
+        stored_df = alert['df']
+        
         interval_id = INTERVAL_ID
         interval_minutes = get_intervals(interval_id,'minutes')
         ahora = datetime.now()
 
         exchInfo = Exchange(type='info',exchange='bnc',prms=None)
-        start_str = (alert['start'] - timedelta(minutes=15*(KLINES_TO_GET_ALERTS+1))).strftime("%Y-%m-%d")
-        df = exchInfo.get_futures_klines(alert['symbol'],interval_id,start_str=start_str)
-        exchPrice = df.iloc[-1]['close']
-
+        #start_str = (alert['start'] - timedelta(minutes=15*200)).strftime("%Y-%m-%d")
+        start_str = (stored_df.iloc[0]['datetime']+timedelta(hours=3)).strftime("%Y-%m-%d %H:%M")
+        klines = exchInfo.get_futures_klines(alert['symbol'],interval_id,start_str=start_str)
+        exchPrice = klines.iloc[-1]['close']
+        
         alert = alert_add_data(alert, actual_price=exchPrice)
-        stored_df = alert['df']
-
+        
         ia_prompt = get_ia_prompt(alert)
-         
-        pivot_alert = get_pivots_alert(df)
-        if 'df' in pivot_alert:
-            klines = pivot_alert['df']
-        else:
-            klines = df
-            klines['ZigZag'] = None
 
         events = pd.DataFrame(data=[
                                     {
@@ -120,10 +114,7 @@ def analyze(request, key):
                                     },
                                     ])
                                     
-        indicators = [
-                {'col': 'ZigZag','name': 'ZigZag', 'color': 'white','row': 1, 'mode':'lines',},
-            ]
-        fig = ohlc_chart(klines,show_volume=False,show_pnl=False, indicators=indicators)
+        fig = ohlc_chart(klines,show_volume=False,show_pnl=False)
 
         fig.add_trace(go.Scatter(
                 x=stored_df["datetime"], y=stored_df["st_high"], name="ST Bajista", mode="lines", showlegend=True, 
