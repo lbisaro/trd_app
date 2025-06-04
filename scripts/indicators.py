@@ -592,7 +592,7 @@ def get_pivots_alert(df,threshold=1.5):
             df_pivots = df[df['ZigZag']>0]
             lpdt = df_pivots.iloc[-1]['datetime'] #Last Pivot Datetime
             max_flp = df[df['datetime']>lpdt]['high'].max() #Max From last pivot
-            min_flp = df[df['datetime']>lpdt]['low'].max()  #Min From last pivot
+            min_flp = df[df['datetime']>lpdt]['low'].min()  #Min From last pivot
 
             if trend > 0:
                 #Alertas en LONG
