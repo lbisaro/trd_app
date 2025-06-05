@@ -1,6 +1,7 @@
 import pandas as pd
 import pandas_ta
 import numpy as np
+from pandas_ta.trend import adx
 
 def resample(df,periods,reset_index=True):
     """
