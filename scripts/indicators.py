@@ -569,7 +569,7 @@ def HeikinAshi(df):
     return df
 
 def get_pivots_alert(df,threshold=1.5):
-    
+
     def contar_decimales(f):
         s = str(f)
         if '.' in s:
@@ -582,69 +582,91 @@ def get_pivots_alert(df,threshold=1.5):
     price = df.iloc[-1]['close']
     if df['close'].count() >= min_periods:
         
-        df = zigzag(df)
-        df = supertrend(df)
-        pivots = df[df['ZigZag']>0]['ZigZag'].tolist()
-        trend = int(df.iloc[-1]['st_trend'])
-
-        
-        if len(pivots) >= 5: #Se busca que existan mas pivots de lo necesario par apoder formarlos
-            df_pivots = df[df['ZigZag']>0]
-            lpdt = df_pivots.iloc[-1]['datetime'] #Last Pivot Datetime
-            max_flp = df[df['datetime']>lpdt]['high'].max() #Max From last pivot
-            min_flp = df[df['datetime']>lpdt]['low'].min()  #Min From last pivot
-
-            if trend > 0:
-                #Alertas en LONG
-
-                #Busqueda de pivots con el siguiente formato 
-                #        -1
-                #                   Precio
-                #            min_flp
-                #    -2
-               
-                alert_type = 'Dual Pullback LONG'
-                last_pivots_diff = pivots[-1]-min_flp
-                valid_pivots_type = pivots[-1] > min_flp and min_flp > pivots[-2] 
-                valid_price = price > min_flp and price < min_flp+last_pivots_diff/3
-                valid_pivot_delta = pivots[-1] > min_flp*(1+threshold/100) and min_flp > pivots[-2]*(1+(threshold/5)/100)
-                if valid_pivots_type and valid_price and valid_pivot_delta:
-
-                    data['alert'] = 1
-                    data['side'] = 1
-                    data['alert_str'] = alert_type
-                    data['sl1'] = min_flp
-                    data['tp1'] = pivots[-1] 
-                    data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
+        adx_length = 14
+        adx_data = adx(df['high'],df['low'],df['close'],length=adx_length)
+        last_adx = adx_data.iloc[-1][f'ADX_{adx_length}']
+        adx_data['adx_ma'] = adx_data[f'ADX_{adx_length}'].rolling(window=5).mean()
+        last_adx_ma = adx_data.iloc[-1]['adx_ma']
+                
+        if last_adx > 26:
             
-            else: 
-                # Alertas en SHORT
+            df = supertrend(df)
+            trend = int(df.iloc[-1]['st_trend'])
+            
+            if trend >= 1 or trend <= -1:
 
-                #Busqueda de pivots con el siguiente formato 
-                #    -2
-                #            max_flp
-                #                       Precio
-                #        -1
-                alert_type = 'Dual Pullback SHORT'
-                last_pivots_diff = max_flp-pivots[-1]
-                valid_pivots_type = pivots[-1] < max_flp and max_flp < pivots[-2] 
-                valid_price = price < max_flp and price > max_flp-last_pivots_diff/3
-                valid_pivot_delta = max_flp > pivots[-1]*(1+threshold/100) and pivots[-2] > max_flp*(1+(threshold/5)/100) 
-                if valid_pivots_type and valid_price and valid_pivot_delta:
-                    data['alert'] = -1
-                    data['side'] = -1
-                    data['alert_str'] = alert_type
-                    data['sl1'] = max_flp
-                    data['tp1'] = pivots[-1] 
-                    data['in_price'] = data['sl1']-((data['sl1']-data['tp1'])/3) #Genera un ratio 2:1
+                df = zigzag(df)
+                pivots = df[df['ZigZag']>0]['ZigZag'].tolist()
+                
+                if len(pivots) >= 5: #Se busca que existan mas pivots de lo necesario par apoder formarlos
+
+                    df_pivots = df[df['ZigZag']>0]
+                    lpdt = df_pivots.iloc[-1]['datetime'] #Last Pivot Datetime
+                    max_flp = df[df['datetime']>lpdt]['high'].max() #Max From last pivot
+                    min_flp = df[df['datetime']>lpdt]['low'].min()  #Min From last pivot
+
+                    if trend >=1:
+                        #Alertas en LONG
+
+                        #Busqueda de pivots con el siguiente formato 
+                        #              -1
+                        #       -3
+                        #                         Precio
+                        #                  min_flp
+                        #          -2
+                        #   -4
+                    
+                        alert_type = 'Dual Pullback LONG'
+                        last_pivots_diff = pivots[-1]-min_flp
+                        valid_pivots_type = pivots[-1] > pivots[-3] and pivots[-3] > min_flp and \
+                                            min_flp > pivots[-2] and pivots[-2] > pivots[-4] 
+                        in_price = min_flp+last_pivots_diff/3
+                        valid_price = in_price*(1-(0.25/100)) < price < in_price*(1+(0.25/100))
+                        valid_pivot_delta = pivots[-1] > min_flp*(1+threshold/100) and min_flp > pivots[-2]*(1+(threshold/3)/100) \
+                                            and pivots[-1] > pivots[-4]*(1+(2*threshold)/100) 
+                        if valid_pivots_type and valid_price and valid_pivot_delta:
+
+                            data['alert'] = 1
+                            data['side'] = 1
+                            data['alert_str'] = alert_type
+                            data['sl1'] = min_flp
+                            data['tp1'] = pivots[-1] 
+                            data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
+                        
+                    elif trend <= -1:
+                        # Alertas en SHORT
+
+                        #Busqueda de pivots con el siguiente formato 
+                        #   -4
+                        #           -2
+                        #                   max_flp
+                        #                              Precio
+                        #       -3
+                        #               -1
+                        alert_type = 'Dual Pullback SHORT'
+                        last_pivots_diff = max_flp-pivots[-1]
+                        valid_pivots_type = pivots[-1] < pivots[-3] and pivots[-3] < max_flp and \
+                                            max_flp < pivots[-2] and pivots[-2] < pivots[-4] 
+                        in_price = max_flp-last_pivots_diff/3
+                        valid_price = in_price*(1-(0.25/100)) < price < in_price*(1+(0.25/100))
+                        valid_pivot_delta = pivots[-1] < max_flp*(1-threshold/100) and max_flp < pivots[-2]*(1-(threshold/3)/100) \
+                                            and pivots[-1] < pivots[-4]*(1-(2*threshold)/100) 
+                        if valid_pivots_type and valid_price and valid_pivot_delta:
+                            data['alert'] = -1
+                            data['side'] = -1
+                            data['alert_str'] = alert_type
+                            data['sl1'] = max_flp
+                            data['tp1'] = pivots[-1] 
+                            data['in_price'] = data['sl1']-((data['sl1']-data['tp1'])/3) #Genera un ratio 2:1
 
 
-        if data['alert'] != 0:
-            decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
-            data['in_price'] = round(data['in_price'],decs)
-            data['df'] = df
-            data['pivots'] = pivots
-            data['datetime'] = df.iloc[-1]['datetime']
-            data['last_pivot'] = lpdt
+                if data['alert'] != 0:
+                    decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
+                    data['in_price'] = round(data['in_price'],decs)
+                    data['df'] = df
+                    data['datetime'] = df.iloc[-1]['datetime']
+                    data['last_pivot'] = lpdt
+                    data['adx'] = last_adx
+                    data['adx_ma'] = last_adx_ma
 
     return data
