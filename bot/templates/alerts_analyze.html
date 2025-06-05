@@ -67,8 +67,13 @@
             </div>
 
             <div class="col-6 p-2">
-                <h6 class="text-info">IA Prompt</h6>
-                {{ia_prompt}}
+                <h6 class="text-info">Geminipt</h6>
+                <div class="border border-secondary rounded p-2" id="ia_prompt">
+                    {{ia_prompt}}
+                </div>
+                <div class="border border-secondary rounded p-2" id="ia_response">
+                    Analizando...
+                </div>
             </div>
         </div>
 
@@ -93,6 +98,10 @@
 
 {% block script %}
 <script>
+
+    $(document).ready( function () {
+        ia_analize();
+    })
 
     function alert_view(key) {
         let url = '/bot/alerts/view/'+key+'/'; 
@@ -135,6 +144,25 @@
         {
             alert('Se debe especificar una cantidad de USDT mayor a 10.00!');
         }
+    }
+
+    function ia_analize()
+    {
+        var data = {
+            prompt: $('#ia_prompt').text(),
+        }
+        url = 'http://192.168.1.8/ia/prompt/';
+        get_ajax(url,data).done( function (rsp) {
+            if (rsp)
+            {
+                $('#ia_response').html('');
+                if (rsp.hasOwnProperty(ia_response)) {
+                    $('#ia_response').html('<div>'+rsp[ia_response]+"</div>");
+                }
+
+                console.log(rsp)
+            }
+        }); 
     }
 
 </script>
