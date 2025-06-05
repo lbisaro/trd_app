@@ -156,28 +156,12 @@ def analyze(request, key):
                 line={'width': 1}, marker=dict(color='yellow', size=4, ),
             ),row=1,col=1,
         ) 
-
-
-        
-        url = 'http://127.0.0.1/ia/prompt/'
-        data = {'prompt': ia_prompt}  
-
-        try:
-            response = requests.post(url, data=data)
-            response.raise_for_status()  
-            
-            json_data = response.json()  
-            ia_response = json_data['ia_response']
-        
-        except requests.exceptions.RequestException as e:
-            ia_response = 'No fue posible obtener el analisis de Gemini'
         
         return render(request, 'alerts_analyze.html',{
             'DATA_FILE': DATA_FILE ,
             'key': key,
             'alert': alert,
             'ia_prompt': ia_prompt,
-            'ia_response': ia_response,
             'chart': fig.to_html(config = {'scrollZoom': True, }),
         })
 
