@@ -98,7 +98,9 @@
 
 {% block script %}
 <script>
-
+    $(document).ready(function () {
+        ia_analize();
+    }) 
     function execute_trade() {
 
         var quote_qty = 1*($('#quote_qty').val());
@@ -142,7 +144,7 @@
         var data = {
             prompt: $('#ia_prompt').text(),
         }
-        url = '{% url "alerts_ia_prompt" %}';
+        //url = '{% url "alerts_ia_prompt" %}';
         url = 'http://192.168.1.8/ia/prompt/'
         get_ajax(url,data).done( function (rsp) {
             if (rsp)
