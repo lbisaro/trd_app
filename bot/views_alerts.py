@@ -367,15 +367,19 @@ def ia_prompt(request):
     url = 'http://192.168.1.8/ia/prompt/'
     data = {'prompt': prompt}  
 
-    ##try:
-    response = requests.post(url, data=data)
-    response.raise_for_status()  
+    try:
+        response = requests.post(url, json=data)
+        response.raise_for_status()  
+        
+        json_data = response.json()  # Convierte la respuesta a JSON
+        ia_response = json_data['ia_response']
+        ia_response_int = int(ia_response.strip().replace('%', ''))
+        json_rsp['text_class'] = 'text-success' if  ia_response_int > 50 else 'text-warning'
+        json_rsp['ia_response'] = f'De acuerdo al analisis de Gemini, la probabilidad de exito del trade es del {ia_response}'
+        
     
-    json_data = response.json()  # Convierte la respuesta a JSON
-    json_rsp['ia_response'] = '50%' #json_data['ia_response']
-    #
-    ##except requests.exceptions.RequestException as e:
-    ##    json_rsp['error'] = 'No fue posible obtener el analisis de Gemini'
+    except requests.exceptions.RequestException as e:
+        json_rsp['error'] = 'No fue posible obtener el analisis de Gemini'
     
     
     json_rsp['prompt'] = prompt
