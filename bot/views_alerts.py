@@ -362,6 +362,7 @@ def execute(request):
 def ia_prompt(request):
     json_rsp = {}
     prompt = request.POST['prompt']
+    json_rsp['prompt'] = prompt
 
     #url = 'http://127.0.0.1/ia/prompt/'
     #data = {'prompt': prompt}  
@@ -369,7 +370,7 @@ def ia_prompt(request):
     ##try:
     #response = requests.post(url, data=data)
     #response.raise_for_status()  
-#
+    #
     #json_data = response.json()  # Convierte la respuesta a JSON
     json_rsp['ia_response'] = '50%' #json_data['ia_response']
     #
