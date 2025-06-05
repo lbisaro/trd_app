@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+import requests
 
 import plotly.graph_objects as go
 
@@ -354,5 +355,29 @@ def execute(request):
     
     if not 'error' in json_rsp:
         json_rsp['ok'] = 1
+
+    return JsonResponse(json_rsp)
+
+@login_required
+def ia_prompt(request):
+    json_rsp = {}
+    prompt = request.POST['prompt']
+
+    url = 'http://192.168.1.8/ia/prompt/'
+    data = {'prompt': prompt}  
+
+    #try:
+    response = requests.post(url, data=data)
+    response.raise_for_status()  
+
+    json_data = response.json()  # Convierte la respuesta a JSON
+    json_rsp['ia_response'] = json_data['ia_response']
+    
+    #except requests.exceptions.RequestException as e:
+    #    json_rsp['error'] = 'No fue posible obtener el analisis de Gemini'
+    
+    
+    json_rsp['prompt'] = prompt
+
 
     return JsonResponse(json_rsp)
