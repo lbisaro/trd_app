@@ -366,15 +366,15 @@ def ia_prompt(request):
     url = 'http://127.0.0.1/ia/prompt/'
     data = {'prompt': prompt}  
 
-    #try:
-    response = requests.post(url, data=data)
-    response.raise_for_status()  
-
-    json_data = response.json()  # Convierte la respuesta a JSON
-    json_rsp['ia_response'] = json_data['ia_response']
-    
-    #except requests.exceptions.RequestException as e:
-    #    json_rsp['error'] = 'No fue posible obtener el analisis de Gemini'
+    ##try:
+    #response = requests.post(url, data=data)
+    #response.raise_for_status()  
+#
+    #json_data = response.json()  # Convierte la respuesta a JSON
+    json_rsp['ia_response'] = '50%' #json_data['ia_response']
+    #
+    ##except requests.exceptions.RequestException as e:
+    ##    json_rsp['error'] = 'No fue posible obtener el analisis de Gemini'
     
     
     json_rsp['prompt'] = prompt
