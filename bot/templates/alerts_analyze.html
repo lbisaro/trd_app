@@ -139,31 +139,31 @@
         }
     }
 
-
     function ia_analize() {
-        var prompt_text = $('#ia_prompt').text(); // Si #ia_prompt es un input/textarea, usa .val(). Si es un div/span, .text() está bien.
-                                            // Asegúrate que no esté vacío o sea undefined.
+        var prompt_text = $('#ia_prompt').text(); // Usa .val() si #ia_prompt es un <input> o <textarea>
+                                            // Usa .text() si es un <div>, <span>, etc.
         console.log("Prompt a enviar:", prompt_text);
+
         if (!prompt_text || prompt_text.trim() === "") {
             console.error("El prompt está vacío.");
             $('#ia_response').html('<div>Error: El prompt no puede estar vacío.</div>').show();
             return;
         }
 
-        var data = {
+        var data_to_send = { // Renombré para evitar confusión con la variable 'data' que se pasará a $.ajax
             prompt: prompt_text
         };
         var url = 'http://192.168.1.8/ia/prompt/';
 
-        // Usa la versión más detallada para depurar
         $.ajax({
             url: url,
             type: 'POST',
-            data: data,
-            dataType: 'json',
+            data: JSON.stringify(data_to_send), // 1. Convertir a cadena JSON
+            contentType: 'application/json; charset=utf-8', // 2. Establecer Content-Type
+            dataType: 'json', // Lo que esperas recibir del servidor (esto ya estaba bien)
             success: function (rsp) {
                 if (rsp) {
-                    $('#ia_response').html('');
+                    $('#ia_response').html(''); // Limpia antes de añadir nuevo contenido
                     if (rsp.ia_response) {
                         $('#ia_response').html('<div>' + rsp.ia_response + "</div>");
                         $('#ia_response').show();
@@ -175,8 +175,20 @@
                 console.error("Error en petición AJAX a IA:");
                 console.error("Status:", jqXHR.status);
                 console.error("Error:", errorThrown);
-                console.error("Response:", jqXHR.responseText); // Esto puede tener el traceback de Flask
-                $('#ia_response').html('<div>Error del servidor al analizar. Revisa la consola.</div>').show();
+                console.error("Response Text:", jqXHR.responseText); // Esto te dio la pista clave
+                var errorMsg = '<div>Error del servidor al analizar.';
+                if (jqXHR.responseText) {
+                    try {
+                        var responseJson = JSON.parse(jqXHR.responseText);
+                        if (responseJson && responseJson.error) {
+                            errorMsg += ' Detalle: ' + responseJson.error;
+                        }
+                    } catch(e) {
+                        errorMsg += ' Respuesta no JSON: ' + jqXHR.responseText;
+                    }
+                }
+                errorMsg += '</div>';
+                $('#ia_response').html(errorMsg).show();
             }
         });
     }
