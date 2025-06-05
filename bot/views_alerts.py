@@ -159,7 +159,7 @@ def analyze(request, key):
 
 
         
-        url = 'http://localhost/ia/prompt/'
+        url = 'http://192.168.1.8/ia/prompt/'
         data = {'prompt': ia_prompt}  
 
         try:
