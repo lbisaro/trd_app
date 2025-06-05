@@ -363,7 +363,7 @@ def ia_prompt(request):
     json_rsp = {}
     prompt = request.POST['prompt']
 
-    url = 'http://192.168.1.8/ia/prompt/'
+    url = 'http://127.0.0.1/ia/prompt/'
     data = {'prompt': prompt}  
 
     #try:
