@@ -157,12 +157,27 @@ def analyze(request, key):
             ),row=1,col=1,
         ) 
 
+
+        
+        url = 'http://localhost/ia/prompt/'
+        data = {'prompt': ia_prompt}  
+
+        try:
+            response = requests.post(url, data=data)
+            response.raise_for_status()  
+            
+            json_data = response.json()  
+            ia_response = json_data['ia_response']
+        
+        except requests.exceptions.RequestException as e:
+            ia_response = 'No fue posible obtener el analisis de Gemini'
         
         return render(request, 'alerts_analyze.html',{
             'DATA_FILE': DATA_FILE ,
             'key': key,
             'alert': alert,
             'ia_prompt': ia_prompt,
+            'ia_response': ia_response,
             'chart': fig.to_html(config = {'scrollZoom': True, }),
         })
 
@@ -355,30 +370,5 @@ def execute(request):
     
     if not 'error' in json_rsp:
         json_rsp['ok'] = 1
-
-    return JsonResponse(json_rsp)
-
-@login_required
-def ia_prompt(request):
-    json_rsp = {}
-    prompt = request.POST['prompt']
-    json_rsp['prompt'] = prompt
-
-    url = '/ia/prompt/'
-    data = {'prompt': prompt}  
-
-    ##try:
-    response = requests.post(url, data=data)
-    response.raise_for_status()  
-    
-    json_data = response.json()  # Convierte la respuesta a JSON
-    json_rsp['ia_response'] = json_data['ia_response']
-    #
-    ##except requests.exceptions.RequestException as e:
-    ##    json_rsp['error'] = 'No fue posible obtener el analisis de Gemini'
-    
-    
-    json_rsp['prompt'] = prompt
-
 
     return JsonResponse(json_rsp)

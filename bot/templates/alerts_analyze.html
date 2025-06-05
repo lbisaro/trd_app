@@ -71,8 +71,8 @@
                 <div class="border border-secondary rounded p-2" id="ia_prompt">
                     {{ia_prompt}}
                 </div>
-                <div class="border border-secondary rounded p-2" style="display:none;" id="ia_response">
-                    
+                <div class="border border-secondary rounded p-2" id="ia_response">
+                    {{ia_response}}
                 </div>
             </div>
         </div>
@@ -98,15 +98,6 @@
 
 {% block script %}
 <script>
-
-    $(document).ready( function () {
-        //ia_analize();
-    })
-
-    function alert_view(key) {
-        let url = '/bot/alerts/view/'+key+'/'; 
-        window.location.href = url;
-    }
 
     function execute_trade() {
 
@@ -144,25 +135,6 @@
         {
             alert('Se debe especificar una cantidad de USDT mayor a 10.00!');
         }
-    }
-
-    function ia_analize()
-    {
-        var data = {
-            prompt: $('#ia_prompt').text(),
-        }
-        url = '{% url "alerts_ia_prompt" %}';
-        get_ajax(url,data).done( function (rsp) {
-            if (rsp)
-            {
-                $('#ia_response').html('');
-                if (rsp.ia_response) {
-                    $('#ia_response').html('<div>'+rsp.ia_response+"</div>");
-                    $('#ia_response').show();
-                }
-                console.log(rsp.ia_response);
-            }
-        }); 
     }
 
 </script>
