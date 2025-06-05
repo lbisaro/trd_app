@@ -151,7 +151,7 @@
         var data = {
             prompt: $('#ia_prompt').text(),
         }
-        url = url = '{% url "alerts_ia_prompt" %}';
+        url = '{% url "alerts_ia_prompt" %}';
         get_ajax(url,data).done( function (rsp) {
             if (rsp)
             {
