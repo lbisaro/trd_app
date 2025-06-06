@@ -65,30 +65,9 @@
 
                 </div>
             </div>
-            <div class="col-3 p-2">
-                <!-- TradingView Widget BEGIN -->
-                <div class="tradingview-widget-container">
-                <div class="tradingview-widget-container__widget"></div>
-                <div class="tradingview-widget-copyright"><a href="https://es.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Siga los mercados en TradingView</span></a></div>
-                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
-                {
-                "interval": "15m",
-                "width": 300,
-                "isTransparent": false,
-                "height": 425,
-                "symbol": "BINANCE:{{alert.symbol}}.P",
-                "showIntervalTabs": true,
-                "displayMode": "single",
-                "locale": "es",
-                "colorTheme": "light"
-                }
-                </script>
-                </div>
-                <!-- TradingView Widget END -->
-            </div>
 
-            <div class="col-5 p-2">
-                <h6 class="text-info">Geminipt</h6>
+            <div class="col-8 p-2">
+                <h6 class="text-info">Gemini</h6>
                 <div class="border border-secondary rounded p-2" id="ia_prompt">
                     {{ia_prompt}}
                 </div>
@@ -99,9 +78,62 @@
         </div>
 
     </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-4">
+<!-- TradingView Widget BEGIN -->
+                <div class="tradingview-widget-container">
+                <div class="tradingview-widget-container__widget"></div>
+                <div class="tradingview-widget-copyright"><a href="https://es.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Siga los mercados en TradingView</span></a></div>
+                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+                {
+                "interval": "15m",
+                "isTransparent": true,
+                "height": "390",
+                "symbol": "BINANCE:{{alert.symbol}}.P",
+                "showIntervalTabs": true,
+                "displayMode": "single",
+                "locale": "es",
+                "colorTheme": "light"
+                }
+                </script>
+                </div>
+                <!-- TradingView Widget END -->
+            </div>
+            <div class="col-8">
+                <!-- TradingView Widget BEGIN -->
+                <div class="tradingview-widget-container" style="height:100%;width:100%">
+                <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+                <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                {
+                "autosize": true,
+                "symbol": "BINANCE:{{alert.symbol}}.P",
+                "interval": "15",
+                "height": "100%",
+                "width": "100%",
+                "timezone": "America/Argentina/Buenos_Aires",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "allow_symbol_change": false,
+                "save_image": false,
+                "studies": [
+                    "STD;Supertrend"
+                ],
+                "support_host": "https://www.tradingview.com"
+                }
+                </script>
+                </div>
+                <!-- TradingView Widget END -->
+            </div>
+        </div>
+        
+    </div>
     <div id="chart" class="container">
         {{chart|safe}}
     </div>
+
     <div class="container text-end text-bottom text-secondary">
         Iniciada: {{alert.start|date:"d/m/Y H:i"}}
     </div>
