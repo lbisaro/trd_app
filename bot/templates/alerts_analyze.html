@@ -154,11 +154,12 @@
                 if (rsp)
                 {
                     $('#trade_log').html('');
-                    for (const clave in rsp) {
-                        if (rsp.hasOwnProperty(clave)) {
-                            $('#trade_log').append('<div>'+clave+': '+rsp[clave]+"</div>");
-                        }
-                    } 
+                    $('#trade_log').append('<div class="text-success">Ejecutado OK</div>');
+                    //for (const clave in rsp) {
+                    //    if (rsp.hasOwnProperty(clave)) {
+                    //        $('#trade_log').append('<div>'+clave+': '+rsp[clave]+"</div>");
+                    //    }
+                    //} 
                 }
             }); 
         }
