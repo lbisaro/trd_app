@@ -67,6 +67,7 @@ urlpatterns = [
     path('alerts/analyze/<str:key>/',alerts.analyze,name='alerts_analyze'),
     path('alerts/execute/',alerts.execute,name='alerts_execute'),
     path('alerts/ia_prompt/',alerts.ia_prompt,name='alerts_ia_prompt'),
+    path('alerts/ta/',alerts.technical_analysis,name='alerts_ta'),
 
     path('chart/get/<str:symbol>',vgt.chart_get,name='chart_get'),
     path('chart/',vgt.chart,name='chart'),

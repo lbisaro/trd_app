@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 import requests
+import json
 
 import plotly.graph_objects as go
 
@@ -12,8 +13,8 @@ import time
 
 from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, INTERVAL_ID, load_data_file, ohlc_from_prices, alert_add_data
 from scripts.Exchange import Exchange
-from scripts.functions import ohlc_chart, get_intervals
-from scripts.indicators import get_pivots_alert
+from scripts.functions import get_intervals
+from scripts.indicators import get_technical_summary
 from bot.models import *
 from bot.model_sw import *
 from binance.exceptions import BinanceAPIException, BinanceOrderException
@@ -92,7 +93,6 @@ def analyze(request, key):
         ia_prompt = get_ia_prompt(alert)
 
 
-        
         return render(request, 'alerts_analyze.html',{
             'DATA_FILE': DATA_FILE ,
             'key': key,
@@ -108,7 +108,7 @@ def analyze(request, key):
 
 def get_ia_prompt(alert):
 
-    df = alert['df'][['high', 'low', 'close']]
+    df = alert['df'][['high', 'low', 'close',]]
     df = df[-50:]
     df_json = df.to_json(orient='records')
     
@@ -320,4 +320,16 @@ def ia_prompt(request):
     json_rsp['prompt'] = prompt
 
 
+    return JsonResponse(json_rsp)
+
+@login_required
+def technical_analysis(request):
+    json_rsp = {}
+    klines = json.loads(request.POST['klines'])
+
+    df = pd.DataFrame(klines, columns=['open','high','low','close','volume'])
+    
+    ta_result = get_technical_summary(df)
+    json_rsp['ok'] = 1
+    json_rsp['result'] = ta_result
     return JsonResponse(json_rsp)

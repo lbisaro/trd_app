@@ -1,6 +1,7 @@
 import pandas as pd
 import pandas_ta
 import numpy as np
+import pandas_ta as ta
 from pandas_ta.trend import adx
 
 def resample(df,periods,reset_index=True):
@@ -671,3 +672,176 @@ def get_pivots_alert(df,threshold=1.5):
                     data['adx_ma'] = last_adx_ma
 
     return data
+
+def get_technical_summary(df):
+    """
+    Analiza el DataFrame y devuelve un resumen técnico similar a TradingView.
+    """
+    signals = []
+    
+    # Asegurarse de que el df tenga las columnas correctas
+    df.columns = df.columns.str.lower()
+    
+    # --- CÁLCULO DE INDICADORES ---
+    # Usamos pandas_ta para calcular todos los indicadores de una vez
+    # Parámetros basados en el widget de TradingView
+    df.ta.rsi(length=14, append=True)
+    df.ta.stoch(k=14, d=3, smooth_k=3, append=True)
+    df.ta.cci(length=20, append=True)
+    df.ta.adx(length=14, append=True)
+    df.ta.ao(append=True)
+    df.ta.mom(length=10, append=True)
+    df.ta.macd(fast=12, slow=26, signal=9, append=True)
+    df.ta.stochrsi(length=14, rsi_length=14, k=3, d=3, append=True)
+    df.ta.willr(length=14, append=True)
+    # Bull Bear Power no está directamente en pandas_ta, pero se puede calcular
+    ema13 = ta.ema(df['close'], length=13)
+    df['BULLP'] = df['high'] - ema13
+    df['BEARP'] = df['low'] - ema13
+    df.ta.uo(fast=7, medium=14, slow=28, append=True)
+    
+    # Medias Móviles
+    for period in [10, 20, 30, 50, 100, 200]:
+        df.ta.ema(length=period, append=True)
+        df.ta.sma(length=period, append=True)
+        
+    df.ta.vwma(length=20, append=True)
+    df.ta.hma(length=9, append=True)
+    # Ichimoku. La "Base Line" es la Kijun Sen
+    ichimoku = df.ta.ichimoku(tenkan=9, kijun=26, senkou=52)
+    df['ISA_9_26_52'] = ichimoku[0]['ISA_9'] # Tenkan-sen
+    df['ISB_26'] = ichimoku[0]['ISB_26'] # Kijun-sen
+
+    # Tomar la última vela completa para el análisis
+    last_row = df.iloc[-1]
+    
+    # --- ANÁLISIS DE OSCILADORES ---
+    
+    # RSI
+    rsi = last_row['RSI_14']
+    if rsi > 55: signals.append({'Indicator': 'RSI(14)', 'Value': rsi, 'Signal': 'Compra', 'Type': 'Oscillator'})
+    elif rsi < 45: signals.append({'Indicator': 'RSI(14)', 'Value': rsi, 'Signal': 'Venta', 'Type': 'Oscillator'})
+    else: signals.append({'Indicator': 'RSI(14)', 'Value': rsi, 'Signal': 'Neutral', 'Type': 'Oscillator'})
+
+    # Stochastic %K
+    stoch_k, stoch_d = last_row['STOCHk_14_3_3'], last_row['STOCHd_14_3_3']
+    if stoch_k > stoch_d: signals.append({'Indicator': 'Stoch %K(14,3,3)', 'Value': stoch_k, 'Signal': 'Compra', 'Type': 'Oscillator'})
+    else: signals.append({'Indicator': 'Stoch %K(14,3,3)', 'Value': stoch_k, 'Signal': 'Venta', 'Type': 'Oscillator'})
+
+    # CCI
+    cci = last_row['CCI_20_0.015']
+    if cci > 100: signals.append({'Indicator': 'CCI(20)', 'Value': cci, 'Signal': 'Venta', 'Type': 'Oscillator'}) # Sobrecompra -> Venta
+    elif cci < -100: signals.append({'Indicator': 'CCI(20)', 'Value': cci, 'Signal': 'Compra', 'Type': 'Oscillator'}) # Sobreventa -> Compra
+    else: signals.append({'Indicator': 'CCI(20)', 'Value': cci, 'Signal': 'Neutral', 'Type': 'Oscillator'})
+    
+    # ADX
+    adx, dmp, dmn = last_row['ADX_14'], last_row['DMP_14'], last_row['DMN_14']
+    if adx > 25 and dmp > dmn: signals.append({'Indicator': 'ADX(14)', 'Value': adx, 'Signal': 'Compra', 'Type': 'Oscillator'})
+    elif adx > 25 and dmn > dmp: signals.append({'Indicator': 'ADX(14)', 'Value': adx, 'Signal': 'Venta', 'Type': 'Oscillator'})
+    else: signals.append({'Indicator': 'ADX(14)', 'Value': adx, 'Signal': 'Neutral', 'Type': 'Oscillator'})
+    
+    # Awesome Oscillator
+    ao = last_row['AO_5_34']
+    if ao > 0: signals.append({'Indicator': 'Awesome Osc.', 'Value': ao, 'Signal': 'Compra', 'Type': 'Oscillator'})
+    else: signals.append({'Indicator': 'Awesome Osc.', 'Value': ao, 'Signal': 'Venta', 'Type': 'Oscillator'})
+
+    # Momentum
+    mom = last_row['MOM_10']
+    if mom > 0: signals.append({'Indicator': 'Momentum(10)', 'Value': mom, 'Signal': 'Compra', 'Type': 'Oscillator'})
+    else: signals.append({'Indicator': 'Momentum(10)', 'Value': mom, 'Signal': 'Venta', 'Type': 'Oscillator'})
+
+    # MACD Level
+    macd, macd_s = last_row['MACD_12_26_9'], last_row['MACDs_12_26_9']
+    if macd > macd_s: signals.append({'Indicator': 'MACD Level(12,26)', 'Value': macd, 'Signal': 'Compra', 'Type': 'Oscillator'})
+    else: signals.append({'Indicator': 'MACD Level(12,26)', 'Value': macd, 'Signal': 'Venta', 'Type': 'Oscillator'})
+
+    # Stochastic RSI
+    stoch_rsi_k, stoch_rsi_d = last_row['STOCHRSIk_14_14_3_3'], last_row['STOCHRSId_14_14_3_3']
+    if stoch_rsi_k > stoch_rsi_d: signals.append({'Indicator': 'Stoch RSI Fast(3,3,14,14)', 'Value': stoch_rsi_k, 'Signal': 'Compra', 'Type': 'Oscillator'})
+    else: signals.append({'Indicator': 'Stoch RSI Fast(3,3,14,14)', 'Value': stoch_rsi_k, 'Signal': 'Venta', 'Type': 'Oscillator'})
+
+    # Williams %R
+    willr = last_row['WILLR_14']
+    if willr < -80: signals.append({'Indicator': 'Williams %R(14)', 'Value': willr, 'Signal': 'Compra', 'Type': 'Oscillator'})
+    elif willr > -20: signals.append({'Indicator': 'Williams %R(14)', 'Value': willr, 'Signal': 'Venta', 'Type': 'Oscillator'})
+    else: signals.append({'Indicator': 'Williams %R(14)', 'Value': willr, 'Signal': 'Neutral', 'Type': 'Oscillator'})
+
+    # Bull Bear Power (simplificado)
+    bullp, bearp = last_row['BULLP'], last_row['BEARP']
+    if bullp > 0: signals.append({'Indicator': 'Bull Bear Power', 'Value': bullp, 'Signal': 'Compra', 'Type': 'Oscillator'})
+    else: signals.append({'Indicator': 'Bull Bear Power', 'Value': bullp, 'Signal': 'Venta', 'Type': 'Oscillator'})
+    
+    # Ultimate Oscillator
+    uo = last_row['UO_7_14_28']
+    if uo > 70: signals.append({'Indicator': 'Ultimate Osc.(7,14,28)', 'Value': uo, 'Signal': 'Venta', 'Type': 'Oscillator'})
+    elif uo < 30: signals.append({'Indicator': 'Ultimate Osc.(7,14,28)', 'Value': uo, 'Signal': 'Compra', 'Type': 'Oscillator'})
+    else: signals.append({'Indicator': 'Ultimate Osc.(7,14,28)', 'Value': uo, 'Signal': 'Neutral', 'Type': 'Oscillator'})
+    
+    # --- ANÁLISIS DE MEDIAS MÓVILES ---
+    price = last_row['close']
+    ma_list = [
+        ('EMA(10)', f'EMA_10'), ('SMA(10)', f'SMA_10'),
+        ('EMA(20)', f'EMA_20'), ('SMA(20)', f'SMA_20'),
+        ('EMA(30)', f'EMA_30'), ('SMA(30)', f'SMA_30'),
+        ('EMA(50)', f'EMA_50'), ('SMA(50)', f'SMA_50'),
+        ('EMA(100)', f'EMA_100'), ('SMA(100)', f'SMA_100'),
+        ('EMA(200)', f'EMA_200'), ('SMA(200)', f'SMA_200'),
+        ('Ichimoku Base(9,26,52)', 'ISB_26'), # Kijun Sen
+        ('VWMA(20)', 'VWMA_20'),
+        ('Hull MA(9)', 'HMA_9')
+    ]
+    
+    for name, col in ma_list:
+        ma_value = last_row[col]
+        if price > ma_value: signals.append({'Indicator': name, 'Value': ma_value, 'Signal': 'Compra', 'Type': 'MA'})
+        else: signals.append({'Indicator': name, 'Value': ma_value, 'Signal': 'Venta', 'Type': 'MA'})
+
+    results_df = pd.DataFrame(signals)
+
+    """
+    Imprime el resumen de manera clara, similar a TradingView, 
+    con un veredicto final de 5 categorías.
+    """
+    brief = {}
+
+    if results_df.empty:
+        print("No hay resultados para analizar.")
+        return brief
+
+    # --- 1. Conteo de Señales ---
+    buy_signals = len(results_df[results_df['Signal'] == 'Compra'])
+    sell_signals = len(results_df[results_df['Signal'] == 'Venta'])
+    neutral_signals = len(results_df[results_df['Signal'] == 'Neutral'])
+    
+    # Total de indicadores que dan una señal activa (no neutral)
+    total_active_signals = buy_signals + sell_signals
+
+    # --- 2. Cálculo del Puntaje y Ratio ---
+    # Compra = +1, Venta = -1, Neutral = 0
+    net_score = buy_signals - sell_signals
+    
+    # Evitar división por cero si todos los indicadores son neutrales
+    if total_active_signals > 0:
+        sentiment_ratio = net_score / total_active_signals
+    else:
+        sentiment_ratio = 0 # Si no hay señales activas, el sentimiento es neutral
+
+    # --- 3. Determinación del Veredicto Final (5 categorías) ---
+    if sentiment_ratio > 0.75:
+        final_verdict = 'Compra Fuerte'
+    elif sentiment_ratio > 0.25:
+        final_verdict = 'Compra'
+    elif sentiment_ratio >= -0.25:
+        final_verdict = 'Neutral'
+    elif sentiment_ratio >= -0.75:
+        final_verdict = 'Venta'
+    else: # sentiment_ratio < -0.75
+        final_verdict = 'Venta Fuerte'
+
+    brief['final_verdict'] = final_verdict
+    brief['buy_signals'] = buy_signals
+    brief['sell_signals'] = sell_signals
+    brief['neutral_signals'] = neutral_signals
+    brief['sentiment_ratio'] = round(sentiment_ratio,2)
+
+    return brief
