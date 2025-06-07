@@ -299,7 +299,7 @@
     function addCandlestickData(mainSeries) {
 
         klinesData = JSON.parse('{{ json_klines|safe }}');
-
+        
         const fullData = klinesData.map(kline => ({
             time: formatDateTime(kline.datetime),
             open: kline.open,
@@ -307,7 +307,8 @@
             low: kline.low,
             close: kline.close
         }));
-
+        
+        console.log(fullData);
         
         // Set the data for the Main Series
         const lastItem = fullData[fullData.length - 1];
