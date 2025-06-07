@@ -337,7 +337,7 @@
         var in_range = true;
         if ({{alert.side}} > 0) { //LONG
             pi_perc = to_dec((actual_price/{{alert.in_price}}-1)*100 , 2);
-            if ({{alert.sl1}}>actual_price>{{alert.tp1}})
+            if (actual_price < {{alert.sl1}} || actual_price > {{alert.tp1}})
             {
                 pi_legend = 'Fuera de rango';
                 pi_class = 'text-danger';
@@ -357,7 +357,7 @@
         }
         else { //SHORT
             pi_perc = to_dec(({{alert.in_price}}/actual_price-1)*100 , 2);
-            if ({{alert.sl1}}<actual_price<{{alert.tp1}})
+            if (actual_price>{{alert.sl1}} || actual_price<{{alert.tp1}})
             {
                 pi_legend = 'Fuera de rango';
                 pi_class = 'text-danger';
