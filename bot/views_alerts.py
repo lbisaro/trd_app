@@ -83,7 +83,7 @@ def analyze(request, key):
         ahora = datetime.now()
 
         exchInfo = Exchange(type='info',exchange='bnc',prms=None)
-        start_str = (ahora - timedelta(minutes=interval_minutes*200)).strftime("%Y-%m-%d")
+        start_str = (ahora - timedelta(minutes=15*200)).strftime("%Y-%m-%d")
         klines = exchInfo.get_futures_klines(alert['symbol'],interval_id,start_str=start_str)
         exchPrice = klines.iloc[-1]['close']
         
