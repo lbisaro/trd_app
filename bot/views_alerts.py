@@ -77,93 +77,24 @@ def analyze(request, key):
     if key in log_alerts:
         alert = log_alerts[key]
         alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
-        stored_df = alert['df']
         
         interval_id = INTERVAL_ID
-        interval_minutes = get_intervals(interval_id,'minutes')
-        ahora = datetime.now()
 
         exchInfo = Exchange(type='info',exchange='bnc',prms=None)
-        #start_str = (alert['start'] - timedelta(minutes=15*200)).strftime("%Y-%m-%d")
-        start_str = (stored_df.iloc[0]['datetime']+timedelta(hours=3)).strftime("%Y-%m-%d %H:%M")
+        start_str = (alert['start'] - timedelta(minutes=15*200)).strftime("%Y-%m-%d")
         klines = exchInfo.get_futures_klines(alert['symbol'],interval_id,start_str=start_str)
         exchPrice = klines.iloc[-1]['close']
         
         alert = alert_add_data(alert, actual_price=exchPrice)
         
         ia_prompt = get_ia_prompt(alert)
-
-        events = pd.DataFrame(data=[
-                                    {
-                                     'datetime': alert['start'],
-                                     'in_price': alert['in_price'],
-                                     'sl1': alert['sl1'],
-                                     'tp1': alert['tp1'],
-                                     'actual_price': None,
-                                    },
-                                    {'datetime': ahora+timedelta(minutes=30),
-                                     'in_price': alert['in_price'],
-                                     'sl1': alert['sl1'],
-                                     'tp1': alert['tp1'],
-                                     'actual_price': None,
-                                    },
-                                    {'datetime': ahora,
-                                     'in_price': alert['in_price'],
-                                     'sl1': alert['sl1'],
-                                     'tp1': alert['tp1'],
-                                     'actual_price': exchPrice,
-                                    },
-                                    ])
-                                    
-        fig = ohlc_chart(klines,show_volume=False,show_pnl=False)
-
-        fig.add_trace(go.Scatter(
-                x=stored_df["datetime"], y=stored_df["st_high"], name="ST Bajista", mode="lines", showlegend=True, 
-                line={'width': 2}, marker=dict(color='red'),),row=1,col=1,
-        )         
-        fig.add_trace(go.Scatter(
-                x=stored_df["datetime"], y=stored_df["st_low"], name="ST Alcista", mode="lines", showlegend=True, 
-                line={'width': 2    }, marker=dict(color='green'),),row=1,col=1,
-        )         
-        fig.add_trace(go.Scatter(
-                x=stored_df["datetime"], y=stored_df["ZigZag"], name="Pivots", mode="markers", showlegend=True, 
-                line={'width': 1}, marker=dict(color='white', size=4,),),row=1,col=1,
-        )         
-       
-
-
-        fig.add_trace(
-            go.Scatter(
-                x=events["datetime"], y=events["in_price"], name="Entrada", mode="lines", showlegend=True, 
-                line={'width': 1}, marker=dict(color='white', size=2,),
-            ),row=1,col=1,
-        ) 
-        fig.add_trace(
-            go.Scatter(
-                x=events["datetime"], y=events["sl1"], name="Stop Loss", mode="lines", showlegend=True, 
-                line={'width': 1}, marker=dict(color='red', size=2,),
-            ),row=1,col=1,
-        ) 
-        fig.add_trace(
-            go.Scatter(
-                x=events["datetime"], y=events["tp1"], name="Take Profit", mode="lines", showlegend=True, 
-                line={'width': 1}, marker=dict(color='green', size=2,),
-            ),row=1,col=1,
-        ) 
-        fig.add_trace(
-            go.Scatter(
-                x=events["datetime"], y=events["actual_price"], name="Precio Actual", mode="markers",showlegend=True, 
-                line={'width': 1}, marker=dict(color='yellow', size=4, ),
-            ),row=1,col=1,
-        ) 
-
         
         return render(request, 'alerts_analyze.html',{
             'DATA_FILE': DATA_FILE ,
             'key': key,
             'alert': alert,
             'ia_prompt': ia_prompt,
-            'chart': fig.to_html(config = {'scrollZoom': True, }),
+            'json_klines': klines.to_json(orient='records'),
         })
 
 
@@ -190,7 +121,6 @@ def get_ia_prompt(alert):
     EP: {entry_price}
     SL: {stop_loss}
     TP: {take_profit}
-
     Considera: Los pivots generados por el Parabolic SAR, RRR (Short: (EP-TP)/(SL-EP)), acción de precio, tendencia general basado en el Supertrend.
     Evalúa la probabilidad de éxito de este trade y responde con un porcentaje de exito de 0 a 100%, donde 0% significa 'éxito altamente improbable' y 100% significa 'éxito altamente probable'.
     No incluyas ninguna otra explicación, justificación o texto adicional. Tu respuesta debe ser solo el porcentaje.

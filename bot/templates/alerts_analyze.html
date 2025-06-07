@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}Alerta {{alert.name}}{% endblock %}
 {% block nav_title %}Alerta {{alert.name}}{% endblock %}
+    
+{% block head %}
+<script
+    type="text/javascript"
+    src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js">
+    </script>
+{% endblock %}
 
 {% load static %}
 
@@ -76,62 +83,32 @@
                 </div>
             </div>
         </div>
-
-    </div>
-    <div class="container">
         <div class="row">
             <div class="col-4">
-<!-- TradingView Widget BEGIN -->
+                <!-- TradingView Widget BEGIN -->
                 <div class="tradingview-widget-container">
                 <div class="tradingview-widget-container__widget"></div>
                 <div class="tradingview-widget-copyright"><a href="https://es.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Siga los mercados en TradingView</span></a></div>
                 <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
                 {
                 "interval": "15m",
-                "isTransparent": true,
-                "height": "390",
+                "isTransparent": false,
+                "height": "425",
                 "symbol": "BINANCE:{{alert.symbol}}.P",
                 "showIntervalTabs": true,
                 "displayMode": "single",
                 "locale": "es",
-                "colorTheme": "light"
+                "colorTheme": "dark"
                 }
                 </script>
                 </div>
                 <!-- TradingView Widget END -->
             </div>
             <div class="col-8">
-                <!-- TradingView Widget BEGIN -->
-                <div class="tradingview-widget-container" style="height:100%;width:100%">
-                <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
-                <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
-                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-                {
-                "autosize": true,
-                "symbol": "BINANCE:{{alert.symbol}}.P",
-                "interval": "15",
-                "height": "100%",
-                "width": "100%",
-                "timezone": "America/Argentina/Buenos_Aires",
-                "theme": "dark",
-                "style": "1",
-                "locale": "en",
-                "allow_symbol_change": false,
-                "save_image": false,
-                "studies": [
-                    "STD;Supertrend"
-                ],
-                "support_host": "https://www.tradingview.com"
-                }
-                </script>
-                </div>
-                <!-- TradingView Widget END -->
+               <div id="chart"></div>
             </div>
         </div>
         
-    </div>
-    <div id="chart" class="container">
-        {{chart|safe}}
     </div>
 
     <div class="container text-end text-bottom text-secondary">
@@ -182,7 +159,6 @@
                             $('#trade_log').append('<div>'+clave+': '+rsp[clave]+"</div>");
                         }
                     } 
-                    console.log(rsp)
                 }
             }); 
         }
@@ -206,11 +182,139 @@
                     $('#ia_response').html('<div class="'+rsp.text_class+'">'+rsp.ia_response+"</div>");
                     $('#ia_response').show();
                 }
-                console.log(rsp);
             }
         }); 
     }
 
+
+    $(document).ready(function () {
+        
+        const chartContainer = document.getElementById('chart');
+
+        // Create the Lightweight Chart within the container element
+        const chart = LightweightCharts.createChart(chartContainer, {
+            height: 400,
+            width: parseInt($('#chart').css('width')),
+            layout: {
+                background: { color: '#222' },
+                textColor: '#DDD',
+            },
+            grid: {
+                vertLines: { color: '#444' },
+                horzLines: { color: '#444' },
+            },
+            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+            timeScale: { timeVisible: true, secondsVisible: false },
+        });
+        chart.priceScale().applyOptions({
+            borderColor: '#71649C',
+        });
+        chart.timeScale().applyOptions({
+            borderColor: '#71649C',
+        });
+        window.addEventListener('resize', () => {
+            chart.resize(parseInt($('#chart').css('width')), 400);
+        });
+
+
+        
+        // Create the Main Series (Candlesticks)
+        const mainSeries = chart.addSeries(LightweightCharts.CandlestickSeries);
+        
+        // Generate sample data to use within a candlestick series
+        addCandlestickData(mainSeries);
+
+        const tp1Series = chart.addSeries(LightweightCharts.LineSeries, {
+            color: '#0ecb81',
+            lineWidth: 1,
+            lastValueVisible: false,
+            priceLineVisible: false,
+        });
+        const tpData = [
+            { time: formatDateTime('{{alert.start}}'), value: {{alert.tp1}} },
+            { time: currentDateTime(), value: {{alert.tp1}} },
+        ];
+        tp1Series.setData(tpData);
+
+        const sl1Series = chart.addSeries(LightweightCharts.LineSeries, {
+            color: '#f6465d',
+            lineWidth: 1,
+            lastValueVisible: false,
+            priceLineVisible: false,
+        });
+        const slData = [
+            { time: formatDateTime('{{alert.start}}'), value: {{alert.sl1}} },
+            { time: currentDateTime(), value: {{alert.sl1}} },
+        ];
+        sl1Series.setData(slData);
+        
+        const inPriceSeries = chart.addSeries(LightweightCharts.LineSeries, {
+            color: '#6c757d',
+            lineWidth: 1,
+            lastValueVisible: false,
+            priceLineVisible: false,
+        });
+        const inPriceData = [
+            { time: formatDateTime('{{alert.start}}'), value: {{alert.in_price}} },
+            { time: currentDateTime(), value: {{alert.in_price}} },
+        ];
+        inPriceSeries.setData(inPriceData);
+        
+ 
+ 
+
+        // --- 3. CONEXIÓN WEBSOCKET PARA DATOS EN TIEMPO REAL ---
+        const symbol = ('{{alert.symbol}}').toLowerCase();
+        const interval = '{{alert.timeframe}}';
+        const socket = new WebSocket(`wss://fstream.binance.com/ws/${symbol}@kline_${interval}`);
+
+        socket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            const kline = message.k; // El objeto kline/vela está en la propiedad 'k'
+            // Actualiza la última vela en el gráfico
+            mainSeries.update({
+                time: kline.t / 1000, // Tiempo de inicio de la vela
+                open: parseFloat(kline.o),
+                high: parseFloat(kline.h),
+                low: parseFloat(kline.l),
+                close: parseFloat(kline.c),
+            });
+        };
+
+        socket.onerror = (error) => {
+            console.error('WebSocket Error:', error);
+        };
+    });
+
+    const formatDateTime = (datetimeString) => {
+        const date = new Date(datetimeString);
+        return Math.floor(date.getTime() / 1000);
+    };
+
+    const currentDateTime = () => {
+        const date = new Date();
+        return Math.floor(date.getTime() / 1000);
+    };
+
+    function addCandlestickData(mainSeries) {
+
+        klinesData = JSON.parse('{{ json_klines|safe }}');
+
+        const fullData = klinesData.map(kline => ({
+            time: formatDateTime(kline.datetime),
+            open: kline.open,
+            high: kline.high,
+            low: kline.low,
+            close: kline.close
+        }));
+
+        
+        // Set the data for the Main Series
+        const lastItem = fullData[fullData.length - 1];
+        fullData.pop();
+        mainSeries.setData(fullData);
+        mainSeries.update(lastItem);
+      }
 </script>
 
 {% endblock %}
