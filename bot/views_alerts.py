@@ -98,6 +98,7 @@ def analyze(request, key):
             'key': key,
             'alert': alert,
             'ia_prompt': ia_prompt,
+            'actual_price': exchPrice,
             'json_klines': klines.to_json(orient='records'),
         })
 

@@ -33,17 +33,12 @@
         <div class="row">
 
             <div class="col-4">
-                <div class="mb-3 p-2">
-                    <h6 class="text-{{alert.class}}">{{alert.origin}} -{{alert.symbol}}- {{alert.timeframe}}</h6>
-                    <div class="row">
-                        <div class="col">Precio de entrada: {{alert.in_price}}</div>    
-                        <div class="col">Take Profit: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
-                        <div class="col">Stop Loss: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
-
-                    </div>
-                    {% if alert.actual_price_legend %}
-                    <div class="{{alert.actual_price_class}}">{{alert.actual_price_legend}}</div>
-                    {% endif %}
+                <div class="mb-3 p-2  border border-secondary rounded">
+                    <h6 class="text-{{alert.class}}">{{alert.origin}} [{{alert.symbol}}] [{{alert.timeframe}}]</h6>
+                    <div>Entrada: {{alert.in_price}}</div> 
+                    <div>Precio: <span id="actual_price">{{actual_price}}</span> <span id="price_in_perc"></span></div>    
+                    <div>T/P: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
+                    <div>S/L: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
                 </div>
                 <div class="border border-secondary rounded p-2">
                     <h6 class="text-info">Ejecucion del trade</h6>
@@ -66,24 +61,21 @@
                         </div>
 
                     </div>
-                    <div class="row" id="trade_log">
-                    </div>
+                    <div class="row" id="trade_log"></div>
 
 
                 </div>
             </div>
 
-            <div class="col-8 p-2">
+            <div class="col-8 p-2 border border-secondary rounded">
                 <h6 class="text-info">Gemini</h6>
-                <div class="border border-secondary rounded p-2" id="ia_prompt">
+                <div class="p-2" id="ia_prompt">
                     {{ia_prompt}}
                 </div>
-                <div class="border border-secondary rounded p-2" style="display:none;" id="ia_response">
-                    
-                </div>
+                <div class="p-2" style="display:none;" id="ia_response"></div>
             </div>
         </div>
-        <div class="row">
+        <div class="row pt-4">
             <div class="col-4">
                 <!-- TradingView Widget BEGIN -->
                 <div class="tradingview-widget-container">
@@ -110,10 +102,6 @@
         </div>
         
     </div>
-
-    <div class="container text-end text-bottom text-secondary">
-        Iniciada: {{alert.start|date:"d/m/Y H:i"}}
-    </div>
     
 
 {% else %}
@@ -128,9 +116,7 @@
 
 {% block script %}
 <script>
-    $(document).ready(function () {
-        ia_analize();
-    }) 
+
     function execute_trade() {
 
         var quote_qty = 1*($('#quote_qty').val());
@@ -189,7 +175,10 @@
 
 
     $(document).ready(function () {
-        
+
+        updatePriceInPerc({{actual_price}})
+        ia_analize();
+
         const chartContainer = document.getElementById('chart');
 
         // Create the Lightweight Chart within the container element
@@ -279,6 +268,8 @@
                 close: parseFloat(kline.c),
             });
 
+            updatePriceInPerc(parseFloat(kline.c));
+
             tp1Series.update({
                 time: upd_time,
                 value: {{alert.tp1}},
@@ -323,7 +314,54 @@
         }));
 
         mainSeries.setData(fullData);
-      }
+    }
+
+    function updatePriceInPerc(actual_price)
+    {
+        var pi_perc = 0.0;
+        var pi_legend = '';
+        var pi_class = 'text-secondary';
+        if ({{alert.side}} > 0) { //LONG
+            pi_perc = to_dec((actual_price/{{alert.in_price}}-1)*100 , 2);
+            if ({{alert.sl1}}>actual_price>{{alert.tp1}})
+            {
+                pi_legend = 'Fuera de rango';
+                pi_class = 'text-danger';
+            }
+            else if (Math.abs(pi_perc) < ({{alert.tp1_perc}}/3))  
+            {
+                pi_legend = '';
+                pi_class = 'text-success';
+            }
+            else
+            {
+                pi_legend = '';
+                pi_class = 'text-warning';
+            }
+                
+        }
+        else { //SHORT
+            pi_perc = to_dec(({{alert.in_price}}/actual_price-1)*100 , 2);
+            if ({{alert.sl1}}<actual_price<{{alert.tp1}})
+            {
+                pi_legend = 'Fuera de rango';
+                pi_class = 'text-danger';
+            }
+            else if (Math.abs(pi_perc) < ({{alert.tp1_perc}}/3))  
+            {
+                pi_legend = '';
+                pi_class = 'text-success';
+            }
+            else
+            {
+                pi_legend = '';
+                pi_class = 'text-warning';
+            }            
+        }
+        $('#actual_price').html(actual_price);
+        $('#price_in_perc').html(`${pi_perc}% ${pi_legend}`);
+        $('#price_in_perc').attr('class',pi_class);
+    }
 </script>
 
 {% endblock %}
