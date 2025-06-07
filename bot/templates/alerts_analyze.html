@@ -219,11 +219,14 @@
 
         
         // Create the Main Series (Candlesticks)
-        const mainSeries = chart.addSeries(LightweightCharts.CandlestickSeries);
+        const mainSeries = chart.addSeries(LightweightCharts.CandlestickSeries, {
+            lastValueVisible: true,
+            priceLineVisible: true,
+        });
         
         // Generate sample data to use within a candlestick series
         addCandlestickData(mainSeries);
-
+        
         const tp1Series = chart.addSeries(LightweightCharts.LineSeries, {
             color: '#0ecb81',
             lineWidth: 1,
@@ -231,11 +234,10 @@
             priceLineVisible: false,
         });
         const tpData = [
-            { time: formatDateTime('{{alert.start}}'), value: {{alert.tp1}} },
-            { time: currentDateTime(), value: {{alert.tp1}} },
+            { time: formatDateTime('{{alert.start_dt}}'), value: {{alert.tp1}} },
         ];
         tp1Series.setData(tpData);
-
+              
         const sl1Series = chart.addSeries(LightweightCharts.LineSeries, {
             color: '#f6465d',
             lineWidth: 1,
@@ -243,8 +245,7 @@
             priceLineVisible: false,
         });
         const slData = [
-            { time: formatDateTime('{{alert.start}}'), value: {{alert.sl1}} },
-            { time: currentDateTime(), value: {{alert.sl1}} },
+            { time: formatDateTime('{{alert.start_dt}}'), value: {{alert.sl1}} },
         ];
         sl1Series.setData(slData);
         
@@ -255,14 +256,10 @@
             priceLineVisible: false,
         });
         const inPriceData = [
-            { time: formatDateTime('{{alert.start}}'), value: {{alert.in_price}} },
-            { time: currentDateTime(), value: {{alert.in_price}} },
+            { time: formatDateTime('{{alert.start_dt}}'), value: {{alert.in_price}} },
         ];
         inPriceSeries.setData(inPriceData);
         
- 
- 
-
         // --- 3. CONEXIÓN WEBSOCKET PARA DATOS EN TIEMPO REAL ---
         const symbol = ('{{alert.symbol}}').toLowerCase();
         const interval = '{{alert.timeframe}}';
@@ -270,15 +267,30 @@
 
         socket.onmessage = (event) => {
             const message = JSON.parse(event.data);
-            const kline = message.k; // El objeto kline/vela está en la propiedad 'k'
-            // Actualiza la última vela en el gráfico
+            const kline = message.k; 
+
+            upd_time = (kline.t / 1000) - (3 * 3600)  // Tiempo de inicio de la vela, GMT-3
             mainSeries.update({
-                time: kline.t / 1000, // Tiempo de inicio de la vela
+                time: upd_time,
                 open: parseFloat(kline.o),
                 high: parseFloat(kline.h),
                 low: parseFloat(kline.l),
                 close: parseFloat(kline.c),
             });
+
+            tp1Series.update({
+                time: upd_time,
+                value: {{alert.tp1}},
+            });
+            sl1Series.update({
+                time: upd_time,
+                value: {{alert.sl1}},
+            });
+            inPriceSeries.update({
+                time: upd_time,
+                value: {{alert.in_price}},
+            });
+            
         };
 
         socket.onerror = (error) => {
@@ -288,12 +300,13 @@
 
     const formatDateTime = (datetimeString) => {
         const date = new Date(datetimeString);
-        return Math.floor(date.getTime() / 1000);
+        return alignUnixTo15MinCandle(Math.floor(date.getTime() / 1000));
     };
 
-    const currentDateTime = () => {
-        const date = new Date();
-        return Math.floor(date.getTime() / 1000);
+
+    const alignUnixTo15MinCandle = (unixTimestamp) => {
+        const interval = 15 * 60;  // 900 segundos
+        return Math.floor(unixTimestamp / interval) * interval;
     };
 
     function addCandlestickData(mainSeries) {
@@ -307,14 +320,8 @@
             low: kline.low,
             close: kline.close
         }));
-        
-        console.log(fullData);
-        
-        // Set the data for the Main Series
-        const lastItem = fullData[fullData.length - 1];
-        fullData.pop();
+
         mainSeries.setData(fullData);
-        mainSeries.update(lastItem);
       }
 </script>
 
