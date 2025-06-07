@@ -88,7 +88,7 @@ def analyze(request, key):
         exchPrice = klines.iloc[-1]['close']
         
         alert = alert_add_data(alert, actual_price=exchPrice)
-        alert['start_dt'] = alert['start'].strftime("%Y-%m-%d %H:%M")
+        alert['start_dt'] = (alert['start']- timedelta(hours=3)).strftime("%Y-%m-%d %H:%M")
         ia_prompt = get_ia_prompt(alert)
 
 
