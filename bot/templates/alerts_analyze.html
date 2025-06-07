@@ -40,7 +40,7 @@
                     <div>T/P: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
                     <div>S/L: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
                 </div>
-                <div class="border border-secondary rounded p-2">
+                <div class="border border-secondary rounded p-2"  id="trade_operation">
                     <h6 class="text-info">Ejecucion del trade</h6>
                     
                     <div class="row" id="trade_parameters">
@@ -207,14 +207,11 @@
         });
 
 
-        
-        // Create the Main Series (Candlesticks)
         const mainSeries = chart.addSeries(LightweightCharts.CandlestickSeries, {
             lastValueVisible: true,
             priceLineVisible: true,
         });
         
-        // Generate sample data to use within a candlestick series
         addCandlestickData(mainSeries);
         
         const tp1Series = chart.addSeries(LightweightCharts.LineSeries, {
@@ -240,7 +237,7 @@
         sl1Series.setData(slData);
         
         const inPriceSeries = chart.addSeries(LightweightCharts.LineSeries, {
-            color: '#6c757d',
+            color: '#ffffff',
             lineWidth: 1,
             lastValueVisible: false,
             priceLineVisible: false,
@@ -260,15 +257,18 @@
             const kline = message.k; 
 
             upd_time = (kline.t / 1000) - (3 * 3600)  // Tiempo de inicio de la vela, GMT-3
-            mainSeries.update({
+            new_kline = {
                 time: upd_time,
                 open: parseFloat(kline.o),
                 high: parseFloat(kline.h),
                 low: parseFloat(kline.l),
                 close: parseFloat(kline.c),
-            });
+            }
+            mainSeries.update(new_kline);
 
             updatePriceInPerc(parseFloat(kline.c));
+
+            updateFullData(new_kline);
 
             tp1Series.update({
                 time: upd_time,
@@ -301,11 +301,12 @@
         return Math.floor(unixTimestamp / interval) * interval;
     };
 
+    var fullData;
     function addCandlestickData(mainSeries) {
 
         klinesData = JSON.parse('{{ json_klines|safe }}');
         
-        const fullData = klinesData.map(kline => ({
+        fullData = klinesData.map(kline => ({
             time: formatDateTime(kline.datetime),
             open: kline.open,
             high: kline.high,
@@ -313,7 +314,19 @@
             close: kline.close
         }));
 
+
+
         mainSeries.setData(fullData);
+    }
+
+    function updateFullData(new_kline)
+    {
+        if (fullData.length > 0 && new_kline.time === fullData[fullData.length - 1].time) {
+            fullData[fullData.length - 1] = new_kline;
+        } else {
+            fullData.push(new_kline);
+        }
+        console.log(fullData.length);
     }
 
     function updatePriceInPerc(actual_price)
@@ -321,12 +334,14 @@
         var pi_perc = 0.0;
         var pi_legend = '';
         var pi_class = 'text-secondary';
+        var in_range = true;
         if ({{alert.side}} > 0) { //LONG
             pi_perc = to_dec((actual_price/{{alert.in_price}}-1)*100 , 2);
             if ({{alert.sl1}}>actual_price>{{alert.tp1}})
             {
                 pi_legend = 'Fuera de rango';
                 pi_class = 'text-danger';
+                in_range = false;
             }
             else if (Math.abs(pi_perc) < ({{alert.tp1_perc}}/3))  
             {
@@ -338,7 +353,7 @@
                 pi_legend = '';
                 pi_class = 'text-warning';
             }
-                
+            
         }
         else { //SHORT
             pi_perc = to_dec(({{alert.in_price}}/actual_price-1)*100 , 2);
@@ -346,6 +361,7 @@
             {
                 pi_legend = 'Fuera de rango';
                 pi_class = 'text-danger';
+                in_range = false;
             }
             else if (Math.abs(pi_perc) < ({{alert.tp1_perc}}/3))  
             {
@@ -361,6 +377,11 @@
         $('#actual_price').html(actual_price);
         $('#price_in_perc').html(`${pi_perc}% ${pi_legend}`);
         $('#price_in_perc').attr('class',pi_class);
+
+        if (in_range)
+            $('#trade_operation').show();
+        else
+            $('#trade_operation').hide();
     }
 </script>
 
