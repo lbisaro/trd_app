@@ -79,15 +79,19 @@ def analyze(request, key):
         alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
         
         interval_id = INTERVAL_ID
+        interval_minutes = get_intervals(interval_id,'minutes')
+        ahora = datetime.now()
 
         exchInfo = Exchange(type='info',exchange='bnc',prms=None)
-        start_str = (alert['start'] - timedelta(minutes=15*200)).strftime("%Y-%m-%d")
+        start_str = (ahora - timedelta(minutes=interval_minutes*200)).strftime("%Y-%m-%d")
         klines = exchInfo.get_futures_klines(alert['symbol'],interval_id,start_str=start_str)
         exchPrice = klines.iloc[-1]['close']
         
         alert = alert_add_data(alert, actual_price=exchPrice)
         
         ia_prompt = get_ia_prompt(alert)
+
+
         
         return render(request, 'alerts_analyze.html',{
             'DATA_FILE': DATA_FILE ,
