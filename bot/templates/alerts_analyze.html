@@ -39,6 +39,13 @@
                     <div>Precio: <span id="actual_price">{{actual_price}}</span> <span id="price_in_perc"></span></div>    
                     <div>T/P: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
                     <div>S/L: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
+                    <div>
+                        Analisis Tecnico: <span id="center-verdict"></span>
+                        <div class="progress border border-secondary rounded" style="height: 25px; background-color: #212529;">
+                            <div id="center-progress-bar" class="progress-bar" role="progressbar"></div>
+        
+                        </div>
+                    </div>
                 </div>
                 <div class="border border-secondary rounded p-2"  id="trade_operation">
                     <h6 class="text-info">Ejecucion del trade</h6>
@@ -59,7 +66,6 @@
                                 {% endif %}
                             </div>
                         </div>
-
                     </div>
                     <div class="row" id="trade_log"></div>
 
@@ -78,18 +84,6 @@
 
         <div class="row pt-4">
             <div class="col-4">
-                <div>
-                    <h6 id="center-verdict" class="text-center fs-4 mb-3"></h6>
-    
-                    <!-- El contenedor de la barra de progreso. 
-                        Le damos un color de fondo para que el espacio vacío sea visible. -->
-                    <div class="progress" style="height: 25px; background-color: #212529;border: 1px solid #444;">
-                        
-                        <!-- Esta es la única barra que moveremos y redimensionaremos con JS -->
-                        <div id="center-progress-bar" class="progress-bar" role="progressbar"></div>
-    
-                    </div>
-                </div>
                 <div>
                     <!-- TradingView Widget BEGIN -->
                     <div class="tradingview-widget-container">
@@ -357,8 +351,6 @@
             fullData.push(new_kline);
             is_new = true
         }
-        if (is_new)
-            get_technical_analize(fullData);
     }
 
     function updatePriceInPerc(actual_price)
@@ -416,10 +408,18 @@
             $('#trade_operation').hide();
     }
 
-    
+    setInterval(function () {
+        get_technical_analize(fullData);
+        },1000*60*5); //Cada 5 minutos
+
     function get_technical_analize(fullData)
     {
-        const arr_klines = fullData.map(item => [item.open, item.high, item.low, item.close, item.volume]);
+        const arr_klines = fullData.map(item => [item.open, 
+                                                 item.high, 
+                                                 item.low, 
+                                                 item.close, 
+                                                 item.volume]
+                                                 );
 
         data = {
             klines: JSON.stringify(arr_klines),
@@ -479,13 +479,13 @@
         // Aplicar clases de color y el texto
         progressBar.className = 'progress-bar'; // Limpiar clases anteriores
         progressBar.classList.add(barClass);
-        progressBar.textContent = clampedRatio;
+        progressBar.textContent = to_dec(clampedRatio*100,0)+'%';
 
         // Actualizar el título principal
-        verdictEl.textContent = `Sentimiento del Mercado: ${verdictText}`;
+        verdictEl.textContent = `${verdictText}`;
         
         // Cambiar color del título para que coincida con la barra
-        verdictEl.className = 'text-center fw-bold fs-4 mb-3'; // Clases base
+        verdictEl.className = ''; // Clases base
         if(barClass === 'bg-success') verdictEl.classList.add('text-success');
         if(barClass === 'bg-danger') verdictEl.classList.add('text-danger');
         if(barClass === 'bg-warning') verdictEl.classList.add('text-warning');
