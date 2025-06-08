@@ -196,6 +196,8 @@
 
         const chartContainer = document.getElementById('chart');
 
+
+
         // Create the Lightweight Chart within the container element
         const chart = LightweightCharts.createChart(chartContainer, {
             height: 400,
@@ -216,6 +218,16 @@
         });
         chart.timeScale().applyOptions({
             borderColor: '#71649C',
+        });
+        // Get the current users primary locale
+        const currentLocale = window.navigator.languages[0];
+        // Create a number format using Intl.NumberFormat
+        const myPriceFormatter = p => p.toFixed({{qty_decs_price}});
+        // Apply the custom priceFormatter to the chart
+        chart.applyOptions({
+            localization: {
+                priceFormatter: myPriceFormatter,
+            },
         });
         window.addEventListener('resize', () => {
             chart.resize(parseInt($('#chart').css('width')), 400);
@@ -338,12 +350,15 @@
 
     function updateFullData(new_kline)
     {
+        const is_new = false;
         if (fullData.length > 0 && new_kline.time === fullData[fullData.length - 1].time) {
             fullData[fullData.length - 1] = new_kline;
         } else {
             fullData.push(new_kline);
+            is_new = true
         }
-        console.log(fullData.length)
+        if (is_new)
+            get_technical_analize(fullData);
     }
 
     function updatePriceInPerc(actual_price)
@@ -414,7 +429,6 @@
             if (rsp)
             {
                 if (rsp.ok) {
-                    console.log(rsp.result);
                     updateCenterBar(rsp.result.sentiment_ratio)
                 }
             }

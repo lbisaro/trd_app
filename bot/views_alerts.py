@@ -14,7 +14,7 @@ import time
 from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, INTERVAL_ID, load_data_file, ohlc_from_prices, alert_add_data
 from scripts.Exchange import Exchange
 from scripts.functions import get_intervals
-from scripts.indicators import get_technical_summary
+from scripts.indicators import get_technical_summary, contar_decimales
 from bot.models import *
 from bot.model_sw import *
 from binance.exceptions import BinanceAPIException, BinanceOrderException
@@ -99,6 +99,7 @@ def analyze(request, key):
             'alert': alert,
             'ia_prompt': ia_prompt,
             'actual_price': exchPrice,
+            'qty_decs_price': contar_decimales(exchPrice),
             'json_klines': klines.to_json(orient='records'),
         })
 

@@ -570,13 +570,13 @@ def HeikinAshi(df):
     df.drop(['HA_vela_indecision','HA_cuerpo','HA_sombra_inferior','HA_sombra_superior'], axis=1, inplace=True)
     return df
 
-def get_pivots_alert(df,threshold=1.5):
+def contar_decimales(f):
+    s = str(f)
+    if '.' in s:
+        return len(s.split('.')[1].rstrip('0'))
+    return 0
 
-    def contar_decimales(f):
-        s = str(f)
-        if '.' in s:
-            return len(s.split('.')[1].rstrip('0'))
-        return 0
+def get_pivots_alert(df,threshold=1.5):
 
     data = {}
     data['alert'] = 0
