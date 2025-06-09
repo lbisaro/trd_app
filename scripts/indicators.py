@@ -673,7 +673,7 @@ def get_pivots_alert(df,threshold=1.5):
 
     return data
 
-def get_technical_summary(df):
+def technical_summary(df):
     """
     Analiza el DataFrame y devuelve un resumen técnico similar a TradingView.
     """
@@ -812,6 +812,14 @@ def get_technical_summary(df):
     buy_signals = len(results_df[results_df['Signal'] == 'Compra'])
     sell_signals = len(results_df[results_df['Signal'] == 'Venta'])
     neutral_signals = len(results_df[results_df['Signal'] == 'Neutral'])
+
+    ma_buy_signals = len(results_df[(results_df['Signal'] == 'Compra') & (results_df['Type']=='MA')])
+    ma_sell_signals = len(results_df[(results_df['Signal'] == 'Venta') & (results_df['Type']=='MA')])
+    ma_neutral_signals = len(results_df[(results_df['Signal'] == 'Neutral') & (results_df['Type']=='MA')])
+    osc_buy_signals = len(results_df[(results_df['Signal'] == 'Compra') & (results_df['Type']=='Oscilator')])
+    osc_sell_signals = len(results_df[(results_df['Signal'] == 'Venta') & (results_df['Type']=='Oscilator')])
+    osc_neutral_signals = len(results_df[(results_df['Signal'] == 'Neutral') & (results_df['Type']=='Oscilator')])
+
     
     # Total de indicadores que dan una señal activa (no neutral)
     total_active_signals = buy_signals + sell_signals
@@ -839,9 +847,16 @@ def get_technical_summary(df):
         final_verdict = 'Venta Fuerte'
 
     brief['final_verdict'] = final_verdict
+    brief['sentiment_ratio'] = round(sentiment_ratio,2)
     brief['buy_signals'] = buy_signals
     brief['sell_signals'] = sell_signals
     brief['neutral_signals'] = neutral_signals
-    brief['sentiment_ratio'] = round(sentiment_ratio,2)
+    brief['ma_buy_signals'] = ma_buy_signals
+    brief['ma_sell_signals'] = ma_sell_signals
+    brief['ma_neutral_signals'] = ma_neutral_signals
+    brief['osc_buy_signals'] = osc_buy_signals
+    brief['osc_sell_signals'] = osc_sell_signals
+    brief['osc_neutral_signals'] = osc_neutral_signals
+    brief['signals'] = signals
 
     return brief

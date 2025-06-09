@@ -14,7 +14,7 @@ import time
 from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, INTERVAL_ID, load_data_file, ohlc_from_prices, alert_add_data
 from scripts.Exchange import Exchange
 from scripts.functions import get_intervals
-from scripts.indicators import get_technical_summary, contar_decimales
+from scripts.indicators import technical_summary, contar_decimales
 from bot.models import *
 from bot.model_sw import *
 from binance.exceptions import BinanceAPIException, BinanceOrderException
@@ -52,9 +52,9 @@ def list(request):
         log_alerts[k] = alert_add_data(log_alerts[k],actual_prices[log_alerts[k]['symbol']])
         if 'status_class' in log_alerts[k] and log_alerts[k]['status_class'] != 'status_ok':
             k_to_delete.append(k)
-    #Eliminando Alertas que estan fuera de rango
-    for k in k_to_delete:
-        del(log_alerts[k])
+    ##Eliminando Alertas que estan fuera de rango
+    #for k in k_to_delete:
+    #    del(log_alerts[k])
 
     if 'c_1m' in data['symbols']['BTCUSDT']:
         qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
@@ -330,7 +330,7 @@ def technical_analysis(request):
 
     df = pd.DataFrame(klines, columns=['open','high','low','close','volume'])
     
-    ta_result = get_technical_summary(df)
+    ta_result = technical_summary(df)
     json_rsp['ok'] = 1
     json_rsp['result'] = ta_result
     return JsonResponse(json_rsp)

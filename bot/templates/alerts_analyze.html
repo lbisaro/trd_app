@@ -41,9 +41,8 @@
                     <div>S/L: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
                     <div>
                         Analisis Tecnico: <span id="center-verdict"></span>
-                        <div class="progress border border-secondary rounded" style="height: 25px; background-color: #212529;">
-                            <div id="center-progress-bar" class="progress-bar" role="progressbar"></div>
-        
+                        <div class="progress border border-secondary rounded" style="height: 15px; background-color: #212529;">
+                            <div id="center-progress-bar" class="progress-bar" role="progressbar" style="color: #333;"></div>
                         </div>
                     </div>
                 </div>
@@ -429,13 +428,14 @@
             if (rsp)
             {
                 if (rsp.ok) {
-                    updateCenterBar(rsp.result.sentiment_ratio)
+                    updateCenterBar(rsp.result.sentiment_ratio);
                 }
             }
         });  
     }
 
     function updateCenterBar(sentimentRatio) {
+
         // Asegurarse de que el ratio esté en el rango [-1, 1]
         const clampedRatio = Math.max(-1, Math.min(1, sentimentRatio));
 
@@ -447,7 +447,7 @@
         let barWidth = 0;
         let marginLeft = 0;
 
-        if (clampedRatio > 0.05) { // Umbral para considerar Compra
+        if (clampedRatio > 0.25) { // Umbral para considerar Compra
             // --- LÓGICA DE COMPRA (CRECE A LA DERECHA) ---
             barWidth = clampedRatio * 50; // Ancho es la mitad del ratio (0 a 50%)
             marginLeft = 50; // Empieza desde el centro
@@ -455,7 +455,7 @@
             verdictText = (clampedRatio > 0.75) ? 'Compra Fuerte' : 'Compra';
             barClass = 'bg-success'; // Verde
 
-        } else if (clampedRatio < -0.05) { // Umbral para considerar Venta
+        } else if (clampedRatio < -0.25) { // Umbral para considerar Venta
             // --- LÓGICA DE VENTA (CRECE A LA IZQUIERDA) ---
             const absRatio = Math.abs(clampedRatio);
             barWidth = absRatio * 50; // Ancho es la mitad del ratio (0 a 50%)
