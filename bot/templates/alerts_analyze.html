@@ -108,6 +108,93 @@
                <div id="chart"></div>
             </div>
         </div>
+
+        <div class="row pt-4 text-center">
+            <h5 class="text-info">Analisis Tecnico Detallado</h5>
+            <div class="col-4 border border-secondary rounded">
+                <h6 class="text-info pt-2">Osciladores</h6>
+                <div class="row">
+                    <span id="osc_final_verdict"></span>
+                </div>
+                <div class="row">
+                    <div class="col-4">Venta</div>
+                    <div class="col-4">Neutral</div>
+                    <div class="col-4">Compra</div>
+                </div>
+                <div class="row pb-2">
+                    <div class="col-4" id="osc_sell_signals">-</div>
+                    <div class="col-4" id="osc_neutral_signals">-</div>
+                    <div class="col-4" id="osc_buy_signals">-</div>                    
+                </div>
+            </div>
+            
+            <div class="col-4 border border-secondary rounded">
+                <h6 class="text-info pt-2">Resumen</h6>
+                <div class="row">
+                    <span id="final_verdict"></span>
+                </div>                
+                <div class="row">
+                    <div class="col-4">Venta</div>
+                    <div class="col-4">Neutral</div>
+                    <div class="col-4">Compra</div>
+                </div>
+                <div class="row pb-2">
+                    <div class="col-4" id="sell_signals">-</div>
+                    <div class="col-4" id="neutral_signals">-</div>
+                    <div class="col-4" id="buy_signals">-</div>                    
+                </div>
+            </div>
+            <div class="col-4 border border-secondary rounded">
+                <h6 class="text-info pt-2">Medias Moviles</h6>
+                <div class="row">
+                    <span id="ma_final_verdict"></span>
+                </div>
+                
+                <div class="row">
+                    <div class="col-4">Venta</div>
+                    <div class="col-4">Neutral</div>
+                    <div class="col-4">Compra</div>
+                </div>
+                <div class="row pb-2">
+                    <div class="col-4" id="ma_sell_signals">-</div>
+                    <div class="col-4" id="ma_neutral_signals">-</div>
+                    <div class="col-4" id="ma_buy_signals">-</div>                    
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <row class="col border border-secondary rounded">
+                <h6 class="text-info pt-2 text-center">
+                    Osciladores
+                </h6>
+                <table id="osc_table" class="table-dg table-trade-info table table-hover table-sm table-borderless">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th class="text-end" style="width: 20%">Valor</th>
+                            <th class="text-center" style="width: 20%">Accion</th>
+                        </tr>
+                    </thead>                    
+                    <tbody></tbody>
+                </table>
+            </row>
+            <row class="col border border-secondary rounded">
+                <h6 class="text-info pt-2 text-center">
+                    Medias Moviles
+                </h6>
+                <table id="ma_table" class="table-dg table-trade-info table table-hover table-sm table-borderless">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th class="text-end" style="width: 20%">Valor</th>
+                            <th class="text-center" style="width: 20%">Accion</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </row>
+
+        </div>
         
     </div>
     
@@ -343,7 +430,7 @@
 
     function updateFullData(new_kline)
     {
-        const is_new = false;
+        var is_new = false;
         if (fullData.length > 0 && new_kline.time === fullData[fullData.length - 1].time) {
             fullData[fullData.length - 1] = new_kline;
         } else {
@@ -429,6 +516,8 @@
             {
                 if (rsp.ok) {
                     updateCenterBar(rsp.result.sentiment_ratio);
+                    updateTA(rsp.result);
+
                 }
             }
         });  
@@ -489,6 +578,59 @@
         if(barClass === 'bg-success') verdictEl.classList.add('text-success');
         if(barClass === 'bg-danger') verdictEl.classList.add('text-danger');
         if(barClass === 'bg-warning') verdictEl.classList.add('text-warning');
+    }
+
+    function getsignalSpan(text,ratio=0) {
+        var cls = 'text-secondary';
+        if (ratio>0.25 || text=='Compra')
+            cls = 'text-success';
+        else if (ratio < -0.25 || text=='Venta')
+            cls = 'text-danger';
+        return '<span class="'+cls+'">'+text+'</span>';
+    }
+
+    function updateTA(result) {
+        $('#buy_signals').html(result.buy_signals);
+        $('#sell_signals').html(result.sell_signals);
+        $('#neutral_signals').html(result.neutral_signals);
+        $('#ma_buy_signals').html(result.ma_buy_signals);
+        $('#ma_sell_signals').html(result.ma_sell_signals);
+        $('#ma_neutral_signals').html(result.ma_neutral_signals);
+        $('#osc_buy_signals').html(result.osc_buy_signals);
+        $('#osc_sell_signals').html(result.osc_sell_signals);
+        $('#osc_neutral_signals').html(result.osc_neutral_signals);
+
+        $('#final_verdict').    html(getsignalSpan(result.final_verdict,result.sentiment_ratio));
+        $('#ma_final_verdict'). html(getsignalSpan(result.ma_final_verdict,result.ma_sentiment_ratio));
+        $('#osc_final_verdict').html(getsignalSpan(result.osc_final_verdict,result.osc_sentiment_ratio));
+
+        $('#final_verdict').append(' ('+to_dec(result.sentiment_ratio*100,0)+'%)');
+        $('#ma_final_verdict').append(' ('+to_dec(result.ma_sentiment_ratio*100,0)+'%)');
+        $('#osc_final_verdict').append(' ('+to_dec(result.osc_sentiment_ratio*100,0)+'%)');
+
+        var ma_table = $('#ma_table tbody');
+        var osc_table = $('#osc_table tbody');
+        ma_table.html('');
+        osc_table.html('');
+        for (const k in result.signals) {
+            var signal = result.signals[k];
+
+            decs = {{qty_decs_price}};
+            if (signal.hasOwnProperty('Decs'))
+                decs = signal.Decs;
+            
+            var tr = '<tr>';
+            tr += '<td>'+signal.Indicator+'</td>';
+            tr += '<td class="text-end">'+to_dec(signal.Value,decs)+'</td>';
+            tr += '<td class="text-center">'+getsignalSpan(signal.Signal)+'</td>';
+            tr += '</tr>';
+                
+            if (signal.Type == 'MA')
+                ma_table.append(tr);
+            else
+                osc_table.append(tr);
+            
+        } 
     }
 
 </script>
