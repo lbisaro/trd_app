@@ -40,10 +40,7 @@
                     <div>T/P: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
                     <div>S/L: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
                     <div>
-                        Analisis Tecnico: <span id="center-verdict"></span>
-                        <div class="progress border border-secondary rounded" style="height: 15px; background-color: #212529;">
-                            <div id="center-progress-bar" class="progress-bar" role="progressbar" style="color: #333;"></div>
-                        </div>
+                        Analisis Tecnico: <span id="main_verdict"></span>
                     </div>
                 </div>
                 <div class="border border-secondary rounded p-2"  id="trade_operation">
@@ -82,31 +79,7 @@
         </div>
 
         <div class="row pt-4">
-            <div class="col-4">
-                <div>
-                    <!-- TradingView Widget BEGIN -->
-                    <div class="tradingview-widget-container">
-                    <div class="tradingview-widget-container__widget"></div>
-                    <div class="tradingview-widget-copyright"><a href="https://es.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Siga los mercados en TradingView</span></a></div>
-                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
-                    {
-                    "interval": "15m",
-                    "isTransparent": false,
-                    "height": "425",
-                    "symbol": "BINANCE:{{alert.symbol}}.P",
-                    "showIntervalTabs": true,
-                    "displayMode": "single",
-                    "locale": "es",
-                    "colorTheme": "dark"
-                    }
-                    </script>
-                    </div>
-                    <!-- TradingView Widget END -->
-                </div>
-            </div>
-            <div class="col-8">
-               <div id="chart"></div>
-            </div>
+            <div id="chart"></div>
         </div>
 
         <div class="row pt-4 text-center">
@@ -171,8 +144,9 @@
                     <thead>
                         <tr>
                             <th>Nombre</th>
-                            <th class="text-end" style="width: 20%">Valor</th>
-                            <th class="text-center" style="width: 20%">Accion</th>
+                            <th class="text-end" style="width: 15%">Valor</th>
+                            <th class="text-end" style="width: 15%">Cambio</th>
+                            <th class="text-center" style="width: 15%">Accion</th>
                         </tr>
                     </thead>                    
                     <tbody></tbody>
@@ -186,8 +160,9 @@
                     <thead>
                         <tr>
                             <th>Nombre</th>
-                            <th class="text-end" style="width: 20%">Valor</th>
-                            <th class="text-center" style="width: 20%">Accion</th>
+                            <th class="text-end" style="width: 15%">Valor</th>
+                            <th class="text-end" style="width: 15%">Cambio</th>
+                            <th class="text-center" style="width: 15%">Accion</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -236,11 +211,6 @@
                 {
                     $('#trade_log').html('');
                     $('#trade_log').append('<div class="text-success">Ejecutado OK</div>');
-                    //for (const clave in rsp) {
-                    //    if (rsp.hasOwnProperty(clave)) {
-                    //        $('#trade_log').append('<div>'+clave+': '+rsp[clave]+"</div>");
-                    //    }
-                    //} 
                 }
             }); 
         }
@@ -515,76 +485,17 @@
             if (rsp)
             {
                 if (rsp.ok) {
-                    updateCenterBar(rsp.result.sentiment_ratio);
                     updateTA(rsp.result);
-
                 }
             }
         });  
     }
 
-    function updateCenterBar(sentimentRatio) {
-
-        // Asegurarse de que el ratio esté en el rango [-1, 1]
-        const clampedRatio = Math.max(-1, Math.min(1, sentimentRatio));
-
-        const progressBar = document.getElementById('center-progress-bar');
-        const verdictEl = document.getElementById('center-verdict');
-
-        let verdictText = 'Neutral';
-        let barClass = 'bg-warning'; // Amarillo para Neutral
-        let barWidth = 0;
-        let marginLeft = 0;
-
-        if (clampedRatio > 0.25) { // Umbral para considerar Compra
-            // --- LÓGICA DE COMPRA (CRECE A LA DERECHA) ---
-            barWidth = clampedRatio * 50; // Ancho es la mitad del ratio (0 a 50%)
-            marginLeft = 50; // Empieza desde el centro
-            
-            verdictText = (clampedRatio > 0.75) ? 'Compra Fuerte' : 'Compra';
-            barClass = 'bg-success'; // Verde
-
-        } else if (clampedRatio < -0.25) { // Umbral para considerar Venta
-            // --- LÓGICA DE VENTA (CRECE A LA IZQUIERDA) ---
-            const absRatio = Math.abs(clampedRatio);
-            barWidth = absRatio * 50; // Ancho es la mitad del ratio (0 a 50%)
-            marginLeft = 50 - barWidth; // Se posiciona a la izquierda del centro
-
-            verdictText = (clampedRatio < -0.75) ? 'Venta Fuerte' : 'Venta';
-            barClass = 'bg-danger'; // Rojo
-            
-        } else {
-            // --- LÓGICA NEUTRAL (BARRA PEQUEÑA EN EL CENTRO) ---
-            barWidth = 2; // Un ancho pequeño y fijo
-            marginLeft = 49; // Centrado (50% - la mitad del ancho)
-            verdictText = 'Neutral';
-            barClass = 'bg-warning'; // Amarillo
-        }
-
-        // Aplicar los estilos a la barra
-        progressBar.style.width = `${barWidth}%`;
-        progressBar.style.marginLeft = `${marginLeft}%`;
-        
-        // Aplicar clases de color y el texto
-        progressBar.className = 'progress-bar'; // Limpiar clases anteriores
-        progressBar.classList.add(barClass);
-        progressBar.textContent = to_dec(clampedRatio*100,0)+'%';
-
-        // Actualizar el título principal
-        verdictEl.textContent = `${verdictText}`;
-        
-        // Cambiar color del título para que coincida con la barra
-        verdictEl.className = ''; // Clases base
-        if(barClass === 'bg-success') verdictEl.classList.add('text-success');
-        if(barClass === 'bg-danger') verdictEl.classList.add('text-danger');
-        if(barClass === 'bg-warning') verdictEl.classList.add('text-warning');
-    }
-
-    function getsignalSpan(text,ratio=0) {
+    function getsignalSpan(text) {
         var cls = 'text-secondary';
-        if (ratio>0.25 || text=='Compra')
+        if (text=='Compra' || text=='Compra Fuerte')
             cls = 'text-success';
-        else if (ratio < -0.25 || text=='Venta')
+        else if (text=='Venta' || text=='Venta Fuerte')
             cls = 'text-danger';
         return '<span class="'+cls+'">'+text+'</span>';
     }
@@ -600,13 +511,15 @@
         $('#osc_sell_signals').html(result.osc_sell_signals);
         $('#osc_neutral_signals').html(result.osc_neutral_signals);
 
-        $('#final_verdict').    html(getsignalSpan(result.final_verdict,result.sentiment_ratio));
-        $('#ma_final_verdict'). html(getsignalSpan(result.ma_final_verdict,result.ma_sentiment_ratio));
-        $('#osc_final_verdict').html(getsignalSpan(result.osc_final_verdict,result.osc_sentiment_ratio));
+        $('#main_verdict').html(getsignalSpan(result.final_verdict));
 
-        $('#final_verdict').append(' ('+to_dec(result.sentiment_ratio*100,0)+'%)');
-        $('#ma_final_verdict').append(' ('+to_dec(result.ma_sentiment_ratio*100,0)+'%)');
-        $('#osc_final_verdict').append(' ('+to_dec(result.osc_sentiment_ratio*100,0)+'%)');
+        $('#final_verdict').html(getsignalSpan(result.final_verdict));
+        $('#ma_final_verdict').html(getsignalSpan(result.ma_final_verdict));
+        $('#osc_final_verdict').html(getsignalSpan(result.osc_final_verdict));
+
+        //$('#final_verdict').append(' ('+to_dec(result.sentiment_ratio*100,0)+'%)');
+        //$('#ma_final_verdict').append(' ('+to_dec(result.ma_sentiment_ratio*100,0)+'%)');
+        //$('#osc_final_verdict').append(' ('+to_dec(result.osc_sentiment_ratio*100,0)+'%)');
 
         var ma_table = $('#ma_table tbody');
         var osc_table = $('#osc_table tbody');
@@ -622,6 +535,7 @@
             var tr = '<tr>';
             tr += '<td>'+signal.Indicator+'</td>';
             tr += '<td class="text-end">'+to_dec(signal.Value,decs)+'</td>';
+            tr += '<td class="text-end text-'+(signal.Slope>0?'success':'danger')+'">'+to_dec(signal.Slope,2)+'</td>';
             tr += '<td class="text-center">'+getsignalSpan(signal.Signal)+'</td>';
             tr += '</tr>';
                 

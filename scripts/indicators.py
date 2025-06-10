@@ -673,18 +673,55 @@ def get_pivots_alert(df,threshold=1.5):
 
     return data
 
+def get_normalized_slope(df, column_name, window=5, stability_factor=1e-9):
+    """
+    Calcula una pendiente 'normalizada' como un porcentaje del valor actual del indicador.
+    
+    Args:
+        df (pd.DataFrame): El DataFrame con los datos.
+        column_name (str): El nombre de la columna del indicador.
+        window (int): La ventana para calcular la regresión lineal.
+        stability_factor (float): Un valor pequeño para evitar la división por cero.
+
+    Returns:
+        float: La pendiente normalizada como un porcentaje, o 0.0 si el valor es demasiado inestable.
+    """
+    
+    # 1. Obtener la serie de la ventana y el último valor
+    indicator_series = df[column_name].tail(window)
+    last_value = indicator_series.iloc[-1]
+
+    # --- Medida de Seguridad Clave ---
+    # Si el valor absoluto es muy pequeño, la normalización es inestable.
+    # Devolvemos 0 para indicar que no hay una tendencia porcentual fiable.
+    if abs(last_value) < stability_factor:
+        return 0.0
+
+    # 2. Calcular la pendiente
+    # Retorna 0.0 si la ventana no está llena o contiene NaNs
+    if indicator_series.isnull().any() or len(indicator_series) < window:
+        return 0.0
+        
+    y = indicator_series.values
+    x = np.arange(len(y))
+    slope, _ = np.polyfit(x, y, 1)
+
+    # 3. Normalizar la pendiente y convertir a porcentaje
+    normalized_slope = (slope / last_value) * 100
+    
+    return normalized_slope
+
 def technical_summary(df):
     """
     Analiza el DataFrame y devuelve un resumen técnico similar a TradingView.
+    https://es.tradingview.com/symbols/AVAAIUSDT.P/technicals/
     """
     signals = []
-    
-    # Asegurarse de que el df tenga las columnas correctas
-    df.columns = df.columns.str.lower()
+
+    SLOPE_THRESHOLD = 3 
+    SLOPE_MA_THRESHOLD = 0.025
     
     # --- CÁLCULO DE INDICADORES ---
-    # Usamos pandas_ta para calcular todos los indicadores de una vez
-    # Parámetros basados en el widget de TradingView
     df.ta.rsi(length=14, append=True)
     df.ta.stoch(k=14, d=3, smooth_k=3, append=True)
     df.ta.cci(length=20, append=True)
@@ -694,16 +731,13 @@ def technical_summary(df):
     df.ta.macd(fast=12, slow=26, signal=9, append=True)
     df.ta.stochrsi(length=14, rsi_length=14, k=3, d=3, append=True)
     df.ta.willr(length=14, append=True)
+    df.ta.uo(fast=7, medium=14, slow=28, append=True)
     # Bull Bear Power no está directamente en pandas_ta, pero se puede calcular
     ema13 = ta.ema(df['close'], length=13)
     df['BULLP'] = df['high'] - ema13
     df['BEARP'] = df['low'] - ema13
     df['BBP'] = ((df['BULLP']+df['BEARP']) / df['close']) * 100
-    df.drop(['BEARP','BEARP'],axis=1, inplace=True)
-    df.ta.uo(fast=7, medium=14, slow=28, append=True)
-
-    df['CCI_trend'] = df['CCI_20_0.015'].iloc[-10:].diff()
-    df['AO_trend'] = df['AO_5_34'].iloc[-10:].diff()
+    df.drop(['BULLP','BEARP'],axis=1, inplace=True)
     
     # Medias Móviles
     for period in [10, 20, 30, 50, 100, 200]:
@@ -724,68 +758,137 @@ def technical_summary(df):
     
     # RSI
     rsi = last_row['RSI_14']
-    if rsi > 65: signals.append({'Indicator': 'RSI(14)', 'Value': rsi, 'Signal': 'Compra', 'Type': 'Oscillator', 'Decs': 2 })
-    elif rsi < 35: signals.append({'Indicator': 'RSI(14)', 'Value': rsi, 'Signal': 'Venta', 'Type': 'Oscillator', 'Decs': 2})
-    else: signals.append({'Indicator': 'RSI(14)', 'Value': rsi, 'Signal': 'Neutral', 'Type': 'Oscillator', 'Decs': 2})
+    slope = get_normalized_slope(df, 'RSI_14')
+    signal = 'Neutral'
+    if slope > -SLOPE_THRESHOLD and slope < SLOPE_THRESHOLD:
+        signal = 'Neutral'
+    elif rsi < 40 and slope < 0: 
+        signal = 'Venta'
+    elif rsi > 60 and slope > 0: 
+        signal = 'Compra'
+    signals.append({'Indicator': 'RSI(14)', 'Value': rsi, 'Signal': signal, 'Slope': slope, 'Type': 'Oscillator', 'Decs': 2})
 
     # Stochastic %K
     stoch_k, stoch_d = last_row['STOCHk_14_3_3'], last_row['STOCHd_14_3_3']
-    if stoch_k > stoch_d and stoch_k > 70: signals.append({'Indicator': 'Stoch %K(14,3,3)', 'Value': stoch_k, 'Signal': 'Compra', 'Type': 'Oscillator', 'Decs': 2})
-    elif stoch_k < stoch_d and stoch_k < 30: signals.append({'Indicator': 'Stoch %K(14,3,3)', 'Value': stoch_k, 'Signal': 'Venta', 'Type': 'Oscillator', 'Decs': 2})
-    else: signals.append({'Indicator': 'Stoch %K(14,3,3)', 'Value': stoch_k, 'Signal': 'Neutral', 'Type': 'Oscillator', 'Decs': 2})
+    slope = get_normalized_slope(df,'STOCHk_14_3_3')
+    signal = 'Neutral'
+    if slope > -SLOPE_THRESHOLD and slope < SLOPE_THRESHOLD:
+        signal = 'Neutral'
+    elif stoch_k < stoch_d and stoch_k < 30 and slope < 0: 
+        signal = 'Venta'
+    elif stoch_k > stoch_d and stoch_k > 70 and slope > 0: 
+        signal = 'Compra'
+    signals.append({'Indicator': 'Stoch %K(14,3,3)', 'Value': stoch_k, 'Signal': signal, 'Slope': slope, 'Type': 'Oscillator', 'Decs': 2})
 
     # CCI
-    cci, cci_trend = last_row['CCI_20_0.015'], last_row['CCI_trend']
-    
-    if cci > 100 and cci_trend>0: signals.append({'Indicator': 'CCI(20)', 'Value': cci, 'Signal': 'Venta', 'Type': 'Oscillator', 'Decs': 2}) # Sobrecompra -> Venta
-    elif cci < -100 and cci_trend<0: signals.append({'Indicator': 'CCI(20)', 'Value': cci, 'Signal': 'Compra', 'Type': 'Oscillator', 'Decs': 2}) # Sobreventa -> Compra
-    else: signals.append({'Indicator': 'CCI(20)', 'Value': cci, 'Signal': 'Neutral', 'Type': 'Oscillator', 'Decs': 2})
+    cci = last_row['CCI_20_0.015']
+    slope = get_normalized_slope(df, 'CCI_20_0.015')
+    signal = 'Neutral'
+    if slope > -SLOPE_THRESHOLD and slope < SLOPE_THRESHOLD:
+        signal = 'Neutral'
+    elif cci > 100 and slope < 0: 
+        signal = 'Venta'
+    elif cci < -100 and slope > 0: 
+        signal = 'Compra'
+    signals.append({'Indicator': 'CCI(20)', 'Value': cci, 'Signal': signal, 'Slope': slope, 'Type': 'Oscillator', 'Decs': 2})
     
     # ADX
     adx, dmp, dmn = last_row['ADX_14'], last_row['DMP_14'], last_row['DMN_14']
-    if adx > 45 and dmp > dmn: signals.append({'Indicator': 'ADX(14)', 'Value': adx, 'Signal': 'Compra', 'Type': 'Oscillator', 'Decs': 2})
-    elif adx > 45 and dmn > dmp: signals.append({'Indicator': 'ADX(14)', 'Value': adx, 'Signal': 'Venta', 'Type': 'Oscillator', 'Decs': 2})
-    else: signals.append({'Indicator': 'ADX(14)', 'Value': adx, 'Signal': 'Neutral', 'Type': 'Oscillator', 'Decs': 2})
+    slope = get_normalized_slope(df, 'ADX_14')
+    signal = 'Neutral'
+    if slope > -SLOPE_THRESHOLD and slope < SLOPE_THRESHOLD:
+        signal = 'Neutral'
+    elif adx > 25 and dmn > dmp and slope > 0: 
+        signal = 'Venta'
+    elif adx > 25 and dmp > dmn and slope > 0: 
+        signal = 'Compra'
+    signals.append({'Indicator': 'ADX(14)', 'Value': adx, 'Signal': signal, 'Slope': slope, 'Type': 'Oscillator', 'Decs': 2})
     
     # Awesome Oscillator
-    ao,ao_trend = last_row['AO_5_34'],last_row['AO_trend']
-    if ao > 0 and ao_trend>0: signals.append({'Indicator': 'Awesome Osc.', 'Value': ao, 'Signal': 'Compra', 'Type': 'Oscillator'})
-    elif ao < 0 and ao_trend<0: signals.append({'Indicator': 'Awesome Osc.', 'Value': ao, 'Signal': 'Venta', 'Type': 'Oscillator'})
-    else: signals.append({'Indicator': 'Awesome Osc.', 'Value': ao, 'Signal': 'Neutral', 'Type': 'Oscillator'})
+    ao = last_row['AO_5_34']
+    slope = get_normalized_slope(df, 'AO_5_34')
+    signal = 'Neutral'
+    if slope > -SLOPE_THRESHOLD and slope < SLOPE_THRESHOLD:
+        signal = 'Neutral'
+    elif ao < 0 and slope < 0: 
+        signal = 'Venta'
+    elif ao > 0 and slope > 0: 
+        signal = 'Compra'
+    signals.append({'Indicator': 'Awesome Osc.', 'Value': ao, 'Signal': signal, 'Slope': slope, 'Type': 'Oscillator'})
 
     # Momentum
     mom = last_row['MOM_10']
-    if mom > 0: signals.append({'Indicator': 'Momentum(10)', 'Value': mom, 'Signal': 'Compra', 'Type': 'Oscillator'})
-    else: signals.append({'Indicator': 'Momentum(10)', 'Value': mom, 'Signal': 'Venta', 'Type': 'Oscillator'})
+    slope = get_normalized_slope(df, 'MOM_10')
+    signal = 'Neutral'
+    if slope > -SLOPE_THRESHOLD and slope < SLOPE_THRESHOLD:
+        signal = 'Neutral'
+    elif mom < 0 and slope < 0: 
+        signal = 'Venta'
+    elif mom > 0 and slope > 0: 
+        signal = 'Compra'
+    signals.append({'Indicator': 'Momentum(10)', 'Value': mom, 'Signal': signal, 'Slope': slope, 'Type': 'Oscillator'})
 
     # MACD Level
     macd, macd_s = last_row['MACD_12_26_9'], last_row['MACDs_12_26_9']
-    if macd > macd_s: signals.append({'Indicator': 'MACD Level(12,26)', 'Value': macd, 'Signal': 'Compra', 'Type': 'Oscillator'})
-    else: signals.append({'Indicator': 'MACD Level(12,26)', 'Value': macd, 'Signal': 'Venta', 'Type': 'Oscillator'})
+    slope = get_normalized_slope(df, 'MACD_12_26_9')
+    signal = 'Neutral'
+    if slope > -SLOPE_THRESHOLD and slope < SLOPE_THRESHOLD:
+        signal = 'Neutral'
+    elif macd > macd_s and slope > 0: 
+        signal = 'Compra'
+    elif macd < macd_s and slope < 0: 
+        signal = 'Venta'
+    signals.append({'Indicator': 'MACD Level(12,26)', 'Value': macd, 'Signal': signal, 'Slope': slope, 'Type': 'Oscillator'})
 
     # Stochastic RSI
     stoch_rsi_k, stoch_rsi_d = last_row['STOCHRSIk_14_14_3_3'], last_row['STOCHRSId_14_14_3_3']
-    if stoch_rsi_k > stoch_rsi_d: signals.append({'Indicator': 'Stoch RSI Fast(3,3,14,14)', 'Value': stoch_rsi_k, 'Signal': 'Compra', 'Type': 'Oscillator', 'Decs': 2})
-    else: signals.append({'Indicator': 'Stoch RSI Fast(3,3,14,14)', 'Value': stoch_rsi_k, 'Signal': 'Venta', 'Type': 'Oscillator', 'Decs': 2})
+    slope = get_normalized_slope(df, 'STOCHRSIk_14_14_3_3')
+    signal = 'Neutral'
+    if slope > -SLOPE_THRESHOLD and slope < SLOPE_THRESHOLD:
+        signal = 'Neutral'
+    elif stoch_rsi_k > stoch_rsi_d and slope > 0: 
+        signal = 'Compra'
+    elif stoch_rsi_k < stoch_rsi_d and slope < 0: 
+        signal = 'Venta'
+    signals.append({'Indicator': 'Stoch RSI Fast(3,3,14,14)', 'Value': stoch_rsi_k, 'Signal': signal, 'Slope': slope, 'Type': 'Oscillator', 'Decs': 2})
 
     # Williams %R
     willr = last_row['WILLR_14']
-    if willr < -80: signals.append({'Indicator': 'Williams %R(14)', 'Value': willr, 'Signal': 'Compra', 'Type': 'Oscillator', 'Decs': 2})
-    elif willr > -20: signals.append({'Indicator': 'Williams %R(14)', 'Value': willr, 'Signal': 'Venta', 'Type': 'Oscillator', 'Decs': 2})
-    else: signals.append({'Indicator': 'Williams %R(14)', 'Value': willr, 'Signal': 'Neutral', 'Type': 'Oscillator', 'Decs': 2})
+    slope = get_normalized_slope(df, 'WILLR_14')
+    signal = 'Neutral'
+    if slope > -SLOPE_THRESHOLD and slope < SLOPE_THRESHOLD:
+        signal = 'Neutral'
+    elif willr > -20 and slope < 0: 
+        signal = 'Venta'
+    elif willr < -80 and slope > 0: 
+        signal = 'Compra'
+    signals.append({'Indicator': 'Williams %R(14)', 'Value': willr, 'Signal': signal, 'Slope': slope, 'Type': 'Oscillator', 'Decs': 2})
 
     # Bull Bear Power (simplificado)
     bbp = last_row['BBP']
-    if bbp > 2: signals.append({'Indicator': 'Bull Bear Power', 'Value': bbp, 'Signal': 'Compra', 'Type': 'Oscillator', 'Decs': 2})
-    elif bbp < -2: signals.append({'Indicator': 'Bull Bear Power', 'Value': bbp, 'Signal': 'Venta', 'Type': 'Oscillator', 'Decs': 2})
-    else: signals.append({'Indicator': 'Bull Bear Power', 'Value': bbp, 'Signal': 'Neutral', 'Type': 'Oscillator', 'Decs': 2})
-    
-    # Ultimate Oscillator
-    uo = last_row['UO_7_14_28']
-    if uo > 70: signals.append({'Indicator': 'Ultimate Osc.(7,14,28)', 'Value': uo, 'Signal': 'Venta', 'Type': 'Oscillator', 'Decs': 2})
-    elif uo < 30: signals.append({'Indicator': 'Ultimate Osc.(7,14,28)', 'Value': uo, 'Signal': 'Compra', 'Type': 'Oscillator', 'Decs': 2})
-    else: signals.append({'Indicator': 'Ultimate Osc.(7,14,28)', 'Value': uo, 'Signal': 'Neutral', 'Type': 'Oscillator', 'Decs': 2})
-    
+    slope = get_normalized_slope(df, 'BBP')
+    signal = 'Neutral'
+    if slope > -SLOPE_THRESHOLD and slope < SLOPE_THRESHOLD:
+        signal = 'Neutral'
+    elif bbp < -2 and slope < 0: 
+        signal = 'Venta'
+    elif bbp > 2 and slope > 0: 
+        signal = 'Compra'
+    signals.append({'Indicator': 'Bull Bear Power', 'Value': bbp, 'Signal': signal, 'Slope': slope, 'Type': 'Oscillator', 'Decs': 2})
+
+    # Ultimate Oscillator 
+    uo = last_row['UO_7_14_28'] 
+    slope = get_normalized_slope(df, 'UO_7_14_28') 
+    signal = 'Neutral' 
+    if slope > -SLOPE_THRESHOLD and slope < SLOPE_THRESHOLD: 
+        signal = 'Neutral' # Venta: Saliendo de sobrecompra 
+    elif uo > 70 and slope < 0: 
+        signal = 'Venta' # Compra: Saliendo de sobreventa 
+    elif uo < 30 and slope > 0: 
+        signal = 'Compra' 
+    signals.append({'Indicator': 'Ultimate Osc.(7,14,28)', 'Value': uo, 'Signal': signal, 'Slope': slope, 'Type': 'Oscillator', 'Decs': 2})
+
+
     # --- ANÁLISIS DE MEDIAS MÓVILES ---
     price = last_row['close']
     ma_list = [
@@ -802,65 +905,69 @@ def technical_summary(df):
     
     for name, col in ma_list:
         ma_value = last_row[col]
-        if price > ma_value: signals.append({'Indicator': name, 'Value': ma_value, 'Signal': 'Compra', 'Type': 'MA'})
-        else: signals.append({'Indicator': name, 'Value': ma_value, 'Signal': 'Venta', 'Type': 'MA'})
+        slope = get_normalized_slope(df,col)
+        signal = 'Neutral'
+        if slope > -SLOPE_MA_THRESHOLD and slope < SLOPE_MA_THRESHOLD:
+            signal = 'Neutral'
+        elif price > ma_value: # and slope > 0: 
+            signal = 'Compra'
+        elif price < ma_value:# and slope < 0:
+            signal = 'Venta'
+        signals.append({'Indicator': name, 'Value': ma_value, 'Signal': signal, 'Slope': slope, 'Type': 'MA'})
+        
 
     results_df = pd.DataFrame(signals)
 
-    """
-    Imprime el resumen de manera clara, similar a TradingView, 
-    con un veredicto final de 5 categorías.
-    """
     brief = {}
 
     if results_df.empty:
-        print("No hay resultados para analizar.")
         return brief
 
     # --- 1. Conteo de Señales ---
     buy_signals = len(results_df[results_df['Signal'] == 'Compra'])
     sell_signals = len(results_df[results_df['Signal'] == 'Venta'])
     neutral_signals = len(results_df[results_df['Signal'] == 'Neutral'])
-
     ma_buy_signals = len(results_df[(results_df['Signal'] == 'Compra') & (results_df['Type']=='MA')])
     ma_sell_signals = len(results_df[(results_df['Signal'] == 'Venta') & (results_df['Type']=='MA')])
     ma_neutral_signals = len(results_df[(results_df['Signal'] == 'Neutral') & (results_df['Type']=='MA')])
     osc_buy_signals = len(results_df[(results_df['Signal'] == 'Compra') & (results_df['Type']=='Oscillator')])
     osc_sell_signals = len(results_df[(results_df['Signal'] == 'Venta') & (results_df['Type']=='Oscillator')])
     osc_neutral_signals = len(results_df[(results_df['Signal'] == 'Neutral') & (results_df['Type']=='Oscillator')])
-
     
-    # Total de indicadores que dan una señal activa (no neutral)
-    total_active_signals = buy_signals + sell_signals
-    ma_active_signals = ma_buy_signals + ma_sell_signals
-    osc_active_signals = ma_buy_signals + osc_sell_signals
 
-    # --- 2. Cálculo del Puntaje y Ratio ---
-    # Compra = +1, Venta = -1, Neutral = 0
+    total_indicators = buy_signals + sell_signals + neutral_signals
     net_score = buy_signals - sell_signals
+    sentiment_ratio = 0 if total_indicators == 0 else net_score / total_indicators
+
+    ma_total_indicators = ma_buy_signals + ma_sell_signals + ma_neutral_signals
     ma_net_score = ma_buy_signals - ma_sell_signals
+    ma_sentiment_ratio = 0 if ma_total_indicators == 0 else ma_net_score / ma_total_indicators
+
+    osc_total_indicators = osc_buy_signals + osc_sell_signals + osc_neutral_signals
     osc_net_score = osc_buy_signals - osc_sell_signals
+    osc_sentiment_ratio = 0 if osc_total_indicators == 0 else osc_net_score / osc_total_indicators
 
-    
-    # Evitar división por cero si todos los indicadores son neutrales
-    sentiment_ratio = 0 if total_active_signals == 0 else net_score / total_active_signals
-    ma_sentiment_ratio = 0 if ma_active_signals == 0 else ma_net_score / ma_active_signals
-    osc_sentiment_ratio = 0 if osc_active_signals == 0 else osc_net_score / osc_active_signals
-
-        
-    
     # --- 3. Determinación del Veredicto Final (5 categorías) ---
     def calc_final_verdict(ratio):
-        if ratio > 0.75:
+        """
+        Calcula el veredicto final basado en el ratio de sentimiento.
+        Usa umbrales deducidos del comportamiento de TradingView.
+        """
+        # Nuevos umbrales deducidos de los datos
+        STRONG_BUY_THRESHOLD = 0.5
+        BUY_THRESHOLD = 0.1
+        
+        if ratio >= STRONG_BUY_THRESHOLD:
             verdict = 'Compra Fuerte'
-        elif ratio > 0.25:
+        elif ratio >= BUY_THRESHOLD:
             verdict = 'Compra'
-        elif ratio >= -0.25:
+        elif ratio > -BUY_THRESHOLD: # Zona Neutral entre -0.1 y +0.1
             verdict = 'Neutral'
-        elif ratio >= -0.75:
+        elif ratio > -STRONG_BUY_THRESHOLD: # Zona de Venta entre -0.5 y -0.1
             verdict = 'Venta'
-        else: # sentiment_ratio < -0.75
+        else: # Por debajo de -0.5
             verdict = 'Venta Fuerte'
+            
         return verdict
     
     final_verdict = calc_final_verdict(sentiment_ratio)
