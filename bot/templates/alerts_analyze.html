@@ -292,7 +292,15 @@
         });
         
         addCandlestickData(mainSeries);
-        
+
+        const dataSize = fullData.length;
+        if (dataSize >= 96) {
+            chart.timeScale().setVisibleLogicalRange({
+                from: dataSize-96,
+                to: dataSize,
+            });
+        }
+
         const tp1Series = chart.addSeries(LightweightCharts.LineSeries, {
             color: '#0ecb81',
             lineWidth: 1,
@@ -340,15 +348,7 @@
             priceLineVisible: false,
         });
         supertrendSeries.setData(supertrend_color);
-        
 
-        const dataSize = fullData.length;
-        if (dataSize >= 96) {
-            chart.timeScale().setVisibleLogicalRange({
-                from: dataSize-96,
-                to: dataSize,
-            });
-        }
 
         // --- 3. CONEXIÓN WEBSOCKET PARA DATOS EN TIEMPO REAL ---
         const symbol = ('{{alert.symbol}}').toLowerCase();
