@@ -81,7 +81,7 @@
                 <div class="overflow-auto text-secondary" id="ia_prompt" style="max-height: 150px;"> 
                     {{ia_prompt|linebreaksbr}}
                 </div>
-                <div class="pt-3" id="ia_response" style="display:none;">
+                <div class="pt-3" id="ia_response">Consultando a Gemini ..... </div>
             </div>
         </div>
 
@@ -236,7 +236,6 @@
         get_ajax(url,data).done( function (rsp) {
             if (rsp)
             {
-                $('#ia_response').html('');
                 if (rsp.ia_response) {
 
                     const matchTp = rsp.ia_response.match(/tp:\s*(\d+)/);
@@ -253,9 +252,7 @@
                         html_ia_response = '<div class="text-warning">No fue posible obtener un analisis de Gemini</div>'
                     }
 
-
                     $('#ia_response').html(html_ia_response);
-                    $('#ia_response').show();
                 }
             }
         }); 
