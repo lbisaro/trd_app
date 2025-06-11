@@ -274,11 +274,8 @@
         chart.timeScale().applyOptions({
             borderColor: '#71649C',
         });
-        // Get the current users primary locale
         const currentLocale = window.navigator.languages[0];
-        // Create a number format using Intl.NumberFormat
         const myPriceFormatter = p => p.toFixed({{qty_decs_price}});
-        // Apply the custom priceFormatter to the chart
         chart.applyOptions({
             localization: {
                 priceFormatter: myPriceFormatter,
@@ -546,10 +543,6 @@
         $('#final_verdict').html(getsignalSpan(result.final_verdict));
         $('#ma_final_verdict').html(getsignalSpan(result.ma_final_verdict));
         $('#osc_final_verdict').html(getsignalSpan(result.osc_final_verdict));
-
-        //$('#final_verdict').append(' ('+to_dec(result.sentiment_ratio*100,0)+'%)');
-        //$('#ma_final_verdict').append(' ('+to_dec(result.ma_sentiment_ratio*100,0)+'%)');
-        //$('#osc_final_verdict').append(' ('+to_dec(result.osc_sentiment_ratio*100,0)+'%)');
 
         var ma_table = $('#ma_table tbody');
         var osc_table = $('#osc_table tbody');
