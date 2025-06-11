@@ -1,15 +1,22 @@
 {% extends 'base.html' %}
 {% block title %}Alerta {{alert.name}}{% endblock %}
 {% block nav_title %}Alerta {{alert.name}}{% endblock %}
-    
+
+{% load static %}
+
 {% block head %}
 <script
     type="text/javascript"
     src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js">
     </script>
+
+<script
+    type="text/javascript"
+    src="/static/scripts/ta-library.js">
+    </script>
+
 {% endblock %}
 
-{% load static %}
 
 {% block css %}
 <style>
@@ -246,8 +253,6 @@
 
         const chartContainer = document.getElementById('chart');
 
-
-
         // Create the Lightweight Chart within the container element
         const chart = LightweightCharts.createChart(chartContainer, {
             height: 400,
@@ -323,7 +328,31 @@
             { time: formatDateTime('{{alert.start_dt}}'), value: {{alert.in_price}} },
         ];
         inPriceSeries.setData(inPriceData);
+
+
+        //SUPERTREND
+        supertrend = TA.SuperTrend(fullData);
+        const supertrend_color = supertrend.map(point => ({
+            time: point.time,
+            value: point.value,
+            color: point.direction > 0 ? '#0ecb81' : '#f6465d' 
+        }));
+        const supertrendSeries = chart.addSeries(LightweightCharts.LineSeries, {
+            lineWidth: 1,
+            lastValueVisible: false,
+            priceLineVisible: false,
+        });
+        supertrendSeries.setData(supertrend_color);
         
+
+        const dataSize = fullData.length;
+        if (dataSize >= 96) {
+            chart.timeScale().setVisibleLogicalRange({
+                from: dataSize-96,
+                to: dataSize,
+            });
+        }
+
         // --- 3. CONEXIÓN WEBSOCKET PARA DATOS EN TIEMPO REAL ---
         const symbol = ('{{alert.symbol}}').toLowerCase();
         const interval = '{{alert.timeframe}}';
@@ -396,6 +425,7 @@
         mainSeries.setData(fullData);
         
         get_technical_analize(fullData);
+
     }
 
     function updateFullData(new_kline)
@@ -546,6 +576,7 @@
             
         } 
     }
+
 
 </script>
 
