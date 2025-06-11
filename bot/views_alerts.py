@@ -270,8 +270,6 @@ def execute(request):
 
 def get_ia_prompt(alert,df):
 
-    df_1h = resample(df,periods=4)
-
     str_side = 'LONG' if alert['side']>0 else 'SHORT'
     trade_symbol = alert['symbol']
     timeframe = alert['timeframe']
@@ -280,30 +278,17 @@ def get_ia_prompt(alert,df):
     take_profit = str(alert['tp1'])
     actual_price = df.iloc[-1]['close']
 
-    prompt = f'' 
-    prompt = f"""
-Experto en trading, analiza probabilidad de éxito para una entrada en {str_side} para scalping en Binance Futures.
-Símbolo: {trade_symbol}, 
-Temporalidad: {timeframe}.
-Precio Actual: {actual_price}
-EntryPrice: {entry_price}
-StopLoss: {stop_loss}
-TakeProfit: {take_profit}
-Ultimas velas en timeframe de 1 hora:
-high    low close       volume/1000 """
-    for i,row in df_1h.iterrows():
-        high, low, close, volume = row['high'],row['low'],row['close'],round(row['volume']/1000,2)
-        prompt += f"""
-{high}  {low}   {close}     {volume} """
-    prompt += f"""
+    prompt = f'{trade_symbol} {str_side} '\
+             f'P_Act: {actual_price} '\
+             f'EP: {entry_price} '\
+             f'SL: {stop_loss} '\
+             f'TP: {take_profit} '\
+             f'Velas15m(H,L,C,V): '
 
-Evalua unicamente la probabilidades de que el trade alcance el StopLoss y el TakeProfit
-Las probabilidades expresalas con un porcentaje de exito de 0 a 100, donde 0 significa altamente improbable y 100 significa altamente probable.
-No incluyas ninguna otra explicación, justificación o texto adicional, ni descargo de responsabilidad ya que conozco los riesgos. 
-Tu respuesta debe ser representada en dos lineas como se muestra abajo:
-tp: x
-sl: y
-    """
+    for i,row in df[-150:].iterrows():
+        high, low, close, volume = row['high'],row['low'],row['close'],round(row['volume']/1000,2)
+        prompt += f'{high},{low},{close},{volume};'
+
     return prompt
 
 @login_required
@@ -313,18 +298,17 @@ def ia_prompt(request):
     json_rsp['prompt'] = prompt
 
     url = 'http://192.168.1.8/ia/prompt/'
-    data = {'prompt': prompt}  
+    #url = 'http://localhost:5000/prompt/'
+    data = {'prompt': prompt,
+            'instruction': 'scalping_15m'
+            }  
 
     try:
         response = requests.post(url, json=data)
         response.raise_for_status()  
         
         json_data = response.json()  # Convierte la respuesta a JSON
-        ia_response = json_data['ia_response']
-        #ia_response_int = int(ia_response.strip().replace('%', ''))
-        #json_rsp['text_class'] = 'text-success' if  ia_response_int > 50 else 'text-warning'
-        #json_rsp['ia_response'] = f'De acuerdo al analisis de Gemini, la probabilidad de exito del trade es del {ia_response}'
-        json_rsp['ia_response'] = ia_response
+        json_rsp = json_data
         
     
     except requests.exceptions.RequestException as e:

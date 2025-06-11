@@ -39,20 +39,26 @@
         </div>
         <div class="row">
 
-            <div class="col-4">
-                <div class="mb-3 p-2  border border-secondary rounded">
-                    <h6 class="text-{{alert.class}}">{{alert.origin}} [{{alert.symbol}}] [{{alert.timeframe}}]</h6>
-                    <div>Entrada: {{alert.in_price}}</div> 
-                    <div>Precio: <span id="actual_price">{{actual_price}}</span> <span id="price_in_perc"></span></div>    
-                    <div>T/P: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
-                    <div>S/L: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
-                    <div>
-                        Analisis Tecnico: <span id="main_verdict"></span>
-                    </div>
+            <div class="col-4 border border-secondary rounded mb-3 p-2">
+                <h6 class="text-{{alert.class}}">{{alert.origin}} [{{alert.symbol}}] [{{alert.timeframe}}]</h6>
+                <div>Entrada: {{alert.in_price}}</div> 
+                <div>Precio: <span id="actual_price">{{actual_price}}</span> <span id="price_in_perc"></span></div>    
+                <div>T/P: {{alert.tp1}} <span class="text-secondary">({{alert.tp1_perc}} %)</span></div>
+                <div>S/L: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
+                <div>Analisis Tecnico: <span id="main_verdict"></span></div>
+            </div>
+            <div class="col-4 border border-secondary rounded mb-3 p-2">
+                <h6 class="text-info">Analisis de Gemini</h6>
+                <div class="pt-3" id="ia_response">Consultando a Gemini ..... </div>
+                <div id="ia_prompt" style="display: none;">{{ia_prompt}}</div>
+
+            </div>
+            <div class="col-4 border border-secondary rounded mb-3 p-2">
+                <h6 class="text-info">Ejecucion del trade</h6>
+                <div id="trade_operation_off"  class="text-warning">
+                    La ejecucion del trade se encuentra fuera de rango
                 </div>
-                <div class="border border-secondary rounded p-2"  id="trade_operation">
-                    <h6 class="text-info">Ejecucion del trade</h6>
-                    
+                <div id="trade_operation">
                     <div class="row" id="trade_parameters">
                         <div class="form-group col-6">
                             <div class="input-group ">
@@ -71,17 +77,7 @@
                         </div>
                     </div>
                     <div class="row" id="trade_log"></div>
-
-
                 </div>
-            </div>
-
-            <div class="col-8 p-2 border border-secondary rounded">
-                <h6 class="text-info">Analisis de Gemini</h6>
-                <div class="overflow-auto text-secondary" id="ia_prompt" style="max-height: 150px;"> 
-                    {{ia_prompt|linebreaksbr}}
-                </div>
-                <div class="pt-3" id="ia_response">Consultando a Gemini ..... </div>
             </div>
         </div>
 
@@ -236,24 +232,25 @@
         get_ajax(url,data).done( function (rsp) {
             if (rsp)
             {
-                if (rsp.ia_response) {
-
-                    const matchTp = rsp.ia_response.match(/tp:\s*(\d+)/);
-                    const matchSl = rsp.ia_response.match(/sl:\s*(\d+)/);
-
-                    const tp_prob = matchTp ? parseInt(matchTp[1]) : null;
-                    const sl_prob = matchSl ? parseInt(matchSl[1]) : null;
-                    
-                    if (tp_prob>=0 && tp_prob<= 100 && sl_prob>=0 && sl_prob<= 100) {
-                        html_ia_response = '<div>Probabilidad de alcanzar Take-Profit: <span class="text-'+(tp_prob>sl_prob?'success':'danger')+'">'+tp_prob+'%</span></div>';
-                        html_ia_response += '<div>Probabilidad de alcanzar Stop-Loss: <span class="text-'+(sl_prob>tp_prob?'danger':'success')+'">'+sl_prob+'%</span></div>';
-                    }
-                    else {
-                        html_ia_response = '<div class="text-warning">No fue posible obtener un analisis de Gemini</div>'
-                    }
-
-                    $('#ia_response').html(html_ia_response);
+                console.log(rsp);
+                html_ia_response = '';
+                if (rsp.error) {
+                    html_ia_response = '<div class="text-danger">Error al obtener respuesta de la IA</div>';
+                    html_ia_response += '<pre class="text-danger">'+rsp.error+'</pre>';
                 }
+                else if (rsp.ia_response) {
+
+                    if (rsp.instruction == 'scalping_15m')
+                    {
+                        const tp_prob = rsp.ia_response.take_profit_probability
+                        const sl_prob = rsp.ia_response.stop_loss_probability
+                        if (tp_prob>=0 && tp_prob<= 100 && sl_prob>=0 && sl_prob<= 100) {
+                            html_ia_response = '<div>Probabilidad para Take-Profit: <span class="text-'+(tp_prob>sl_prob?'success':'danger')+'">'+tp_prob+'%</span></div>';
+                            html_ia_response += '<div>Probabilidad para Stop-Loss: <span class="text-'+(sl_prob>tp_prob?'danger':'success')+'">'+sl_prob+'%</span></div>';
+                        }
+                    }                                    
+                }
+                $('#ia_response').html(html_ia_response);
             }
         }); 
     }
@@ -498,10 +495,14 @@
         $('#price_in_perc').html(`${pi_perc}% ${pi_legend}`);
         $('#price_in_perc').attr('class',pi_class);
 
-        if (in_range)
+        if (in_range) {
             $('#trade_operation').show();
-        else
+            $('#trade_operation_off').hide();
+        }
+        else {
             $('#trade_operation').hide();
+            $('#trade_operation_off').show();
+        }
     }
 
     setInterval(function () {
