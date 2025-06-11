@@ -77,11 +77,11 @@
             </div>
 
             <div class="col-8 p-2 border border-secondary rounded">
-                <h6 class="text-info">Gemini</h6>
-                <div class="p-2" id="ia_prompt">
-                    {{ia_prompt}}
+                <h6 class="text-info">Analisis de Gemini</h6>
+                <div class="overflow-auto text-secondary" id="ia_prompt" style="max-height: 150px;"> 
+                    {{ia_prompt|linebreaksbr}}
                 </div>
-                <div class="p-2" style="display:none;" id="ia_response"></div>
+                <div class="pt-3" id="ia_response" style="display:none;">
             </div>
         </div>
 
@@ -238,7 +238,23 @@
             {
                 $('#ia_response').html('');
                 if (rsp.ia_response) {
-                    $('#ia_response').html('<div class="'+rsp.text_class+'">'+rsp.ia_response+"</div>");
+
+                    const matchTp = rsp.ia_response.match(/tp:\s*(\d+)/);
+                    const matchSl = rsp.ia_response.match(/sl:\s*(\d+)/);
+
+                    const tp_prob = matchTp ? parseInt(matchTp[1]) : null;
+                    const sl_prob = matchSl ? parseInt(matchSl[1]) : null;
+                    
+                    if (tp_prob>=0 && tp_prob<= 100 && sl_prob>=0 && sl_prob<= 100) {
+                        html_ia_response = '<div>Probabilidad de alcanzar Take-Profit: <span class="text-'+(tp_prob>sl_prob?'success':'danger')+'">'+tp_prob+'%</span></div>';
+                        html_ia_response += '<div>Probabilidad de alcanzar Stop-Loss: <span class="text-'+(sl_prob>tp_prob?'danger':'success')+'">'+sl_prob+'%</span></div>';
+                    }
+                    else {
+                        html_ia_response = '<div class="text-warning">No fue posible obtener un analisis de Gemini</div>'
+                    }
+
+
+                    $('#ia_response').html(html_ia_response);
                     $('#ia_response').show();
                 }
             }

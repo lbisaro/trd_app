@@ -14,7 +14,7 @@ import time
 from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, INTERVAL_ID, load_data_file, ohlc_from_prices, alert_add_data
 from scripts.Exchange import Exchange
 from scripts.functions import get_intervals
-from scripts.indicators import technical_summary, contar_decimales
+from scripts.indicators import technical_summary, contar_decimales, resample
 from bot.models import *
 from bot.model_sw import *
 from binance.exceptions import BinanceAPIException, BinanceOrderException
@@ -90,7 +90,8 @@ def analyze(request, key):
         
         alert = alert_add_data(alert, actual_price=exchPrice)
         alert['start_dt'] = (alert['start']- timedelta(hours=3)).strftime("%Y-%m-%d %H:%M")
-        ia_prompt = get_ia_prompt(alert)
+        
+        ia_prompt = get_ia_prompt(alert, klines)
 
 
         return render(request, 'alerts_analyze.html',{
@@ -106,33 +107,6 @@ def analyze(request, key):
 
     else:
         return render(request, 'alerts_analyze.html',{}) 
-
-def get_ia_prompt(alert):
-
-    df = alert['df'][['high', 'low', 'close',]]
-    df = df[-50:]
-    df_json = df.to_json(orient='records')
-    
-    str_side = 'LONG' if alert['side']>0 else 'SHORT'
-    trade_symbol = alert['symbol']
-    timeframe = alert['timeframe']
-    entry_price = str(alert['in_price'])
-    stop_loss = str(alert['sl1'])
-    take_profit = str(alert['tp1'])
-    price_data_json = df_json
-
-    prompt = f"""
-    Experto en trading.
-    Analizar probabilidad de éxito para un trade de scalping en Binance Futures {str_side}. Símbolo: {trade_symbol}, TF: {timeframe}.
-    EP: {entry_price}
-    SL: {stop_loss}
-    TP: {take_profit}
-    Considera: Los pivots generados por el Parabolic SAR, RRR (Short: (EP-TP)/(SL-EP)), acción de precio, tendencia general basado en el Supertrend.
-    Evalúa la probabilidad de éxito de este trade y responde con un porcentaje de exito de 0 a 100%, donde 0% significa 'éxito altamente improbable' y 100% significa 'éxito altamente probable'.
-    No incluyas ninguna otra explicación, justificación o texto adicional. Tu respuesta debe ser solo el porcentaje.
-    """
-    
-    return prompt
 
 @login_required
 def execute(request):
@@ -294,6 +268,44 @@ def execute(request):
 
     return JsonResponse(json_rsp)
 
+def get_ia_prompt(alert,df):
+
+    df_1h = resample(df,periods=4)
+
+    str_side = 'LONG' if alert['side']>0 else 'SHORT'
+    trade_symbol = alert['symbol']
+    timeframe = alert['timeframe']
+    entry_price = str(alert['in_price'])
+    stop_loss = str(alert['sl1'])
+    take_profit = str(alert['tp1'])
+    actual_price = df.iloc[-1]['close']
+
+    prompt = f'' 
+    prompt = f"""
+Experto en trading, analiza probabilidad de éxito para una entrada en {str_side} para scalping en Binance Futures.
+Símbolo: {trade_symbol}, 
+Temporalidad: {timeframe}.
+Precio Actual: {actual_price}
+EntryPrice: {entry_price}
+StopLoss: {stop_loss}
+TakeProfit: {take_profit}
+Ultimas velas en timeframe de 1 hora:
+high    low close       volume/1000 """
+    for i,row in df_1h.iterrows():
+        high, low, close, volume = row['high'],row['low'],row['close'],round(row['volume']/1000,2)
+        prompt += f"""
+{high}  {low}   {close}     {volume} """
+    prompt += f"""
+
+Evalua unicamente la probabilidades de que el trade alcance el StopLoss y el TakeProfit
+Las probabilidades expresalas con un porcentaje de exito de 0 a 100, donde 0 significa altamente improbable y 100 significa altamente probable.
+No incluyas ninguna otra explicación, justificación o texto adicional, ni descargo de responsabilidad ya que conozco los riesgos. 
+Tu respuesta debe ser representada en dos lineas como se muestra abajo:
+tp: x
+sl: y
+    """
+    return prompt
+
 @login_required
 def ia_prompt(request):
     json_rsp = {}
@@ -309,9 +321,10 @@ def ia_prompt(request):
         
         json_data = response.json()  # Convierte la respuesta a JSON
         ia_response = json_data['ia_response']
-        ia_response_int = int(ia_response.strip().replace('%', ''))
-        json_rsp['text_class'] = 'text-success' if  ia_response_int > 50 else 'text-warning'
-        json_rsp['ia_response'] = f'De acuerdo al analisis de Gemini, la probabilidad de exito del trade es del {ia_response}'
+        #ia_response_int = int(ia_response.strip().replace('%', ''))
+        #json_rsp['text_class'] = 'text-success' if  ia_response_int > 50 else 'text-warning'
+        #json_rsp['ia_response'] = f'De acuerdo al analisis de Gemini, la probabilidad de exito del trade es del {ia_response}'
+        json_rsp['ia_response'] = ia_response
         
     
     except requests.exceptions.RequestException as e:
