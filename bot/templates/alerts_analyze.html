@@ -232,7 +232,6 @@
         get_ajax(url,data).done( function (rsp) {
             if (rsp)
             {
-                console.log(rsp);
                 html_ia_response = '';
                 if (rsp.error) {
                     html_ia_response = '<div class="text-danger">Error al obtener respuesta de la IA</div>';
