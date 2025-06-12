@@ -285,7 +285,7 @@ def get_ia_prompt(alert,df):
              f'TP: {take_profit} '\
              f'Velas15m(H,L,C,V): '
 
-    for i,row in df[-150:].iterrows():
+    for i,row in df[200:].iterrows():
         high, low, close, volume = row['high'],row['low'],row['close'],round(row['volume']/1000,2)
         prompt += f'{high},{low},{close},{volume};'
 
