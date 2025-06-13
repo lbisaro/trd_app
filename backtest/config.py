@@ -18,9 +18,15 @@ intervals = pd.DataFrame([
 intervals.set_index('id',inplace=True)
 
 symbols = {
-    'BNBUSDT', 
-    'BTCUSDT',
-    'ETHUSDT', 
+    #'BNBUSDT', 
+    #'BTCUSDT',
+    #'ETHUSDT', 
+
+    'AAVEUSDT',
+    'GMXUSDT',
+    'AVAXUSDT',
+    'GALAUSDT',
+
     #'TRXUSDT',
     #'MATICUSDT',
     #'ETHBTC',
@@ -28,16 +34,22 @@ symbols = {
 }
 
 #Periodos definidos por Tipo, Fecha de inicio y fin y Pares para backtesting
-periodos = [{'tipo':'Completo',
-            'start':'2021-01-01',
-            'end':'2023-07-31',
-            'symbols': symbols
-            },
+periodos = [
+            #{'tipo':'Completo',
+            #'start':'2021-01-01',
+            #'end':'2023-07-31',
+            #'symbols': symbols
+            #},
             #{'tipo':'Full',
             #'start':'2019-01-01',
             #'end':'2024-11-13',
             #'symbols': symbols
             #},
+            {'tipo':'Alts',
+            'start':'2024-05-28',
+            'end':'2025-05-28',
+            'symbols': symbols
+            },
             ]
 
 
