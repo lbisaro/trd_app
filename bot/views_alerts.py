@@ -286,7 +286,7 @@ def get_ia_prompt(alert,klines):
     klines.rename(columns={'st_high': 'supertrend H', 
                             'st_low': 'supertrend L', 
                             'ZigZag': 'pivots',}, inplace=True)
-    kline_columns = ['close','supertrend H','supertrend L','pivots',f'RSI_{period}',f'ADX_{period}']
+    kline_columns = ['close','volume','supertrend H','supertrend L','pivots',f'RSI_{period}',f'ADX_{period}']
     
     kline_data = klines[kline_columns].values.tolist()
     # Construir el prompt estructurado
@@ -297,7 +297,7 @@ def get_ia_prompt(alert,klines):
             "data": kline_data,
         },
     }
-    print(prompt_dict)
+    
     return json.dumps(prompt_dict, indent=2)
 
 
