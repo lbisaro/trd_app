@@ -238,6 +238,7 @@
             if (rsp)
             {
                 $('#gemini_spinner').hide();
+                console.log(rsp.ia_response);
                 html_ia_response = '';
                 if (rsp.error) {
                     html_ia_response = '<div class="text-danger">Error al obtener respuesta de la IA</div>';
@@ -245,7 +246,7 @@
                 }
                 else if (rsp.ia_response) {
                     Object.entries(rsp.returns).forEach(([key, label]) => {
-                        const value = rsp.ia_response[key];  // Accede dinámicamente al valor en rsp
+                        const value = rsp.ia_response[key];  
                         html_ia_response += `<div><div class="text-secondary">${label}</div>${value}</div>`;
                     });
                                   
