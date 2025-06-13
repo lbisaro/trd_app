@@ -89,11 +89,14 @@ def analyze(request, key):
         klines = exchInfo.get_futures_klines(alert['symbol'],interval_id,start_str=start_str)
         exchPrice = klines.iloc[-1]['close']
         
+        qty_decs_price = contar_decimales(exchPrice)
+
         alert = alert_add_data(alert, actual_price=exchPrice)
         alert['start_dt'] = (alert['start']- timedelta(hours=3)).strftime("%Y-%m-%d %H:%M")
         alert['actual_price'] = exchPrice       
+        alert['qty_decs_price'] = qty_decs_price       
         
-        ia_prompt = get_ia_prompt(alert)
+        ia_prompt = get_ia_prompt(alert,klines)
         #print(ia_prompt)
 
         return render(request, 'alerts_analyze.html',{
@@ -102,7 +105,7 @@ def analyze(request, key):
             'alert': alert,
             'ia_prompt': ia_prompt,
             'actual_price': exchPrice,
-            'qty_decs_price': contar_decimales(exchPrice),
+            'qty_decs_price': qty_decs_price,
             'json_klines': klines.to_json(orient='records'),
         })
 
@@ -270,14 +273,31 @@ def execute(request):
 
     return JsonResponse(json_rsp)
 
-def get_ia_prompt(alert):
+def get_ia_prompt(alert,klines):
 
+    #Preparando el prompt
+    klines = supertrend(klines)
+    klines = zigzag(klines)
+    period = 14
+    klines.ta.rsi(length=period, append=True)
+    klines.ta.adx(length=period, append=True)
+    klines.fillna("",inplace=True)
+
+    klines.rename(columns={'st_high': 'supertrend H', 
+                            'st_low': 'supertrend L', 
+                            'ZigZag': 'pivots',}, inplace=True)
+    kline_columns = ['close','supertrend H','supertrend L','pivots',f'RSI_{period}',f'ADX_{period}']
+    
+    kline_data = klines[kline_columns].values.tolist()
     # Construir el prompt estructurado
     prompt_dict = {
         "actual_price": alert['actual_price'],
-        "raw_pivots": alert['pivots'],
+        "klines": {
+            "columns": kline_columns,
+            "data": kline_data,
+        },
     }
-
+    print(prompt_dict)
     return json.dumps(prompt_dict, indent=2)
 
 
