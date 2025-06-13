@@ -47,13 +47,21 @@
                 <div>S/L: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
                 <div>Analisis Tecnico: <span id="main_verdict"></span></div>
             </div>
-            <div class="col-4 border border-secondary rounded mb-3 p-2">
-                <h6 class="text-info">Analisis de Gemini</h6>
-                <div class="pt-3" id="ia_response">Consultando a Gemini ..... </div>
+            <div class="col-8 border border-secondary rounded mb-3 p-2">
+                <h6 class="text-info">Analisis de Gemini 
+                    <span id="gemini_spinner" class="spinner-grow spinner-grow-sm" role="status">
+                    </span>
+                </h6>
+                <small class="pt-3" id="ia_response">
+                </small>
                 <div id="ia_prompt" style="display: none;">{{ia_prompt}}</div>
 
             </div>
-            <div class="col-4 border border-secondary rounded mb-3 p-2">
+            
+        </div>
+
+        <div class="row">
+            <div class="col-4 border border-secondary rounded p-2">
                 <h6 class="text-info">Ejecucion del trade</h6>
                 <div id="trade_operation_off"  class="text-warning">
                     La ejecucion del trade se encuentra fuera de rango
@@ -79,10 +87,7 @@
                     <div class="row" id="trade_log"></div>
                 </div>
             </div>
-        </div>
-
-        <div class="row pt-4">
-            <div id="chart"></div>
+            <div id="chart" class="col-8 border border-secondary rounded "></div>
         </div>
 
         <div class="row pt-4 text-center">
@@ -232,22 +237,18 @@
         get_ajax(url,data).done( function (rsp) {
             if (rsp)
             {
+                $('#gemini_spinner').hide();
                 html_ia_response = '';
                 if (rsp.error) {
                     html_ia_response = '<div class="text-danger">Error al obtener respuesta de la IA</div>';
                     html_ia_response += '<pre class="text-danger">'+rsp.error+'</pre>';
                 }
                 else if (rsp.ia_response) {
-
-                    if (rsp.instruction == 'scalping_15m')
-                    {
-                        const tp_prob = rsp.ia_response.take_profit_probability
-                        const sl_prob = rsp.ia_response.stop_loss_probability
-                        if (tp_prob>=0 && tp_prob<= 100 && sl_prob>=0 && sl_prob<= 100) {
-                            html_ia_response = '<div>Probabilidad para Take-Profit: <span class="text-'+(tp_prob>sl_prob?'success':'danger')+'">'+tp_prob+'%</span></div>';
-                            html_ia_response += '<div>Probabilidad para Stop-Loss: <span class="text-'+(sl_prob>tp_prob?'danger':'success')+'">'+sl_prob+'%</span></div>';
-                        }
-                    }                                    
+                    Object.entries(rsp.returns).forEach(([key, label]) => {
+                        const value = rsp.ia_response[key];  // Accede dinámicamente al valor en rsp
+                        html_ia_response += `<div><div class="text-secondary">${label}</div>${value}</div>`;
+                    });
+                                  
                 }
                 $('#ia_response').html(html_ia_response);
             }
