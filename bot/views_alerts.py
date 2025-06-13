@@ -91,8 +91,8 @@ def analyze(request, key):
         alert = alert_add_data(alert, actual_price=exchPrice)
         alert['start_dt'] = (alert['start']- timedelta(hours=3)).strftime("%Y-%m-%d %H:%M")
         
-        ia_prompt = get_ia_prompt(alert, klines)
-
+        ia_prompt = get_ia_prompt(alert)
+        print(ia_prompt)
 
         return render(request, 'alerts_analyze.html',{
             'DATA_FILE': DATA_FILE ,
@@ -268,28 +268,77 @@ def execute(request):
 
     return JsonResponse(json_rsp)
 
-def get_ia_prompt(alert,df):
+def get_ia_prompt(alert_data):
 
-    str_side = 'LONG' if alert['side']>0 else 'SHORT'
-    trade_symbol = alert['symbol']
-    timeframe = alert['timeframe']
-    entry_price = str(alert['in_price'])
-    stop_loss = str(alert['sl1'])
-    take_profit = str(alert['tp1'])
-    actual_price = df.iloc[-1]['close']
+    """
+    Toma el diccionario de la alerta y lo transforma en un prompt JSON para Gemini.
+    """
+    
+    # Extraer información básica de la alerta
+    symbol = alert_data['symbol']
+    direction = "LONG" if alert_data['side'] == 1 else "SHORT"
+    entry_price = alert_data['in_price']
+    stop_loss = alert_data['sl1']
+    take_profit = alert_data['tp1']
+    
+    # Traducir la lógica de la estrategia a texto para el LLM
+    pivots = alert_data['pivots']
+    pattern_description = (
+        f"La estructura de pivots ZigZag muestra una secuencia de {len(pivots)} puntos. "
+        f"Los pivots clave para esta alerta son: "
+        f"Último máximo/mínimo principal: {pivots[-1]:.4f}, "
+        f"Punto de pullback: {pivots[-2]:.4f}, " # El último pivot agregado (min_flp/max_flp)
+        f"Soportes/Resistencias de pivots anteriores: {pivots[-3]:.4f}, {pivots[-4]:.4f}, {pivots[-5]:.4f}."
+    )
 
-    prompt = f'{trade_symbol} {str_side} '\
-             f'P_Act: {actual_price} '\
-             f'EP: {entry_price} '\
-             f'SL: {stop_loss} '\
-             f'TP: {take_profit} '\
-             f'Velas15m(H,L,C,V): '
+    # Añadir contexto de momento del ADX
+    adx_momentum = "Aumentando" if alert_data['adx'] > alert_data['adx_ma'] else "Disminuyendo"
 
-    for i,row in df[200:].iterrows():
-        high, low, close, volume = row['high'],row['low'],row['close'],round(row['volume']/1000,2)
-        prompt += f'{high},{low},{close},{volume};'
+    # Construir el prompt estructurado
+    prompt_dict = {
+        "alert_details": {
+            "asset": symbol,
+            "timeframe": "15m",
+            "direction": direction,
+            "entry_price": entry_price,
+            "stop_loss": stop_loss,
+            "take_profit": take_profit
+        },
+        "strategy_rationale": {
+            "pattern_name": alert_data['alert_str'],
+            "primary_indicators": {
+                "adx_value": round(alert_data['adx'], 2),
+                "adx_condition": "ADX > 26, indica tendencia fuerte.",
+                "adx_momentum": f"La fuerza de la tendencia está {adx_momentum} (ADX vs su media móvil).",
+                "supertrend_direction": f"Confirma la dirección {direction}."
+            },
+            "zigzag_pivots_pattern": {
+                "description": pattern_description,
+                "raw_pivots": pivots
+            }
+        },
+        "risk_management": {
+            "risk_reward_ratio": "2:1 (Fijo por diseño de la estrategia)",
+            "stop_loss_logic": "SL colocado en el punto extremo del pullback, invalidando el patrón.",
+            "take_profit_logic": "TP colocado en el último pivot principal, objetivo lógico del movimiento."
+        },
+        "request_for_analysis": (
+            "Basado en la coherencia de estos datos, evalúa los factores de confluencia (positivos) y "
+            "los posibles riesgos o debilidades (negativos) de esta configuración de trading. "
+            "No consideres información externa, solo la provista."
+        )
+    }
+    
+    # NOTA: Para un análisis aún más potente, aquí podrías añadir datos externos
+    # que tu sistema pueda recolectar, como por ejemplo:
+    # prompt_dict['market_context'] = {
+    #    "trend_higher_timeframes": {"1H": "ALCISTA", "4H": "LATERAL"},
+    #    "volume_profile": "Volumen por encima de la media en la última hora.",
+    #    "upcoming_news": "No hay noticias de alto impacto en las próximas 2 horas."
+    # }
 
-    return prompt
+    return json.dumps(prompt_dict, indent=2)
+
 
 @login_required
 def ia_prompt(request):
