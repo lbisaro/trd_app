@@ -39,7 +39,7 @@
         </div>
         <div class="row">
 
-            <div class="col-4 border border-secondary rounded mb-3 p-2">
+            <div class="col-3 border border-secondary rounded mb-3 p-2">
                 <h6 class="text-{{alert.class}}">{{alert.origin}} [{{alert.symbol}}] [{{alert.timeframe}}]</h6>
                 <div>Entrada: {{alert.in_price}}</div> 
                 <div>Precio: <span id="actual_price">{{actual_price}}</span> <span id="price_in_perc"></span></div>    
@@ -47,7 +47,7 @@
                 <div>S/L: {{alert.sl1}}   <span class="text-secondary">({{alert.sl1_perc}} %)</span></div>
                 <div>Analisis Tecnico: <span id="main_verdict"></span></div>
             </div>
-            <div class="col-8 border border-secondary rounded mb-3 p-2">
+            <div class="col-9 border border-secondary rounded mb-3 p-2">
                 <h6 class="text-info">Analisis de Gemini 
                     <span id="gemini_spinner" class="spinner-grow spinner-grow-sm" role="status">
                     </span>
@@ -238,7 +238,6 @@
             if (rsp)
             {
                 $('#gemini_spinner').hide();
-                console.log(rsp.ia_response);
                 html_ia_response = '';
                 if (rsp.error) {
                     html_ia_response = '<div class="text-danger">Error al obtener respuesta de la IA</div>';
