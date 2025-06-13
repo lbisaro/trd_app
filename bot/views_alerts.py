@@ -307,8 +307,8 @@ def ia_prompt(request):
     prompt = request.POST['prompt']
     json_rsp['prompt'] = prompt
 
-    #url = 'http://192.168.1.8/ia/prompt/'
-    url = 'http://localhost:5000/prompt/'
+    url = 'http://192.168.1.8/ia/prompt/'
+    #url = 'http://localhost:5000/prompt/'
     data = {'prompt': prompt,
             'instruction': 'pivots'
             }  
