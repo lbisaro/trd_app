@@ -635,6 +635,9 @@ def get_pivots_alert(df,threshold=1.5):
                             data['tp1'] = pivots[-1] 
                             data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
                         
+                        
+                        pivots.append(min_flp)   
+                        
                     elif trend <= -1:
                         # Alertas en SHORT
 
@@ -662,12 +665,15 @@ def get_pivots_alert(df,threshold=1.5):
                             data['in_price'] = data['sl1']-((data['sl1']-data['tp1'])/3) #Genera un ratio 2:1
 
 
+                        pivots.append(max_flp)
+
                 if data['alert'] != 0:
                     decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
                     data['in_price'] = round(data['in_price'],decs)
                     data['df'] = df
                     data['datetime'] = df.iloc[-1]['datetime']
                     data['last_pivot'] = lpdt
+                    data['pivots'] = pivots
                     data['adx'] = last_adx
                     data['adx_ma'] = last_adx_ma
 
