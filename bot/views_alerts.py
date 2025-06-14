@@ -29,6 +29,7 @@ def list(request):
     qty_symbols = len(data['symbols'])
     updated = data['updated']
     proc_duration = data['proc_duration']
+    analized_symbols = data['analized_symbols']
     log_alerts = data['log_alerts']
     # Ordenar por 'start' descendente y reconstruir el diccionario
     log_alerts = dict(
@@ -65,6 +66,7 @@ def list(request):
     return render(request, 'alerts_list.html',{
         'DATA_FILE': DATA_FILE ,
         'qty_symbols': qty_symbols ,
+        'analized_symbols': analized_symbols ,
         'qty_c_1m': qty_c_1m ,
         'updated': updated ,
         'proc_duration': proc_duration ,
@@ -97,8 +99,7 @@ def analyze(request, key):
         alert['qty_decs_price'] = qty_decs_price       
         
         ia_prompt = get_ia_prompt(alert,klines)
-        #print(ia_prompt)
-
+        
         return render(request, 'alerts_analyze.html',{
             'DATA_FILE': DATA_FILE ,
             'key': key,
@@ -281,12 +282,15 @@ def get_ia_prompt(alert,klines):
     period = 14
     klines.ta.rsi(length=period, append=True)
     klines.ta.adx(length=period, append=True)
-    klines.fillna("",inplace=True)
+    klines.fillna(np.nan,inplace=True)
 
     klines.rename(columns={'st_high': 'supertrend H', 
                             'st_low': 'supertrend L', 
-                            'ZigZag': 'pivots',}, inplace=True)
-    kline_columns = ['close','volume','supertrend H','supertrend L','pivots',f'RSI_{period}',f'ADX_{period}']
+                            'ZigZag': 'pivots',
+                            f'RSI_{period}': 'RSI',
+                            f'ADX_{period}': 'ADX',
+                            }, inplace=True)
+    kline_columns = ['close','volume','supertrend H','supertrend L','pivots','RSI','ADX']
     
     kline_data = klines[kline_columns].values.tolist()
     # Construir el prompt estructurado
@@ -312,8 +316,8 @@ def ia_prompt(request):
     data = {'prompt': prompt,
             'instruction': 'pivots'
             }  
-
     try:
+
         response = requests.post(url, json=data)
         response.raise_for_status()  
         
@@ -323,11 +327,8 @@ def ia_prompt(request):
     
     except requests.exceptions.RequestException as e:
         json_rsp['error'] = 'No fue posible obtener el analisis de Gemini'
-    
-    
-    json_rsp['prompt'] = prompt
-
-
+    """
+    """
     return JsonResponse(json_rsp)
 
 @login_required
