@@ -188,7 +188,7 @@ def run():
             last100_high = df_last100['high'].max()
             last100_min = df_last100['low'].min()
             variacion_pct = (last100_high - last100_min) / last100_min * 100
-            if abs(variacion_pct) >= 3:
+            if abs(variacion_pct) >= (2*ALERT_THRESHOLD):
                 analized_symbols += 1
                 df = df[-200:]
                 alert = get_pivots_alert(df,threshold=ALERT_THRESHOLD)
