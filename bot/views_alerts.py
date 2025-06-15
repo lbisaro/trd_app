@@ -301,9 +301,9 @@ def get_ia_prompt(alert,klines):
     klines.loc[klines['RSI'] > 0, 'RSI'] = klines.loc[klines['RSI'] > 0, 'RSI'].round(1)
     klines.loc[klines['ADX'] > 0, 'ADX'] = klines.loc[klines['ADX'] > 0, 'ADX'].round(1)
         
-    kline_data = klines[kline_columns].values.tolist()
+    
     # Construir el prompt estructurado
-    print(kline_data)
+    kline_data = klines[kline_columns].values.tolist()
     prompt_dict = {
         "actual_price": alert['actual_price'],
         "klines": {
