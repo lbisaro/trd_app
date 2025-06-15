@@ -291,9 +291,19 @@ def get_ia_prompt(alert,klines):
                             f'ADX_{period}': 'ADX',
                             }, inplace=True)
     kline_columns = ['close','volume','supertrend H','supertrend L','pivots','RSI','ADX']
-    
+    qdp = alert['qty_decs_price']
+    klines[klines['supertrend H']>0]['supertrend H'] = klines['supertrend H'].round(qdp)
+    klines[klines['supertrend L']>0]['supertrend L'] = klines['supertrend L'].round(qdp)
+
+    klines.loc[klines['supertrend H'] > 0, 'supertrend H'] = klines.loc[klines['supertrend H'] > 0, 'supertrend H'].round(qdp)
+    klines.loc[klines['supertrend L'] > 0, 'supertrend L'] = klines.loc[klines['supertrend L'] > 0, 'supertrend L'].round(qdp)
+    klines.loc[klines['pivots'] > 0, 'pivots'] = klines.loc[klines['pivots'] > 0, 'pivots'].round(qdp)
+    klines.loc[klines['RSI'] > 0, 'RSI'] = klines.loc[klines['RSI'] > 0, 'RSI'].round(1)
+    klines.loc[klines['ADX'] > 0, 'ADX'] = klines.loc[klines['ADX'] > 0, 'ADX'].round(1)
+        
     kline_data = klines[kline_columns].values.tolist()
     # Construir el prompt estructurado
+    print(kline_data)
     prompt_dict = {
         "actual_price": alert['actual_price'],
         "klines": {
