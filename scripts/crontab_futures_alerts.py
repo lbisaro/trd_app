@@ -160,18 +160,21 @@ def run():
     print("Cantidad de registros:",len(data['datetime']))
     print("Cantidad de symbols:",len(data['symbols']))
     
-    #Limpiando el log de alertas
-    #time_limit = proc_start - timedelta(minutes=60)
-    #log_alerts = {}
-    #for key, alert in data['log_alerts'].items():
-    #    if alert['datetime'] >= time_limit:
-    #        log_alerts[key] = alert
-    #data['log_alerts'] = log_alerts
+    #Limpiando el log de alertas cuando el precio esta fuera de rango
+    log_alerts = {}
+    for key, alert in data['log_alerts'].items():
+        price = actual_prices[alert['symbol']]
+        if alert['side'] > 0 and price<alert['tp1'] and price>alert['sl1']:
+            log_alerts[key] = alert
+        elif alert['side'] < 0 and price>alert['tp1'] and price<alert['sl1']:
+            log_alerts[key] = alert
+    data['log_alerts'] = log_alerts
     
 
     #Analisis de los datos para alertas
     sent_alerts = 0
     analized_symbols = 0
+    alerts_to_send = []
     for symbol, symbol_info in data['symbols'].items():
 
         #Escaneando precios para detectar alertas
@@ -221,7 +224,7 @@ def run():
                                 f'\n{binance_link}'
                     alert_key = f'{symbol}.{alert_alert}'
                     if alert_key not in data['log_alerts']:
-                        log.alert(alert_str)
+                        alerts_to_send.append(alert_str)
                         sent_alerts += 1 
                         alert['start'] = proc_start
                     else:
@@ -245,7 +248,7 @@ def run():
                                 f'\n{binance_link}'
                     alert_key = f'{symbol}.{alert_alert}'
                     if alert_key not in data['log_alerts']:
-                        log.alert(alert_str)
+                        alerts_to_send.append(alert_str)
                         sent_alerts += 1 
                         alert['start'] = proc_start
                     else:
@@ -258,17 +261,14 @@ def run():
                     alert['datetime'] = proc_start
                     alert['price'] = price
 
-                    if alert['side']>0 and price<alert['tp1'] and price>alert['sl1']: 
-                        data['log_alerts'][alert_key] = alert
-                    elif alert['side']<0 and price>alert['tp1'] and price<alert['sl1']: 
-                        data['log_alerts'][alert_key] = alert
-                    elif alert_key in data['log_alerts']:
-                        del data['log_alerts'][alert_key]
-                    
+                    data['log_alerts'][alert_key] = alert
 
         if sent_alerts > 5:
             break
-
+    
+    if len(alerts_to_send)>0:
+        for alert_str in alerts_to_send:
+            log.alert(alert_str)
     data['updated'] = datetime.now().strftime('%d-%m-%Y %H:%M')
     data['analized_symbols'] = analized_symbols
     data['proc_duration'] = round((datetime.now()-proc_start).total_seconds(),1)
