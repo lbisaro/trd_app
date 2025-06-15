@@ -161,12 +161,12 @@ def run():
     print("Cantidad de symbols:",len(data['symbols']))
     
     #Limpiando el log de alertas
-    time_limit = proc_start - timedelta(minutes=60)
-    log_alerts = {}
-    for symbol, alert in data['log_alerts'].items():
-        if alert['datetime'] >= time_limit:
-            log_alerts[symbol] = alert
-    data['log_alerts'] = log_alerts
+    #time_limit = proc_start - timedelta(minutes=60)
+    #log_alerts = {}
+    #for key, alert in data['log_alerts'].items():
+    #    if alert['datetime'] >= time_limit:
+    #        log_alerts[key] = alert
+    #data['log_alerts'] = log_alerts
     
 
     #Analisis de los datos para alertas
@@ -258,7 +258,13 @@ def run():
                     alert['datetime'] = proc_start
                     alert['price'] = price
 
-                    data['log_alerts'][alert_key] = alert
+                    if alert['side']>0 and price<alert['tp1'] and price>alert['sl1']: 
+                        data['log_alerts'][alert_key] = alert
+                    elif alert['side']<0 and price>alert['tp1'] and price<alert['sl1']: 
+                        data['log_alerts'][alert_key] = alert
+                    elif alert_key in data['log_alerts']:
+                        del data['log_alerts'][alert_key]
+                    
 
         if sent_alerts > 5:
             break
