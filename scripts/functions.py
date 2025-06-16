@@ -285,7 +285,10 @@ def ohlc_chart(klines,**kwargs):
 
     if events:
         for event in events:
+            if 'name' not in event:
+                event['name'] = event['col']
             fig.add_trace(
+                    
                 go.Scatter(x=event['df']["datetime"], y=event['df'][event['col']], name=event['name'], mode='markers', 
                         marker=dict(symbol=event['symbol'],
                                     size=8,
