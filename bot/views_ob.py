@@ -125,6 +125,11 @@ def panel(request):
     print(dfr.columns)
     print(sr.columns)
 
+    ref_high = dfr.iloc[-1]['high_price']
+    ref_low  = dfr.iloc[-1]['low_price']
+    sr = sr.iloc[-100:]
+    sr = sr[(sr['price']< (ref_high*1.2))&(sr['price']> (ref_low*0.8))]
+
     # Creando Chart 
     chart_rows = 2
     row_heights=[600,200]
@@ -175,7 +180,7 @@ def panel(request):
                         line=dict(width=0,),
                         ),
             hovertemplate="%{x}<br>%{y}<extra></extra>",
-            showlegend=False,
+            showlegend=True,
             ),row=1,col=1,
         )
 
