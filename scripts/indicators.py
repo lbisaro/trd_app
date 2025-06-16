@@ -746,7 +746,8 @@ def technical_summary(df):
     df.drop(['BULLP','BEARP'],axis=1, inplace=True)
     
     # Medias Móviles
-    for period in [10, 20, 30, 50, 100, 200]:
+    periods = [10, 20, 30, 50, 100] #, 200
+    for period in periods:
         df.ta.ema(length=period, append=True)
         df.ta.sma(length=period, append=True)
         
@@ -903,7 +904,7 @@ def technical_summary(df):
         ('EMA(30)', f'EMA_30'), ('SMA(30)', f'SMA_30'),
         ('EMA(50)', f'EMA_50'), ('SMA(50)', f'SMA_50'),
         ('EMA(100)', f'EMA_100'), ('SMA(100)', f'SMA_100'),
-        ('EMA(200)', f'EMA_200'), ('SMA(200)', f'SMA_200'),
+        #('EMA(200)', f'EMA_200'), ('SMA(200)', f'SMA_200'),
         ('Ichimoku Base(9,26,52)', 'ISB_26'), # Kijun Sen
         ('VWMA(20)', 'VWMA_20'),
         ('Hull MA(9)', 'HMA_9')
