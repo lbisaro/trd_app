@@ -122,8 +122,6 @@ def panel(request):
     sr_pct_max = sr['pct'].max()
     sr_pct_min = sr['pct'].min()
     sr['pct_adj'] = fn.map(sr['pct'],sr_pct_min,sr_pct_max,1,10)
-    print(dfr.columns)
-    print(sr.columns)
 
     ref_high = dfr.iloc[-1]['high_price']
     ref_low  = dfr.iloc[-1]['low_price']
