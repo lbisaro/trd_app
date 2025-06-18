@@ -201,7 +201,7 @@ def run():
                 # 🔔 ALERTA
 
                 binance_link = f'<a href="https://www.binance.com/es-LA/futures/{symbol}">Ir a Binance Futures</a>'
-
+                actual_price = actual_prices[alert['symbol']]
                 if alert['alert'] != 0:
                     alert = alert_add_data(alert,actual_prices[symbol])
                     trend_msg = alert['alert_str']
@@ -213,55 +213,56 @@ def run():
                     alert_sl1_perc = alert['sl1_perc']
                     alert_actual_price_legend = alert['actual_price_legend']
                 
-                if alert['alert'] == 1:
+                if alert['side'] > 0:
+                    if alert_sl1 > actual_price > alert_tp1:
+                        alert_str = f'🟢 <b>LONG</b> Scanner {interval_binance} <b>{symbol}</b>'+\
+                                    f'\nPrecio de entrada: {alert_in_price}'+\
+                                    f'\nTake Profit: {alert_tp1} ({alert_tp1_perc}%)'+\
+                                    f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
+                                    f'\n{trend_msg}'+\
+                                    f'\n{alert_actual_price_legend}'+\
+                                    f'\n{binance_link}'
+                        alert_key = f'{symbol}.{alert_alert}'
+                        if alert_key not in data['log_alerts']:
+                            alerts_to_send.append(alert_str)
+                            sent_alerts += 1 
+                            alert['start'] = proc_start
+                        else:
+                            alert['start'] = data['log_alerts'][alert_key]['start']
+                        alert['origin'] = trend_msg
+                        alert['symbol'] = symbol
+                        alert['timeframe'] = f'{interval_binance}'
+                        alert['alert_str'] = alert_str
+                        alert['datetime'] = proc_start
+                        alert['price'] = price
 
-                    alert_str = f'🟢 <b>LONG</b> Scanner {interval_binance} <b>{symbol}</b>'+\
-                                f'\nPrecio de entrada: {alert_in_price}'+\
-                                f'\nTake Profit: {alert_tp1} ({alert_tp1_perc}%)'+\
-                                f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
-                                f'\n{trend_msg}'+\
-                                f'\n{alert_actual_price_legend}'+\
-                                f'\n{binance_link}'
-                    alert_key = f'{symbol}.{alert_alert}'
-                    if alert_key not in data['log_alerts']:
-                        alerts_to_send.append(alert_str)
-                        sent_alerts += 1 
-                        alert['start'] = proc_start
-                    else:
-                        alert['start'] = data['log_alerts'][alert_key]['start']
-                    alert['origin'] = trend_msg
-                    alert['symbol'] = symbol
-                    alert['timeframe'] = f'{interval_binance}'
-                    alert['alert_str'] = alert_str
-                    alert['datetime'] = proc_start
-                    alert['price'] = price
+                        data['log_alerts'][alert_key] = alert
 
-                    data['log_alerts'][alert_key] = alert
+                elif alert['side'] < 0:
+                    if alert_sl1 < actual_price < alert_tp1:
+                        alert_str = f'🔴 <b>SHORT</b> Scanner {interval_binance} <b>{symbol}</b>'+\
+                                    f'\nPrecio de entrada: {alert_in_price}'+\
+                                    f'\nTake Profit: {alert_tp1} ({alert_tp1_perc}%)'+\
+                                    f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
+                                    f'\n{trend_msg}'+\
+                                    f'\n{alert_actual_price_legend}'+\
+                                    f'\n{binance_link}'
+                        alert_key = f'{symbol}.{alert_alert}'
+                        if alert_key not in data['log_alerts']:
+                            alerts_to_send.append(alert_str)
+                            sent_alerts += 1 
+                            alert['start'] = proc_start
+                        else:
+                            alert['start'] = data['log_alerts'][alert_key]['start']
 
-                elif alert['alert'] == -1:
-                    alert_str = f'🔴 <b>SHORT</b> Scanner {interval_binance} <b>{symbol}</b>'+\
-                                f'\nPrecio de entrada: {alert_in_price}'+\
-                                f'\nTake Profit: {alert_tp1} ({alert_tp1_perc}%)'+\
-                                f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
-                                f'\n{trend_msg}'+\
-                                f'\n{alert_actual_price_legend}'+\
-                                f'\n{binance_link}'
-                    alert_key = f'{symbol}.{alert_alert}'
-                    if alert_key not in data['log_alerts']:
-                        alerts_to_send.append(alert_str)
-                        sent_alerts += 1 
-                        alert['start'] = proc_start
-                    else:
-                        alert['start'] = data['log_alerts'][alert_key]['start']
+                        alert['origin'] = trend_msg
+                        alert['symbol'] = symbol
+                        alert['timeframe'] = f'{interval_binance}'
+                        alert['alert_str'] = alert_str
+                        alert['datetime'] = proc_start
+                        alert['price'] = price
 
-                    alert['origin'] = trend_msg
-                    alert['symbol'] = symbol
-                    alert['timeframe'] = f'{interval_binance}'
-                    alert['alert_str'] = alert_str
-                    alert['datetime'] = proc_start
-                    alert['price'] = price
-
-                    data['log_alerts'][alert_key] = alert
+                        data['log_alerts'][alert_key] = alert
 
         if sent_alerts > 5:
             break
