@@ -602,80 +602,137 @@ def get_pivots_alert(df,threshold=1.5):
                 
                 if len(pivots) >= 5: #Se busca que existan mas pivots de lo necesario par apoder formarlos
 
-                    df_pivots = df[df['ZigZag']>0]
-                    lpdt = df_pivots.iloc[-1]['datetime'] #Last Pivot Datetime
-                    max_flp = df[df['datetime']>lpdt]['high'].max() #Max From last pivot
-                    min_flp = df[df['datetime']>lpdt]['low'].min()  #Min From last pivot
-
                     if trend >=1:
                         #Alertas en LONG
-
-                        #Busqueda de pivots con el siguiente formato 
-                        #              -1
-                        #       -3
-                        #                         Precio
-                        #                  min_flp
-                        #          -2
-                        #   -4
-                    
-                        alert_type = 'Dual Pullback LONG'
-                        last_pivots_diff = pivots[-1]-min_flp
-                        valid_pivots_type = pivots[-1] > pivots[-3] and pivots[-3] > min_flp and \
-                                            min_flp > pivots[-2] and pivots[-2] > pivots[-4] 
-                        in_price = min_flp+last_pivots_diff/3
-                        valid_price = in_price*(1-(0.25/100)) < price < in_price*(1+(0.25/100))
-                        valid_pivot_delta = pivots[-1] > min_flp*(1+threshold/100) and min_flp > pivots[-2]*(1+(threshold/3)/100) \
-                                            and pivots[-1] > pivots[-4]*(1+(2*threshold)/100) 
-                        if valid_pivots_type and valid_price and valid_pivot_delta:
-
+ 
+                        is_uptrend_structure = pivots[-1] > pivots[-3] and pivots[-2] > pivots[-4]
+                        last_high_pivot = pivots[-1]
+                        if is_uptrend_structure and price > last_high_pivot:
+                            data['alert_str'] = 'Breakout LONG'
                             data['alert'] = 1
                             data['side'] = 1
-                            data['alert_str'] = alert_type
-                            data['sl1'] = min_flp
-                            data['tp1'] = pivots[-1] 
-                            data['in_price'] = data['sl1']+((data['tp1']-data['sl1'])/3) #Genera un ratio 2:1
-                        
-                        
-                        pivots.append(min_flp)   
+                            data['sl1'] = pivots[-2] # O min_flp si es más conservador
+                            data['tp1'] = last_high_pivot + (last_high_pivot - pivots[-2]) # Proyección 1:1 del último impulso
+                            data['in_price'] = last_high_pivot 
+
+                        # Necesitas al menos 5 pivots para esto
+                        high_pivot_1 = pivots[-1]
+                        low_pivot_1 = pivots[-2]
+                        high_pivot_2 = pivots[-3]
+                        low_pivot_2 = pivots[-4]
+                        # Chequea si los máximos están en un nivel similar (con una tolerancia)
+                        resistance_level_formed = abs(high_pivot_1 - high_pivot_2) < (high_pivot_1 * 0.005) # ej: 0.5% de tolerancia
+                        # Chequea si los mínimos son ascendentes
+                        higher_lows_formed = low_pivot_1 > low_pivot_2
+                        if resistance_level_formed and higher_lows_formed and price > high_pivot_1:
+                            # ¡ALERTA DE TRIÁNGULO ASCENDENTE LONG!
+                            data['alert_str'] = 'Ascending Triangle Breakout'
+                            data['alert'] = 2
+                            data['side'] = 1
+                            data['sl1'] = low_pivot_1 
+                            data['tp1'] = high_pivot_1 + (high_pivot_1-low_pivot_1)
+                            data['in_price'] = high_pivot_1
+                            
+                        # Viniendo de una tendencia bajista (ej: Supertrend era negativo)
+                        low_pivot_1 = pivots[-2]
+                        neckline_pivot = pivots[-3]
+                        low_pivot_2 = pivots[-4]
+                        # Chequea si los mínimos están al mismo nivel (tolerancia)
+                        support_level_formed = abs(low_pivot_1 - low_pivot_2) < (low_pivot_1 * 0.005)
+                        # Chequea que el neckline esté por encima de los mínimos
+                        is_valid_pattern = neckline_pivot > low_pivot_1
+                        if support_level_formed and is_valid_pattern and price > neckline_pivot:
+                            data['alert_str'] = 'Double Bottom Breakout'
+                            data['alert'] = 3
+                            data['side'] = 1
+                            data['in_price'] = neckline_pivot
+                            data['sl1'] = low_pivot_1 # O el promedio de los dos mínimos
+                            data['tp1'] = neckline_pivot + (neckline_pivot - low_pivot_1) # Proyección de la altura del patrón
+
                         
                     elif trend <= -1:
-                        # Alertas en SHORT
+                        # --- Alertas en SHORT ---
 
-                        #Busqueda de pivots con el siguiente formato 
-                        #   -4
-                        #           -2
-                        #                   max_flp
-                        #                              Precio
-                        #       -3
-                        #               -1
-                        alert_type = 'Dual Pullback SHORT'
-                        last_pivots_diff = max_flp-pivots[-1]
-                        valid_pivots_type = pivots[-1] < pivots[-3] and pivots[-3] < max_flp and \
-                                            max_flp < pivots[-2] and pivots[-2] < pivots[-4] 
-                        in_price = max_flp-last_pivots_diff/3
-                        valid_price = in_price*(1-(0.25/100)) < price < in_price*(1+(0.25/100))
-                        valid_pivot_delta = pivots[-1] < max_flp*(1-threshold/100) and max_flp < pivots[-2]*(1-(threshold/3)/100) \
-                                            and pivots[-1] < pivots[-4]*(1-(2*threshold)/100) 
-                        if valid_pivots_type and valid_price and valid_pivot_delta:
-                            data['alert'] = -1
+                        # --- 1. Patrón: Breakout SHORT (Contraparte del Breakout LONG) ---
+                        # Lógica: Buscamos una estructura de máximos y mínimos descendentes (tendencia bajista)
+                        # y entramos cuando el precio rompe el último mínimo, esperando continuación.
+                        is_downtrend_structure = pivots[-1] < pivots[-3] and pivots[-2] < pivots[-4]
+                        last_low_pivot = pivots[-2]
+
+                        # La alerta se dispara cuando el precio rompe (cae por debajo de) el último mínimo
+                        if is_downtrend_structure and price < last_low_pivot:
+                            data['alert_str'] = 'Breakout SHORT'
+                            data['alert'] = -1 # Usa un ID de alerta diferente para shorts
+                            data['side'] = -1 # -1 para SHORT
+                            data['in_price'] = last_low_pivot
+                            data['sl1'] = pivots[-1] # El Stop Loss va por encima del último máximo
+                            # Proyección 1:1 del último impulso bajista
+                            data['tp1'] = last_low_pivot - (pivots[-1] - last_low_pivot)
+                            # Aquí podrías añadir tu lógica de envío de alerta y salir del bucle si es necesario
+
+                        # --- 2. Patrón: Descending Triangle Breakout (Contraparte del Ascending Triangle) ---
+                        # Lógica: Un nivel de soporte plano (mínimos al mismo nivel) y máximos descendentes
+                        # que presionan el soporte hasta que se rompe.
+                        
+                        # Aseguramos que tenemos suficientes pivots para el patrón
+                    
+                        high_pivot_1 = pivots[-1]
+                        low_pivot_1 = pivots[-2]
+                        high_pivot_2 = pivots[-3]
+                        low_pivot_2 = pivots[-4]
+
+                        # Chequea si los mínimos están en un nivel similar (soporte plano)
+                        support_level_formed = abs(low_pivot_1 - low_pivot_2) < (low_pivot_1 * 0.005) # ej: 0.5% de tolerancia
+
+                        # Chequea si los máximos son descendentes
+                        lower_highs_formed = high_pivot_1 < high_pivot_2
+
+                        # La alerta se dispara cuando el precio rompe el soporte
+                        if support_level_formed and lower_highs_formed and price < low_pivot_1:
+                            data['alert_str'] = 'Descending Triangle Breakout'
+                            data['alert'] = -2 # Usa un ID de alerta diferente
                             data['side'] = -1
-                            data['alert_str'] = alert_type
-                            data['sl1'] = max_flp
-                            data['tp1'] = pivots[-1] 
-                            data['in_price'] = data['sl1']-((data['sl1']-data['tp1'])/3) #Genera un ratio 2:1
+                            data['in_price'] = low_pivot_1
+                            data['sl1'] = high_pivot_1 # El SL va por encima del último máximo del triángulo
+                            # Proyecta la altura del triángulo hacia abajo desde el punto de ruptura
+                            data['tp1'] = low_pivot_1 - (high_pivot_1 - low_pivot_1)
+                            # Lógica de envío de alerta
 
+                        # --- 3. Patrón: Double Top Breakout (Contraparte del Double Bottom) ---
+                        # Lógica: Patrón de reversión. El precio intenta superar una resistencia dos veces y falla,
+                        # luego rompe el soporte intermedio ("neckline"), señalando un cambio a tendencia bajista.
 
-                        pivots.append(max_flp)
+                        # Aseguramos que tenemos suficientes pivots para el patrón
+                        high_pivot_1 = pivots[-1]
+                        neckline_pivot_short = pivots[-2] # El "neckline" en un doble techo es el mínimo intermedio
+                        high_pivot_2 = pivots[-3]
 
-                if data['alert'] != 0:
-                    decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
-                    data['in_price'] = round(data['in_price'],decs)
-                    data['df'] = df
-                    data['datetime'] = df.iloc[-1]['datetime']
-                    data['last_pivot'] = lpdt
-                    data['pivots'] = pivots
-                    data['adx'] = last_adx
-                    data['adx_ma'] = last_adx_ma
+                        # Chequea si los máximos están al mismo nivel (resistencia)
+                        resistance_level_formed = abs(high_pivot_1 - high_pivot_2) < (high_pivot_1 * 0.005)
+
+                        # Chequea que el neckline esté por debajo de los máximos
+                        is_valid_pattern = neckline_pivot_short < high_pivot_1
+
+                        # La alerta se dispara cuando el precio rompe el neckline hacia abajo
+                        if resistance_level_formed and is_valid_pattern and price < neckline_pivot_short:
+                            data['alert_str'] = 'Double Top Breakout'
+                            data['alert'] = -3 # Usa un ID de alerta diferente
+                            data['side'] = -1
+                            data['in_price'] = neckline_pivot_short
+                            data['sl1'] = high_pivot_1 # SL por encima del doble techo
+                            # Proyecta la altura del patrón hacia abajo desde el neckline
+                            data['tp1'] = neckline_pivot_short - (high_pivot_1 - neckline_pivot_short)
+                            # Lógica de envío de alerta                        
+
+        #Data general de las alertas
+        if data['alert'] != 0:
+            decs = max(contar_decimales(data['sl1']), contar_decimales(data['tp1']))
+            data['in_price'] = round(data['in_price'],decs)
+            data['df'] = df
+            data['datetime'] = df.iloc[-1]['datetime']
+            data['pivots'] = pivots
+            data['adx'] = last_adx
+            data['adx_ma'] = last_adx_ma
 
     return data
 
