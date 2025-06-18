@@ -201,7 +201,7 @@ def run():
                 # 🔔 ALERTA
 
                 binance_link = f'<a href="https://www.binance.com/es-LA/futures/{symbol}">Ir a Binance Futures</a>'
-                actual_price = actual_prices[alert['symbol']]
+                actual_price = actual_prices[symbol]
                 if alert['alert'] != 0:
                     alert = alert_add_data(alert,actual_prices[symbol])
                     trend_msg = alert['alert_str']
