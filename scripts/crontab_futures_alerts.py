@@ -102,7 +102,8 @@ def run():
         
     proc_start = (datetime.now().strftime('%Y-%m-%d %H:%M'))
     proc_start = datetime.strptime(proc_start, "%Y-%m-%d %H:%M")
-    minuto_actual = int(datetime.strptime(proc_start, "%M"))
+    minuto_actual = int(datetime.now().strftime("%M"))
+    print(minuto_actual,type(minuto_actual))
     # Inicializar cliente
     exchInfo = Exchange(type='info', exchange='bnc', prms=None)
 
