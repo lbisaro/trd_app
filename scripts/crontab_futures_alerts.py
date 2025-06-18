@@ -102,8 +102,7 @@ def run():
         
     proc_start = (datetime.now().strftime('%Y-%m-%d %H:%M'))
     proc_start = datetime.strptime(proc_start, "%Y-%m-%d %H:%M")
-    minuto_actual = int(datetime.now().strftime("%M"))
-    print(minuto_actual,type(minuto_actual))
+
     # Inicializar cliente
     exchInfo = Exchange(type='info', exchange='bnc', prms=None)
 
@@ -173,102 +172,105 @@ def run():
     data['log_alerts'] = log_alerts
     
 
-    #Analisis de los datos para alertas
+    #Analisis de los datos para alertas solo cuando se estan cerrando las velas de 15 minutos
+    alerts_to_send = []
     sent_alerts = 0
     analized_symbols = 0
-    alerts_to_send = []
-    for symbol, symbol_info in data['symbols'].items():
+    minuto_actual = int(datetime.now().strftime("%M"))
+    if minuto_actual in [14,29,44,59]:
+        
+        for symbol, symbol_info in data['symbols'].items():
 
-        #Escaneando precios para detectar alertas
-        prices = data['symbols'][symbol]['c_1m']
-        interval_minutes = get_intervals(INTERVAL_ID,'minutes')
-        interval_binance = get_intervals(INTERVAL_ID,'binance')
+            #Escaneando precios para detectar alertas
+            prices = data['symbols'][symbol]['c_1m']
+            interval_minutes = get_intervals(INTERVAL_ID,'minutes')
+            interval_binance = get_intervals(INTERVAL_ID,'binance')
 
-        if len(data['datetime'])>=KLINES_TO_GET_ALERTS*interval_minutes:
-            try:
-                df = ohlc_from_prices(data['datetime'],prices,interval_minutes)
-            except:
+            if len(data['datetime'])>=KLINES_TO_GET_ALERTS*interval_minutes:
+                try:
+                    df = ohlc_from_prices(data['datetime'],prices,interval_minutes)
+                except:
+                    break
+                df_last100 = df[-100:]
+                last100_high = df_last100['high'].max()
+                last100_min = df_last100['low'].min()
+                variacion_pct = (last100_high - last100_min) / last100_min * 100
+                if abs(variacion_pct) >= (2*ALERT_THRESHOLD):
+                    analized_symbols += 1
+                    df = df[-200:]
+                    alert = get_pivots_alert(df,threshold=ALERT_THRESHOLD)
+                    
+                    # 🟢📈 LONG
+                    # 🔴📉 SHORT
+                    # 🔔 ALERTA
+
+                    binance_link = f'<a href="https://www.binance.com/es-LA/futures/{symbol}">Ir a Binance Futures</a>'
+                    actual_price = actual_prices[symbol]
+                    if alert['alert'] != 0:
+                        alert = alert_add_data(alert,actual_prices[symbol])
+                        trend_msg = alert['alert_str']
+                        alert_alert = alert['alert']
+                        alert_in_price = alert['in_price']
+                        alert_tp1 = alert['tp1']
+                        alert_sl1 = alert['sl1']
+                        alert_tp1_perc = alert['tp1_perc']
+                        alert_sl1_perc = alert['sl1_perc']
+                        alert_actual_price_legend = alert['actual_price_legend']
+                    
+                        if alert['side'] > 0:
+                            if actual_price<alert_tp1 and actual_price>alert_sl1:
+                                alert_str = f'🟢 <b>LONG</b> Scanner {interval_binance} <b>{symbol}</b>'+\
+                                            f'\nPrecio de entrada: {alert_in_price}'+\
+                                            f'\nTake Profit: {alert_tp1} ({alert_tp1_perc}%)'+\
+                                            f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
+                                            f'\n{trend_msg}'+\
+                                            f'\n{alert_actual_price_legend}'+\
+                                            f'\n{binance_link}'
+                                alert_key = f'{symbol}.{alert_alert}'
+                                if alert_key not in data['log_alerts']:
+                                    alerts_to_send.append(alert_str)
+                                    sent_alerts += 1 
+                                    alert['start'] = proc_start
+                                else:
+                                    alert['start'] = data['log_alerts'][alert_key]['start']
+                                alert['origin'] = trend_msg
+                                alert['symbol'] = symbol
+                                alert['timeframe'] = f'{interval_binance}'
+                                alert['alert_str'] = alert_str
+                                alert['datetime'] = proc_start
+                                alert['price'] = price
+
+                                data['log_alerts'][alert_key] = alert
+
+                        elif alert['side'] < 0:
+                            if actual_price<alert_sl1 and actual_price>alert_tp1:
+                                alert_str = f'🔴 <b>SHORT</b> Scanner {interval_binance} <b>{symbol}</b>'+\
+                                            f'\nPrecio de entrada: {alert_in_price}'+\
+                                            f'\nTake Profit: {alert_tp1} ({alert_tp1_perc}%)'+\
+                                            f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
+                                            f'\n{trend_msg}'+\
+                                            f'\n{alert_actual_price_legend}'+\
+                                            f'\n{binance_link}'
+                                alert_key = f'{symbol}.{alert_alert}'
+                                if alert_key not in data['log_alerts']:
+                                    alerts_to_send.append(alert_str)
+                                    sent_alerts += 1 
+                                    alert['start'] = proc_start
+                                else:
+                                    alert['start'] = data['log_alerts'][alert_key]['start']
+
+                                alert['origin'] = trend_msg
+                                alert['symbol'] = symbol
+                                alert['timeframe'] = f'{interval_binance}'
+                                alert['alert_str'] = alert_str
+                                alert['datetime'] = proc_start
+                                alert['price'] = price
+
+                                data['log_alerts'][alert_key] = alert
+
+            if sent_alerts > 5:
                 break
-            df_last100 = df[-100:]
-            last100_high = df_last100['high'].max()
-            last100_min = df_last100['low'].min()
-            variacion_pct = (last100_high - last100_min) / last100_min * 100
-            if abs(variacion_pct) >= (2*ALERT_THRESHOLD):
-                analized_symbols += 1
-                df = df[-200:]
-                alert = get_pivots_alert(df,threshold=ALERT_THRESHOLD)
-                
-                # 🟢📈 LONG
-                # 🔴📉 SHORT
-                # 🔔 ALERTA
-
-                binance_link = f'<a href="https://www.binance.com/es-LA/futures/{symbol}">Ir a Binance Futures</a>'
-                actual_price = actual_prices[symbol]
-                if alert['alert'] != 0:
-                    alert = alert_add_data(alert,actual_prices[symbol])
-                    trend_msg = alert['alert_str']
-                    alert_alert = alert['alert']
-                    alert_in_price = alert['in_price']
-                    alert_tp1 = alert['tp1']
-                    alert_sl1 = alert['sl1']
-                    alert_tp1_perc = alert['tp1_perc']
-                    alert_sl1_perc = alert['sl1_perc']
-                    alert_actual_price_legend = alert['actual_price_legend']
-                
-                    if alert['side'] > 0:
-                        if alert_sl1 > actual_price > alert_tp1:
-                            alert_str = f'🟢 <b>LONG</b> Scanner {interval_binance} <b>{symbol}</b>'+\
-                                        f'\nPrecio de entrada: {alert_in_price}'+\
-                                        f'\nTake Profit: {alert_tp1} ({alert_tp1_perc}%)'+\
-                                        f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
-                                        f'\n{trend_msg}'+\
-                                        f'\n{alert_actual_price_legend}'+\
-                                        f'\n{binance_link}'
-                            alert_key = f'{symbol}.{alert_alert}'
-                            if alert_key not in data['log_alerts']:
-                                alerts_to_send.append(alert_str)
-                                sent_alerts += 1 
-                                alert['start'] = proc_start
-                            else:
-                                alert['start'] = data['log_alerts'][alert_key]['start']
-                            alert['origin'] = trend_msg
-                            alert['symbol'] = symbol
-                            alert['timeframe'] = f'{interval_binance}'
-                            alert['alert_str'] = alert_str
-                            alert['datetime'] = proc_start
-                            alert['price'] = price
-
-                            data['log_alerts'][alert_key] = alert
-
-                    elif alert['side'] < 0:
-                        if alert_sl1 < actual_price < alert_tp1:
-                            alert_str = f'🔴 <b>SHORT</b> Scanner {interval_binance} <b>{symbol}</b>'+\
-                                        f'\nPrecio de entrada: {alert_in_price}'+\
-                                        f'\nTake Profit: {alert_tp1} ({alert_tp1_perc}%)'+\
-                                        f'\nStop Loss: {alert_sl1} ({alert_sl1_perc}%)'+\
-                                        f'\n{trend_msg}'+\
-                                        f'\n{alert_actual_price_legend}'+\
-                                        f'\n{binance_link}'
-                            alert_key = f'{symbol}.{alert_alert}'
-                            if alert_key not in data['log_alerts']:
-                                alerts_to_send.append(alert_str)
-                                sent_alerts += 1 
-                                alert['start'] = proc_start
-                            else:
-                                alert['start'] = data['log_alerts'][alert_key]['start']
-
-                            alert['origin'] = trend_msg
-                            alert['symbol'] = symbol
-                            alert['timeframe'] = f'{interval_binance}'
-                            alert['alert_str'] = alert_str
-                            alert['datetime'] = proc_start
-                            alert['price'] = price
-
-                            data['log_alerts'][alert_key] = alert
-
-        if sent_alerts > 5:
-            break
-    
+        
     if len(alerts_to_send)>0:
         for alert_str in alerts_to_send:
             log.alert(alert_str)
