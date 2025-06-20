@@ -42,6 +42,11 @@ def get_klines(start,end,symbol,timeframe):
     #df=df.set_index('datetime')
     return df
 
+check_folder = f'./backtest/klines/'
+if not os.path.exists(check_folder):
+    print('\n\nERROR CRITICO\nEl script se debe ejecutar desde la carpeta base del proyecto.\n\n')
+    quit()    
+
 #proceso para descarga de velas en los periodos definidos
 for index, row in intervals.iterrows():
 
