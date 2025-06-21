@@ -20,12 +20,18 @@ from bot.management.commands.kline_collector import breadth_file
 def home(request):
     breadth = 50
     alerts_log = []
+    last_update = ''
+    timeframe_base = ''
+    timeframe_agregado = ''
+    status = {}
     if os.path.exists(breadth_file):
         with open(breadth_file, "rb") as archivo:
             status = pickle.load(archivo)
             breadth = status['breadth']
             alerts_log = status['log']
             last_update = status['last_update']
+            timeframe_base = status['timeframe_base']
+            timeframe_agregado = status['timeframe_agregado']
     breadth = breadth*2-100
     breadth_class = 'text-secondary'
     if breadth == 100:
@@ -48,6 +54,8 @@ def home(request):
         'str_breadth': str_breadth,
         'breadth_class': breadth_class,
         'last_update': last_update,
+        'timeframe_base': timeframe_base,
+        'timeframe_agregado': timeframe_agregado,
         })
 
 def signup(request):
