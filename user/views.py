@@ -9,13 +9,46 @@ from user.forms import RegistrationForm
 from user.models import UserProfile
 from django.core.mail import send_mail
 import json
+import pickle
+import os
 
 from scripts.Exchange import Exchange
 from django.conf import settings 
+from bot.management.commands.kline_collector import breadth_file
 
 @login_required
 def home(request):
-    return render(request, 'home.html')
+    breadth = 50
+    alerts_log = []
+    if os.path.exists(breadth_file):
+        with open(breadth_file, "rb") as archivo:
+            status = pickle.load(archivo)
+            breadth = status['breadth']
+            alerts_log = status['log']
+            last_update = status['last_update']
+    breadth = breadth*2-100
+    breadth_class = 'text-secondary'
+    if breadth == 100:
+        str_breadth = 'Esperando alerta de Venta'
+        breadth_class = 'text-danger'
+    elif breadth == -100:
+        breadth_class = 'text-success'
+        str_breadth = 'Esperando alerta de Compra'
+    elif breadth > 50:
+        str_breadth = 'Venta parcial del mercado'
+    elif breadth < -50:
+        str_breadth = 'Compra parcial del mercado'
+    else:
+        str_breadth = 'Neutral'
+    
+
+    return render(request, 'home.html', context = {
+        'breadth': breadth, 
+        'alerts_log': alerts_log, 
+        'str_breadth': str_breadth,
+        'breadth_class': breadth_class,
+        'last_update': last_update,
+        })
 
 def signup(request):
     json_rsp = {}

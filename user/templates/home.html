@@ -12,7 +12,22 @@
 
 
 <div class="container">
-    <img style="width: 300px;" src="https://alternative.me/crypto/fear-and-greed-index.png" alt="Latest Crypto Fear & Greed Index" />
+    <h6 class="info">Top30 Criptos </h6>
+    <div>Status:    
+        <b class="{{breadth_class}}">{{str_breadth}}</b>
+        <div>Breadth: <b>{{breadth}}</b></div>
+        <div>Ultima actualizacion: <b>{{last_update}}</b></div>
+    </div>
+    {% if alerts_log %}
+        <div>Log:
+            {% for log in alerts_log %}
+            <div>{{log}}</div>            
+            {% endfor %}
+
+        </div>
+    {% endif %}
+    
+    
 </div>
 
 {% endblock %}
