@@ -58,8 +58,8 @@ class Command(BaseCommand):
     # ... (__init__ sin cambios)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.TIMEFRAME_BASE = '1m'
-        self.TIMEFRAME_AGREGADO = '5m'
+        self.TIMEFRAME_BASE = '1h'
+        self.TIMEFRAME_AGREGADO = '4h'
         self.SEGUNDOS_AGREGADOS = 5 * 60
         self.history = {}
         self.current_candle = {}
