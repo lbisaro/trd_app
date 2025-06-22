@@ -65,19 +65,19 @@
                     <td class="text-end">
                         {{data.current_price}}</td>
                     <td class="text-end {% if data.average_buy_price > data.current_price %} text-danger {% else %} text-success {% endif %}">
-                        {{data.average_buy_price}}</td>
+                        {% if data.average_buy_price %}{{data.average_buy_price}}{% endif %}</td>
                     <td class="text-end">
-                        {{data.open_quantity}}</td>
+                        {% if data.open_quantity %}{{data.open_quantity}}{% endif %}</td>
                     <td class="text-end">
-                        {{data.open_quantity_in_usd}}</td>
+                        {% if data.open_quantity_in_usd %}{{data.open_quantity_in_usd}}{% endif %}</td>
                     <td class="text-end {% if data.realized_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.realized_pnl}}</td>
+                        {% if data.realized_pnl %}{{data.realized_pnl}}{% endif %}</td>
                     <td class="text-end {% if data.unrealized_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.unrealized_pnl}}</td>
+                        {% if data.unrealized_pnl %}{{data.unrealized_pnl}}{% endif %}</td>
                     <td class="text-end {% if data.total_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.total_pnl}}</td>
+                        {% if data.total_pnl %}{{data.total_pnl}}{% endif %}</td>
                     <td class="text-end {% if data.price_distance_percent < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.price_distance_percent}} %</td>
+                        {% if data.price_distance_percent %}{{data.price_distance_percent}} %{% endif %}</td>
                     </tr>
                 {% endfor %}
             </tbody>
