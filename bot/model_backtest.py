@@ -17,8 +17,6 @@ class Backtest(models.Model):
     ESTADO_ENCURSO = 50
     ESTADO_COMPLETO = 100
 
-    tendencias = ['Completo'] #,'Alcista','Lateral','Bajista'
-
     klines_folder = os.path.join(settings.BASE_DIR,'backtest','klines')
     results_folder = os.path.join(settings.BASE_DIR,'backtest','results')
 
@@ -31,6 +29,7 @@ class Backtest(models.Model):
     usuario = models.ForeignKey(User, on_delete = models.CASCADE) 
     scoring = models.FloatField(null=False, blank=False, default=0)
     scoring_str = models.TextField(null=False, blank=True, default='')
+    prefix_backtest_file = models.CharField(max_length = 30, null=False, blank=False)
     
     class Meta:
         verbose_name = "BackTest"
@@ -94,27 +93,27 @@ class Backtest(models.Model):
                     tmp_df = pd.DataFrame(periodo['bt'],columns=['ind',symbol])
                     json_rsp[tendencia][symbol] = tmp_df[symbol]
     
-        
-        for tendencia in self.tendencias:
-            #Eliminando metricas que no se van a medir
-            json_rsp[tendencia].drop(json_rsp[tendencia][json_rsp[tendencia]['ind'] == 'maximo_operaciones_negativas_consecutivas'].index, inplace=True)
-            json_rsp[tendencia].drop(json_rsp[tendencia][json_rsp[tendencia]['ind'] == 'ratio_dias_sin_operar'].index, inplace=True)
-            json_rsp[tendencia].drop(json_rsp[tendencia][json_rsp[tendencia]['ind'] == 'trades_x_mes'].index, inplace=True)
+        tendencia = self.prefix_backtest_file
+    
+        #Eliminando metricas que no se van a medir
+        json_rsp[tendencia].drop(json_rsp[tendencia][json_rsp[tendencia]['ind'] == 'maximo_operaciones_negativas_consecutivas'].index, inplace=True)
+        json_rsp[tendencia].drop(json_rsp[tendencia][json_rsp[tendencia]['ind'] == 'ratio_dias_sin_operar'].index, inplace=True)
+        json_rsp[tendencia].drop(json_rsp[tendencia][json_rsp[tendencia]['ind'] == 'trades_x_mes'].index, inplace=True)
 
-            json_rsp[tendencia]['Media'] = json_rsp[tendencia].drop(columns=['ind']).mean(axis=1)
-            json_rsp[tendencia]['Dev.Est.'] = json_rsp[tendencia].drop(columns=['ind']).std(axis=1)
-            json_rsp[tendencia]['Dev.Est.(%)'] = (json_rsp[tendencia].drop(columns=['ind']).std(axis=1)/json_rsp[tendencia]['Media'])
-        
-            col_media_tendencia = f'Media {tendencia}'
-            col_scoring_tendencia = f'Scoring {tendencia}'
-            if not 'Media' in json_rsp:
-                json_rsp['Media'] = json_rsp[tendencia][['ind','Media']]
-                json_rsp['Media'] = json_rsp['Media'].rename(columns={'Media': col_media_tendencia})
-            else:
-                json_rsp['Media'][col_media_tendencia] = json_rsp[tendencia]['Media']
+        json_rsp[tendencia]['Media'] = json_rsp[tendencia].drop(columns=['ind']).mean(axis=1)
+        json_rsp[tendencia]['Dev.Est.'] = json_rsp[tendencia].drop(columns=['ind']).std(axis=1)
+        json_rsp[tendencia]['Dev.Est.(%)'] = (json_rsp[tendencia].drop(columns=['ind']).std(axis=1)/json_rsp[tendencia]['Media'])
+    
+        col_media_tendencia = f'Media {tendencia}'
+        col_scoring_tendencia = f'Scoring {tendencia}'
+        if not 'Media' in json_rsp:
+            json_rsp['Media'] = json_rsp[tendencia][['ind','Media']]
+            json_rsp['Media'] = json_rsp['Media'].rename(columns={'Media': col_media_tendencia})
+        else:
+            json_rsp['Media'][col_media_tendencia] = json_rsp[tendencia]['Media']
 
-            json_rsp['Media'][col_scoring_tendencia] = json_rsp['Media'].apply(lambda row: self.calcular_scoring_columna(row['ind'], row[col_media_tendencia],col_media_tendencia), axis=1)
-        
+        json_rsp['Media'][col_scoring_tendencia] = json_rsp['Media'].apply(lambda row: self.calcular_scoring_columna(row['ind'], row[col_media_tendencia],col_media_tendencia), axis=1)
+    
         #Formateando los dataframes generados
         ind_names = []
         ind_names.append({'ind':'cagr',
@@ -158,13 +157,13 @@ class Backtest(models.Model):
         return json_rsp
 
     def get_scoring_str(self,resumen_resultados):
-        tendencias = Backtest.tendencias
+        tendencia = self.prefix_backtest_file
         scoring_str = ''
-        for tendencia in tendencias:
-            media = resumen_resultados['Media'][f'Media {tendencia}']
-            cagr = media.loc['cagr']
-            max_drawdown_cap = media.loc['max_drawdown_cap']
-            scoring_str = f'CAGR {cagr:.2f} DD {max_drawdown_cap:.2f} '
+    
+        media = resumen_resultados['Media'][f'Media {tendencia}']
+        cagr = media.loc['cagr']
+        max_drawdown_cap = media.loc['max_drawdown_cap']
+        scoring_str = f'CAGR {cagr:.2f} DD {max_drawdown_cap:.2f} '
         return scoring_str
 
     def calcular_scoring_columna(self,ind,col_media,col_media_tendencia):
@@ -273,8 +272,7 @@ class Backtest(models.Model):
     def calcular_scoring_completo(self,resumen_resultados):
         json_rsp = {}
 
-        tendencias = Backtest.tendencias
-
+        
         #max_scoring surge de: 
         # un valor promedio de 3 como maximo para cada merica
         # multiplicado por el valor maximo de cagr (3) 
@@ -282,14 +280,14 @@ class Backtest(models.Model):
         # 3 * 3 * 2 = 18 
         max_scoring = 18
 
-        for tendencia in tendencias:
-            scoring = resumen_resultados['Media'][f'Scoring {tendencia}']
-            cagr = scoring.loc['cagr']
-            max_drawdown_cap = scoring.loc['max_drawdown_cap']
-            count = scoring.count()
-            sum = scoring.sum() - cagr - max_drawdown_cap
-            avg = sum / (count-2)
-            json_rsp[tendencia] = (( cagr * max_drawdown_cap * avg ) /18 ) *100  
+        tendencia = self.prefix_backtest_file
+        scoring = resumen_resultados['Media'][f'Scoring {tendencia}']
+        cagr = scoring.loc['cagr']
+        max_drawdown_cap = scoring.loc['max_drawdown_cap']
+        count = scoring.count()
+        sum = scoring.sum() - cagr - max_drawdown_cap
+        avg = sum / (count-2)
+        json_rsp[tendencia] = (( cagr * max_drawdown_cap * avg ) /18 ) *100  
 
         return json_rsp
 
@@ -319,13 +317,12 @@ class Backtest(models.Model):
                     parts = f.split('_')
                     tendencia = parts[0]
                     symbol = parts[1]
-                    tendencia = parts[0]
                     start = parts[3]
                     end = parts[4]
                     key = len(periodos)
-                    if all_tendencias or tendencia in self.tendencias:
+                    if all_tendencias or tendencia:
                         for intrvl in intrvls.itertuples(index=False):
-                            if interval_id == 'ALL' or intrvl.interval_id == interval_id:
+                            if interval_id == 'ALL' or intrvl.interval_id == interval_id and tendencia == self.prefix_backtest_file:
                                 periodos.append({
                                             'key': key,
                                             'tendencia':tendencia,

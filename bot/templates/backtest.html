@@ -52,6 +52,7 @@
             <thead>
                 <tr>
                     <th id="th_bot">Bot</th>
+                    <th >Rango</th>
                     <th id="th_intervalo">Intervalo</th>
                     <th>Estado</th>
                     <th>Creado</th>
@@ -67,6 +68,7 @@
                 {% for bt in backtests %}
                 <tr onclick="ver('{{bt.id}}')" class="bot_{{bt.clase}} int_{{bt.str_interval}}">
                     <td>{{bt.name}}</td>
+                    <td>{{bt.prefix_backtest_file}}</td>
                     <td>{{bt.str_interval}}</td>
                     <td>{{bt.str_estado}}</td>
                     <td>{{bt.creado|date:"d-m-Y h:i"}}</td>

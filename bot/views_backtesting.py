@@ -30,6 +30,7 @@ def config(request,bot_class_name):
     gen_bot = GenericBotClass()
     obj = gen_bot.get_instance(bot_class_name)
     periodos = Backtest().get_periodos(interval_id='ALL',all_tendencias=True)
+
     if request.method == 'GET':
         return render(request, 'backtesting_run.html',{
             'bot_class_name': bot_class_name,

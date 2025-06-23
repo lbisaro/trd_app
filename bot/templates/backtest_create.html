@@ -11,23 +11,40 @@
 
 <div class="container  pb-4" id="config">
     <div class="row">
-        <div class="col-2">
+        <div class="col-1">
             Bot Class                                    
         </div>
-        <div class="col-4 data">
+        <div class="col-3 data">
             {{bot_class_name}}
         </div>
-        <div class="col-2">
-            intervalo
+        <div class="col-1">
+            TimeFrame
         </div>
-        <div class="col-4">   
+        <div class="col-3">   
             <select id="interval_id" class="form-control">
+            {% if intervals|length > 1 %}
                 <option value="0" >Seleccionar</option>
+            {% endif %}
             {% for i in intervals %}
-                <option value="{{i.interval_id}}" > {{i.name}}</option>
+                <option value="{{i.interval_id}}">{{i.name}}</option>
             {% endfor %}
             </select>
         </div>
+        <div class="col-1">
+            Rango
+        </div>
+        <div class="col-3">   
+            <select id="prefix_backtest_file" class="form-control">
+            {% if prefix_backtest_files|length > 1 %}
+                <option value="0" >Seleccionar</option>
+            {% endif %}
+            {% for pbf in prefix_backtest_files %}
+                <option value="{{pbf}}">{{pbf}}</option>
+            {% endfor %}
+            </select>
+        </div>
+
+        
     </div>
 
     <div class="fw-bold  pt-3">Parametros del BackTesting</div>
@@ -36,7 +53,7 @@
     </div>
     
 </div>
-<div class="container"></div>
+<div class="container">
     <div class="form-group row ">
         <div class="col-12 d-grid gap-2">
             <div class="btn btn-success " id="btn_ejecutar" onclick="ejecutar()">Ejecutar</div>
@@ -65,8 +82,12 @@
         {% for k,prm in parametros.items %}
             addParametro('{{prm.c}}', '{{prm.d}}', '{{prm.v}}', '{{prm.t}}', '{{prm.l}}');
         {% endfor %} 
-        interval_id = "{% if interval_id %}{{interval_id}}{% else %}2d01{% endif %}";
-        $('#interval_id').val(interval_id).change()
+        {% if interval_id %}
+            $('#interval_id').val('{{interval_id}}').change()
+        {% endif %}
+        {% if prefix_backtest_file %}
+            $('#prefix_backtest_file').val('{{prefix_backtest_file}}').change()
+        {% endif %}
     })
 
     function addParametro(parametro,descripcion,value,type,limit)
@@ -88,7 +109,7 @@
         }
         else if (type == 'symbol')
         {
-            html += '<span class="form-control" >Definidos en periodos de BackTest</span>';
+            html += '<span class="form-control" >Definido por Rango de BackTest</span>';
             html += '<input class="value" value="BACKTEST" type="hidden" id="'+parametro+'_v" >';
         }
         else if (type == 't_int')
@@ -130,12 +151,15 @@
                 from_date: $('#from_date').val(),
                 to_date: $('#to_date').val(),
                 interval_id: $('#interval_id').val(),
+                prefix_backtest_file: $('#prefix_backtest_file').val(),
                 quote_qty: $('#quote_qty').val(),
                 rewrite: (rewrite?'YES':'NO'),
             }
         err = ''
         if (data.interval_id == '0')
-            err += 'Se deben especificar el intervalo<br>';
+            err += 'Se deben especificar el TimeFrame<br>';
+        if (data.prefix_backtest_file == '0')
+            err += 'Se deben especificar el Rango<br>';
         
         data.parametros = getParametros();
         if (!data.parametros)

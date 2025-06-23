@@ -88,23 +88,17 @@
     </div>
     <div class="container font-monospace rounded border border-1" style="font-size: 1em;">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="general">
-              <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general-tab-pane" type="button" role="tab" aria-controls="general-tab-pane" aria-selected="false" tabindex="-1">{{titulo_general}}</button>
-            </li>
-            {% for tendencia in tendencias %}
-            <li class="nav-item" role="{{tendencia}}">
-              <button class="nav-link " id="{{tendencia}}-tab" data-bs-toggle="tab" data-bs-target="#{{tendencia}}-tab-pane" type="button" role="tab" aria-controls="{{tendencia}}-tab-pane" aria-selected="true">{{tendencia}}</button>
+            {% for resultado in resultados %}
+            <li class="nav-item" role="{{resultado.codigo}}">
+              <button class="nav-link {% if resultado.codigo == 'general' %} active{% endif %}" id="{{resultado.codigo}}-tab" data-bs-toggle="tab" data-bs-target="#{{resultado.codigo}}-tab-pane" type="button" role="tab" aria-controls="{{resultado.codigo}}-tab-pane" aria-selected="false" tabindex="-1">{{resultado.titulo}}</button>
             </li>
             {% endfor %}
           </ul>
 
         <div class="tab-content" id="myTabContent">
-            <div class="tab-pane fade show active" id="general-tab-pane" role="tabpanel" aria-labelledby="general-tab" tabindex="0" >
-                {{html_General}}
-            </div>
-            {% for tendencia in tendencias %}
-            <div class="tab-pane   " id="{{tendencia}}-tab-pane" role="tabpanel" aria-labelledby="{{tendencia}}-tab" tabindex="1" >
-                {{html_Completo}}
+            {% for resultado in resultados %}
+            <div class="tab-pane fade {% if resultado.codigo == 'general' %} show active{% endif %}" id="{{resultado.codigo}}-tab-pane" role="tabpanel" aria-labelledby="{{resultado.codigo}}-tab" tabindex="0" >
+                {{resultado.html}}
             </div>
             {% endfor %}
         </div>

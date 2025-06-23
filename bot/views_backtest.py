@@ -31,12 +31,23 @@ def backtest(request):
 def config(request,bot_class_name,backtest_id_to_clone=0):
 
     intervals = fn.get_intervals().to_dict('records')
+    prefix_backtest_files = ['Completo','top30']
+    
+
+    if bot_class_name == 'BotTop30':
+        prefix_backtest_files = ['top30']
+        tmp_intervals = intervals
+        intervals = []
+        for interval in tmp_intervals:
+            if interval['interval_id'] == '1h01':
+                intervals.append(interval)
 
     if backtest_id_to_clone==0:
         gen_bot = GenericBotClass()
         obj = gen_bot.get_instance(bot_class_name)
         parametros = obj.parametros
         interval_id = None
+        prefix_backtest_file = None
 
     else:
         backtest = get_object_or_404(Backtest, pk=backtest_id_to_clone)
@@ -45,6 +56,7 @@ def config(request,bot_class_name,backtest_id_to_clone=0):
         obj = gen_bot.get_instance(bot_class_name)
         parametros = backtest.parse_parametros()
         interval_id = backtest.interval_id
+        prefix_backtest_file = backtest.prefix_backtest_file
         
             
     if request.method == 'GET':
@@ -53,6 +65,8 @@ def config(request,bot_class_name,backtest_id_to_clone=0):
             'intervals': intervals,
             'parametros': parametros,
             'interval_id': interval_id,
+            'prefix_backtest_files': prefix_backtest_files,
+            'prefix_backtest_file': prefix_backtest_file,
         })
 
 @login_required
@@ -63,6 +77,7 @@ def create(request):
         botClass    = request.POST['bot_class_name']
         interval_id = request.POST['interval_id']
         parametros  = request.POST['parametros']
+        prefix_backtest_file  = request.POST['prefix_backtest_file']
         if request.POST['rewrite'] == 'YES':
             rewrite = True
         else:
@@ -72,6 +87,7 @@ def create(request):
         
         existentes = Backtest.objects.filter(interval_id=interval_id,
                                      clase=botClass,
+                                     prefix_backtest_file=prefix_backtest_file,
                                      parametros=parametros)
         
         if existentes and existentes.count() > 0 and rewrite:
@@ -94,6 +110,7 @@ def create(request):
         bt.interval_id = interval_id
         bt.usuario=request.user
         bt.parametros=parametros
+        bt.prefix_backtest_file = prefix_backtest_file
 
         try:
             run_bot = bt.get_instance()
@@ -149,7 +166,9 @@ def view(request,backtest_id):
     backtest = get_object_or_404(Backtest, pk=backtest_id)
     resultados = backtest.get_resultados()
     
-    tendencias = Backtest.tendencias
+    prefix_backtest_file = backtest.prefix_backtest_file
+
+    
 
     df_resultados = None
     next = None
@@ -163,6 +182,7 @@ def view(request,backtest_id):
     if backtest.completo < 100:
         
         for i in range(0,len(resultados['periodos'])-1):
+
             if not next and resultados['periodos'][i]['procesado'] == 'NO':
                 next = resultados['periodos'][i]
         
@@ -171,10 +191,9 @@ def view(request,backtest_id):
 
     else:  
         rango_fechas = {}  
-        context['tendencias'] = tendencias       
-        for tendencia in tendencias:
-            rango_fechas[tendencia] = ''
-        
+        context['tendencias'] = [prefix_backtest_file]      
+        rango_fechas[prefix_backtest_file] = ''
+
         for periodo in resultados['periodos']:
             if rango_fechas[periodo['tendencia']] == '':
                 rango_fechas[periodo['tendencia']] += dt.datetime.strptime(periodo['start'],'%Y-%m-%d').strftime('%d-%m-%Y')
@@ -183,19 +202,24 @@ def view(request,backtest_id):
         df_resultados = backtest.get_resumen_resultados()
         plantilla = get_template('backtest_results_table.html')
         
+        context['resultados'] = []
         
-        context['html_General']    = plantilla.render({'df': df_resultados['Media']    })
-        for tendencia in tendencias:
-            context[f'html_{tendencia}']   = plantilla.render({'df': df_resultados[tendencia]})
-            
-        context['titulo_general']  = 'General'    
-        for tendencia in tendencias:
-            context[f'titulo_{tendencia}'] = f'{tendencia} '+rango_fechas[tendencia] 
-           
+        context['resultados'].append( {
+            'codigo': 'general',
+            'html': plantilla.render({'df': df_resultados['Media']    }),
+            'titulo':'General',
+        })
+        for tendencia in context['tendencias']:
+            context['resultados'].append( {
+                'codigo': tendencia,
+                'html': plantilla.render({'df': df_resultados[tendencia]}),
+                'titulo': f'{tendencia} '+rango_fechas[tendencia],
+            })
 
         scoring = backtest.calcular_scoring_completo(df_resultados)
-        
-        backtest.scoring = round(scoring['Completo'],1)
+        score = backtest.prefix_backtest_file
+            
+        backtest.scoring = round(scoring[score],1)
         backtest.scoring_str = backtest.get_scoring_str(df_resultados)       
         
         backtest.save()
