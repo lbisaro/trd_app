@@ -64,10 +64,35 @@ class Command(BaseCommand):
         self.history = {}
         self.current_candle = {}
         self.target_symbols = []
+    
+    def make_request_with_retries(self, url, max_retries=5, delay_seconds=10):
+        """
+        Realiza una petición GET a una URL, con una lógica de reintentos en caso de fallo.
+        """
+        for attempt in range(max_retries):
+            try:
+                res = requests.get(url, timeout=10) # Añadimos un timeout de 10 segundos
+                res.raise_for_status() # Lanza un error para códigos 4xx/5xx
+                return res.json()
+            except requests.exceptions.RequestException as e:
+                logging.warning(f"Intento {attempt + 1}/{max_retries} fallido para {url}. Error: {e}")
+                if attempt + 1 == max_retries:
+                    logging.error("Se alcanzó el número máximo de reintentos. El script fallará.")
+                    raise # Lanza la excepción final para que el script termine y systemd lo reinicie
+                
+                logging.info(f"Esperando {delay_seconds} segundos para reintentar...")
+                # Espera un poco antes del siguiente intento
+                # Verificamos si se solicitó el apagado durante la espera
+                for _ in range(delay_seconds):
+                    if hasattr(self, 'shutdown_handler') and self.shutdown_handler.shutdown_requested:
+                        logging.info("Apagado solicitado durante la espera, cancelando reintentos.")
+                        return None # Salimos si se pide apagar
+                    time.sleep(1)
+        return None # En caso de que el bucle termine inesperadamente
 
-
-    ### CAMBIO 1: Bootstrap ahora solo obtiene historia COMPLETA ###
     def bootstrap_data(self):
+        retries=5
+        delay_seconds=10
         logging.info(f"Iniciando bootstrap (últimas 60 velas COMPLETAS de {self.TIMEFRAME_AGREGADO})...")
         self.target_symbols = ['XRPUSDT','SOLUSDT','TRXUSDT','DOGEUSDT','ADAUSDT','WBTCUSDT','BCHUSDT',\
                                'SUIUSDT','LINKUSDT','XLMUSDT','AVAXUSDT','SHIBUSDT','LTCUSDT','HBARUSDT',\
@@ -92,7 +117,12 @@ class Command(BaseCommand):
             except Exception as e:
                 logging.error(f"Error en el bootstrap para {symbol}: {e}")
                 self.history[symbol] = deque(maxlen=60)
-
+                if retries == 0:
+                    logging.error("Se alcanzó el número máximo de reintentos. El script fallará.")
+                    raise # Lanza la excepción final para que el script termine y systemd lo reinicie
+                
+                time.sleep(delay_seconds)
+                retries -= 1
 
 
     def run_analysis_for_symbol(self):
@@ -182,7 +212,10 @@ class Command(BaseCommand):
         self.run_analysis_for_symbol()
             
 
-
+    def get_live_breadth():
+        with open(breadth_file, "rb") as archivo:
+            status = pickle.load(archivo)
+            return status['breadth']
 
     # --- PUNTO DE ENTRADA (handle) CON MANEJO DE SEÑALES ---
     def handle(self, *args, **options):
