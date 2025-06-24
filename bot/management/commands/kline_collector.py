@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 from django.core.management.base import BaseCommand
 from binance import ThreadedWebsocketManager
+from binance.exceptions import BinanceRequestException, BinanceAPIException
 from binance.client import Client
 from django.conf import settings
 from scripts.app_log import app_log
@@ -65,33 +66,8 @@ class Command(BaseCommand):
         self.current_candle = {}
         self.target_symbols = []
     
-    def make_request_with_retries(self, url, max_retries=5, delay_seconds=10):
-        """
-        Realiza una petición GET a una URL, con una lógica de reintentos en caso de fallo.
-        """
-        for attempt in range(max_retries):
-            try:
-                res = requests.get(url, timeout=10) # Añadimos un timeout de 10 segundos
-                res.raise_for_status() # Lanza un error para códigos 4xx/5xx
-                return res.json()
-            except requests.exceptions.RequestException as e:
-                logging.warning(f"Intento {attempt + 1}/{max_retries} fallido para {url}. Error: {e}")
-                if attempt + 1 == max_retries:
-                    logging.error("Se alcanzó el número máximo de reintentos. El script fallará.")
-                    raise # Lanza la excepción final para que el script termine y systemd lo reinicie
-                
-                logging.info(f"Esperando {delay_seconds} segundos para reintentar...")
-                # Espera un poco antes del siguiente intento
-                # Verificamos si se solicitó el apagado durante la espera
-                for _ in range(delay_seconds):
-                    if hasattr(self, 'shutdown_handler') and self.shutdown_handler.shutdown_requested:
-                        logging.info("Apagado solicitado durante la espera, cancelando reintentos.")
-                        return None # Salimos si se pide apagar
-                    time.sleep(1)
-        return None # En caso de que el bucle termine inesperadamente
-
     def bootstrap_data(self):
-        retries=5
+        max_retries=5
         delay_seconds=10
         logging.info(f"Iniciando bootstrap (últimas 60 velas COMPLETAS de {self.TIMEFRAME_AGREGADO})...")
         self.target_symbols = ['XRPUSDT','SOLUSDT','TRXUSDT','DOGEUSDT','ADAUSDT','WBTCUSDT','BCHUSDT',\
@@ -100,29 +76,32 @@ class Command(BaseCommand):
                                'ETCUSDT','VETUSDT','ATOMUSDT','FETUSDT','FILUSDT','WLDUSDT','ALGOUSDT',
                                'NEXOUSDT','OPUSDT'] 
         for symbol in self.target_symbols:
-            try:
-                # Pedimos 61 para asegurarnos de que al descartar la última (potencialmente parcial), nos queden 60.
-                klines = self.client.get_historical_klines(symbol=symbol, interval=self.TIMEFRAME_AGREGADO, limit=61)
-                
-                
-                self.history[symbol] = deque(maxlen=60)
-                # IMPORTANTE: Descartamos la última vela de la API para asegurar que solo tenemos historia completa.
-                for k in klines:
-                    candle = Candle(
-                        open_time=int(k[0] / 1000), o=k[1], h=k[2], l=k[3], c=k[4], v=k[5]
-                    )
-                    self.history[symbol].append(candle)
-                logging.info(f"Bootstrap para {symbol} completado. {len(self.history[symbol])} velas cargadas.")
+            for attempt in range(max_retries):
+                try:
+                    # Pedimos 61 para asegurarnos de que al descartar la última (potencialmente parcial), nos queden 60.
+                    klines = self.client.get_historical_klines(symbol=symbol, interval=self.TIMEFRAME_AGREGADO, limit=61)
+                    
+                    
+                    self.history[symbol] = deque(maxlen=60)
+                    # IMPORTANTE: Descartamos la última vela de la API para asegurar que solo tenemos historia completa.
+                    for k in klines:
+                        candle = Candle(
+                            open_time=int(k[0] / 1000), o=k[1], h=k[2], l=k[3], c=k[4], v=k[5]
+                        )
+                        self.history[symbol].append(candle)
+                    logging.info(f"Bootstrap para {symbol} completado. {len(self.history[symbol])} velas cargadas.")
+                    break 
 
-            except Exception as e:
-                logging.error(f"Error en el bootstrap para {symbol}: {e}")
-                self.history[symbol] = deque(maxlen=60)
-                if retries == 0:
-                    logging.error("Se alcanzó el número máximo de reintentos. El script fallará.")
-                    raise # Lanza la excepción final para que el script termine y systemd lo reinicie
-                
-                time.sleep(delay_seconds)
-                retries -= 1
+                except (BinanceRequestException, BinanceAPIException) as e:
+                    logging.warning(f"Intento {attempt + 1}/{max_retries} fallido para {symbol}. Error: {e}")
+                    
+                    if attempt + 1 == max_retries:
+                        logging.error(f"Se alcanzó el número máximo de reintentos para {symbol}. El script se detendrá.")
+                        # Lanzamos la excepción final para que systemd reinicie el servicio.
+                        raise SystemExit(f"Fallo crítico en bootstrap para {symbol}")
+                    
+                    logging.info(f"Esperando {delay_seconds} segundos para reintentar...")
+                    time.sleep(delay_seconds)
 
 
     def run_analysis_for_symbol(self):
@@ -250,3 +229,5 @@ class Command(BaseCommand):
         while not shutdown_handler.shutdown_requested:
             time.sleep(1)
         logging.info("Apagado limpio completado. El programa terminará en breve.")
+        raise SystemExit(f"Finalizado")
+        
