@@ -24,25 +24,25 @@ def home(request):
     timeframe_base = ''
     timeframe_agregado = ''
     status = {}
+    
     if os.path.exists(breadth_file):
         with open(breadth_file, "rb") as archivo:
             status = pickle.load(archivo)
             breadth = status['breadth']
-            alerts_log = status['log']
+            alerts_log = status['log'][::-1][:15]
             last_update = status['last_update']
             timeframe_base = status['timeframe_base']
             timeframe_agregado = status['timeframe_agregado']
-    breadth = breadth*2-100
     breadth_class = 'text-secondary'
     if breadth == 100:
-        str_breadth = 'Esperando alerta de Venta'
+        str_breadth = 'En alerta de Venta'
         breadth_class = 'text-danger'
-    elif breadth == -100:
+    elif breadth == 0:
         breadth_class = 'text-success'
-        str_breadth = 'Esperando alerta de Compra'
-    elif breadth > 50:
+        str_breadth = 'En alerta de Compra'
+    elif breadth > 75:
         str_breadth = 'Venta parcial del mercado'
-    elif breadth < -50:
+    elif breadth < 25:
         str_breadth = 'Compra parcial del mercado'
     else:
         str_breadth = 'Neutral'
