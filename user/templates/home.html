@@ -6,26 +6,32 @@
 {% block content %}
 <h1>Home</h1>
 
+<!--
 <div class="container text-center">
     <img src="{% static 'images/login.png' %}" height="100"/>
 </div>
-
+-->
 
 <div class="container">
-    <h6 class="info">Top30 Criptos {{timeframe_base}}/{{timeframe_agregado}}</h6>
-    <div>Status:    
-        <b class="{{breadth_class}}">{{str_breadth}}</b>
-        <div>Breadth: <b>{{breadth}}</b></div>
-        <div>Ultima actualizacion: <b>{{last_update}}</b></div>
-    </div>
-    {% if alerts_log %}
-        <div>Ultimas alertas:
-            {% for log in alerts_log %}
-            <div>{{log}}</div>            
-            {% endfor %}
-
+    <h6 class="info text-center text-info">Top30 Criptos {{timeframe_base}}/{{timeframe_agregado}}</h6>
+    <div class="row">
+        <div class="col-6">
+            <div>Status:    
+                <b class="{{breadth_class}}">{{str_breadth}}</b>
+                <div>Breadth: <b>{{breadth}}</b></div>
+                <div>Ultima actualizacion: <b>{{last_update}}</b></div>
+            </div>
+        </div>    
+        <div class="col-6">
+            {% if alerts_log %}
+                <div>Ultimas alertas:
+                    {% for log in alerts_log %}
+                    <div>{{log}}</div>            
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
-    {% endif %}
+    </div>
     
     
 </div>
