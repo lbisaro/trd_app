@@ -128,12 +128,12 @@ class Command(BaseCommand):
         breadth = (total_above/total_symbols)*100
         str_alert = ''
         last_update = datetime.now().strftime(date_format)
-        if self.breadth == 100 and breadth < 100:
+        if self.breadth < 100 and breadth == 100:
             str_alert = f'Top30 {self.TIMEFRAME_BASE}/{self.TIMEFRAME_AGREGADO} - Vender'
             logging.info(str_alert)
             self.tlg.alert(str_alert)
             self.alerts_log.append(f'{last_update} - {str_alert}')
-        elif self.breadth == 0 and breadth > 0:
+        elif self.breadth > 0 and breadth == 0:
             str_alert = f'Top30 {self.TIMEFRAME_BASE}/{self.TIMEFRAME_AGREGADO} - Comprar'
             logging.info(str_alert)
             self.tlg.alert(str_alert)
@@ -153,8 +153,6 @@ class Command(BaseCommand):
         with open(self.breadth_file, "wb") as archivo:
             pickle.dump(status, archivo)
         
-        ##logging.info(f"ANÁLISIS CADA MINUTO ({symbol}): Último Cierre (parcial)={last_close:.2f} vs SMA_60 (histórica)={sma_60:.2f}")
-        # ... Aquí iría tu lógica para disparar la alerta real ...
 
     def handle_socket_message(self, msg):
         if 'data' not in msg:
