@@ -26,6 +26,7 @@ class WalletCapital(models.Model):
     usuario = models.ForeignKey(User, on_delete = models.CASCADE)
     date = models.DateField(null=False, blank=False, db_index=True)
     total_usd = models.FloatField(null=False, blank=False)
+    reference = models.CharField(max_length = 50, unique = False, null=False, blank=False)
 
 class Sw(models.Model):
     name = models.CharField(max_length = 50, unique = True, null=False, blank=False)
