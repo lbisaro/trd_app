@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}Smart Wallets{% endblock %}
-{% block nav_title %}Smart Wallets{% endblock %}
+{% block title %}Smart Wallet{% endblock %}
+{% block nav_title %}Smart Wallet{% endblock %}
 
 {% load static %}
 
 {% block action_bar %}
 <a class="btn btn-primary btn-sm" href="{% url 'sw_create' %}">Crear Smart Wallet</a>
+<a class="btn btn-primary btn-sm" href="{% url 'sw_capital' %}">Gestionar Capital</a>
 {% endblock %}
 
 {% block css %}
@@ -49,6 +50,9 @@
         </tbody>
         
     </table>
+</div>
+<div class="container">
+    <div id="pnl_chart">{{pnl_chart|safe}}</div>
 </div>
     
 {% endblock %}

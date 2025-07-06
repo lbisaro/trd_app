@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Smart Wallet - Gestion del Capital{% endblock %}
+{% block nav_title %}Smart Wallet - Gestion del Capital{% endblock %}
+
+{% load static %}
+
+{% block action_bar %}
+    
+    <a class="btn btn-primary btn-sm" href="{% url 'sw_list' %}">Volver a Smart Wallet</a>
+    
+{% endblock %}
+
+{% block css %}
+<style>
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <table id="sws" class="table-dg">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Capital (USD)</th>
+                <th>Referencia</th>
+                <th>Accion</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            {% for cap in capital %}
+            <tr id="cap_{{cap.id}}">
+                <td>{{cap.date}}</td>
+                <td class="text-{% if cap.total_usd > 0%}danger{% else %}success{% endif %}">{{cap.total_usd}}</td>
+                <td>{{cap.reference}}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="eliminar({{cap.id}});">Eliminar</button>
+                </td>
+                
+            </tr>
+            {% endfor %}
+            <tr>
+                <td>
+                    <input class="form-control" type="text" id="date" value="{{today}}" size="20">
+                </td>
+                <td>
+                    <input class="form-control" type="text" id="total_usd" placeholder="0.00">
+                </td>
+                <td>
+                    <input class="form-control" type="text" id="reference" size="50">
+                </td>
+                <td>
+                    <button class="btn btn-success btn-sm" onclick="registrar();">Registrar</button>
+                </td>
+                
+            </tr>
+        </tbody>
+        
+    </table>
+</div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+
+function registrar()
+{   
+    url = '{% url "sw_capital_registrar" %}';
+
+    data = {
+            date: $('#date').val(),
+            total_usd: parseFloat($('#total_usd').val()*1.0),
+            reference: $('#reference').val(),
+        };
+    console.log(data);
+    err = '';
+            
+    if (err)
+        html_alert('Errores detectados',err,'text-danger');
+    else
+    {
+        get_ajax(url,data).done( function (rsp) {
+            if (rsp.error)
+                html_alert('Errores detectados',rsp.error,'text-danger')
+            if (rsp.ok)
+            {
+                window.location.href = rsp.redirect;
+            }
+        });    
+
+    }
+}
+function eliminar(id)
+{   
+    url = '{% url "sw_capital_eliminar" 1 %}'.replaceAll('1',id);
+
+    get_ajax(url).done( function (rsp) {
+        if (rsp.error)
+            html_alert('Errores detectados',rsp.error,'text-danger')
+        if (rsp.ok)
+        {
+
+            $('#date').val($('#cap_'+id+' td').eq(0).html());
+            $('#total_usd').val($('#cap_'+id+' td').eq(1).html());
+            $('#reference').val($('#cap_'+id+' td').eq(2).html());
+
+            $('#cap_'+id).remove();
+        }
+    });    
+
+}
+
+
+</script>
+
+{% endblock %}

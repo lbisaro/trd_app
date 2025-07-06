@@ -53,6 +53,9 @@ urlpatterns = [
 
     path('sw/list',sw.list,name='sw_list'),
     path('sw/create/',sw.create,name='sw_create'),
+    path('sw/capital/',sw.capital,name='sw_capital'),
+    path('sw/capital/registrar',sw.capital_registrar,name='sw_capital_registrar'),
+    path('sw/capital/eliminar/<int:capital_log_id>/',sw.capital_eliminar,name='sw_capital_eliminar'),
     path('sw/view/<int:sw_id>/',sw.view,name='sw_view'),
     path('sw/view_orders/<int:sw_id>/<int:symbol_id>/',sw.view_orders,name='sw_view_orders'),
     path('sw/add_trades_empty/<int:sw_id>/',sw.add_trades_empty,name='sw_add_trades_empty'),

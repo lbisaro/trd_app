@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 import numpy as np
+import pandas as pd
 
 
 from bot.models import *
@@ -24,9 +25,92 @@ def list(request):
                              'activo': sw.activo,
                              'quote_asset': sw.quote_asset,
                              })
+        
+    #Procesando PNL historico
+    wallet_log = WalletLog.objects.filter(usuario=request.user).order_by('date')
+    df = pd.DataFrame.from_records( wallet_log.values('date', 'total_usd') )
+    df.rename(columns={'total_usd':'wallet'},inplace=True)
+
+    wallet_capital = WalletCapital.objects.filter(usuario=request.user).order_by('date')
+    df_cap = pd.DataFrame.from_records( wallet_capital.values('date', 'total_usd') )
+    df_cap.rename(columns={'total_usd':'capital'},inplace=True)
+    df_cap['capital_acum'] = df_cap['capital'].cumsum()
+    df['capital'] = 0
+    for i,row in df_cap.iterrows():
+        date = row['date']
+        capital = row['capital_acum']
+        df['capital'][df['date']>=date] = capital
+
+    df['pnl'] = df['wallet']-df['capital']
+
+    #Creando Chart
+    chart_rows = 1
+    row_heights = [500]
+    total_height = sum(row_heights)
+
+    fig = make_subplots(rows=chart_rows, 
+                        shared_xaxes=True,
+                        row_heights=row_heights,
+                        )
+
+    fig.add_trace(
+            go.Scatter(
+                x=df["date"], y=df["pnl"], name='PNL', mode="lines",  
+                line={'width': 0.75},  
+                marker=dict(color='red'),
+                legendgroup = '1',
+            ),
+            row=1,
+            col=1,
+        )  
+
+    fig.add_trace(
+            go.Scatter(
+                x=df["date"], y=df["wallet"], name='Wallet', mode="lines",  
+                line={'width': 0.75},  
+                marker=dict(color='yellow'),
+                legendgroup = '1',
+            ),
+            row=1,
+            col=1,
+        )  
+
+    fig.add_trace(
+            go.Scatter(
+                x=df["date"], y=df["capital"], name='Capital', mode="lines",  
+                line={'width': 0.75},  
+                marker=dict(color='white'),
+                legendgroup = '1',
+            ),
+            row=1,
+            col=1,
+        )  
+    # Adjust layout for subplots
+    fig.update_layout(
+        font=dict(color="#ffffff", family="Helvetica"),
+        paper_bgcolor="rgba(0,0,0,0)",  # Transparent background
+        plot_bgcolor="#162024",  
+        height=total_height,
+        xaxis_rangeslider_visible=False,
+        modebar_bgcolor="rgba(0,0,0,0)",
+        legend_tracegroupgap = 100,
+    )
+
+    #Ajustar el tamaño de cada sub_plot
+    fig.update_layout(
+        yaxis1=dict(title="PNL (USD)",
+                    showticklabels=True,
+                    zeroline=False,),
+    )
+    fig.update_xaxes(showline=False, linewidth=2,linecolor='#000000', gridcolor='rgba(0,0,0,0)')
+    fig.update_yaxes(showline=False, linewidth=2, zeroline= False, linecolor='#ff0000', gridcolor='rgba(50,50,50,255)')     
+    pnl_chart = fig.to_html(config = {'scrollZoom': True, }) #'displayModeBar': False
+
+
     if request.method == 'GET':
         return render(request, 'sws.html',{
             'sws': formattedSw,
+            'pnl_chart': pnl_chart,
         })
 
 @login_required
@@ -421,107 +505,65 @@ def add_order(request,sw_id):
     json_rsp['ok'] = True
     json_rsp['go_to'] = True
     return JsonResponse(json_rsp)
-"""        
-@login_required
-def get_parametros_estrategia(request,estrategia_id):
-    json_rsp = {}
-    estrategia = Estrategia.objects.get(pk=estrategia_id)
-    parametros = estrategia.parse_parametros(),
-
-    descripcion = estrategia.descripcion
-    intervalo = fn.get_intervals(estrategia.interval_id,'name')
-    json_rsp['ok'] = len(parametros)
-    json_rsp['max_drawdown'] = estrategia.max_drawdown
-    json_rsp['descripcion'] = descripcion
-    json_rsp['intervalo'] = intervalo
-    json_rsp['parametros'] = parametros
-    return JsonResponse(json_rsp)
-
-
 
 @login_required
-def bot_edit(request,bot_id):
+def capital(request):
+    capital = WalletCapital.objects.filter(usuario=request.user).order_by('date')
+    
+    return render(request, 'sw_capital.html', {
+        'capital': capital,
+        'today': datetime.now().date().strftime("%d-%m-%Y")
+    })
+
+@login_required
+def capital_registrar(request):
+
     json_rsp = {}
-    bot = get_object_or_404(Bot, pk=bot_id,usuario=request.user)
-    if request.method == 'GET':
-        symbols = Symbol.objects.filter(activo=1).order_by('symbol')
+    if request.method == 'POST':
+    
+        capital = WalletCapital()
+        total_usd = float(request.POST['total_usd'])
+        date = datetime.strptime(request.POST['date'], '%d-%m-%Y').date()
+        reference = request.POST['reference']
+        if date > datetime.now().date():
+            json_rsp['error'] = 'La fecha no puedde ser posterior a la actual'
+        if total_usd == 0:
+            json_rsp['error'] = 'El Capital debe ser distinto de 0'
+        if len(reference) == 0:
+            json_rsp['error'] = 'Se ebe especificar un texto de referencia'
+
+        if not 'error' in json_rsp:
         
-        return render(request, 'bot_edit.html',{
-            'title': 'Editar Bot '+str(bot),
-            'nav_title': 'Editar Bot',
-            'bot_id': bot.id,
-            'symbols': symbols,
-            'quote_qty': round(bot.quote_qty,2),
-            'stop_loss': round(bot.stop_loss,2),
-            'max_drawdown': round(bot.max_drawdown,2),
-            'estrategia_id': bot.estrategia.id,
-            'estrategias': Estrategia.objects.filter(Q(activo__gt=0) | Q(pk=bot.estrategia.id)),
-            'activo': bot.activo,
-        })
-    else:
+            capital.usuario = request.user
+            capital.date = date
+            capital.total_usd = total_usd
+            capital.reference=reference
 
-        bot.estrategia_id=request.POST['estrategia_id']
-        bot.stop_loss=request.POST['stop_loss']
-        bot.max_drawdown=request.POST['max_drawdown']
-        bot.quote_qty=request.POST['quote_qty']
+            try:
+                capital.full_clean()
 
-        try:
-            bot.full_clean()
+                capital.save()
+                json_rsp['ok'] = True
+                json_rsp['redirect'] = '/bot/sw/capital/'
 
-            bot.save()
-            json_rsp['ok'] = '/bot/bot/'+str(bot.id)
-
-        except ValidationError as e:
-            strError = ''
-            for err in e:
-                if err[0] != '__all__':
-                    strError += '<br/><b>'+err[0]+'</b> '
-                for desc in err[1]:
-                    strError += desc+" "
-            json_rsp['error'] = strError
+            except ValidationError as e:
+                strError = ''
+                for err in e:
+                    if err[0] != '__all__':
+                        strError += '<br/><b>'+err[0]+'</b> '
+                    for desc in err[1]:
+                        strError += desc+" "
+                json_rsp['error'] = strError
 
         return JsonResponse(json_rsp)
-
-
-
-
     
-def get_resultados(request,bot_id):
-    json_rsp = {}
     
-    bot = get_object_or_404(Bot, pk=bot_id,usuario=request.user)
-    if bot:
-        json_rsp = bot.get_resultados()
-    else:
-        json_rsp['error'] = 'No existe el bot con ID: '+bot_id
-    return JsonResponse(json_rsp)   
- 
 @login_required
-def bot_order_echange_info(request,order_id):
+def capital_eliminar(request,capital_log_id):
     json_rsp = {}
-    order = Order.objects.get(pk=order_id)
-
-    usuario=request.user
-    usuario_id = usuario.id
-    profile = UserProfile.objects.get(user_id=usuario_id)
-    profile_config = profile.parse_config()
-    prms = {}
-    prms['bnc_apk'] = profile_config['bnc']['bnc_apk']
-    prms['bnc_aps'] = profile_config['bnc']['bnc_aps']
-    prms['bnc_env'] = profile_config['bnc']['bnc_env']
-            
-
-    exch = Exchange(type='user_apikey',exchange='bnc',prms=prms)
-    exch_order_info = exch.get_order(symbol=order.symbol.symbol,orderId=order.orderid)
-    
-    json_rsp['ok'] = True
-    json_rsp['id'] = order.id
-
-    for k in exch_order_info:
-        if k == 'time':
-            json_rsp[k] = exch_order_info[k].strftime('%d-%m-%Y %H:%M')+' Hs.'
-        else:
-            json_rsp[k] = exch_order_info[k]
-    
+    capital = get_object_or_404(WalletCapital, pk=capital_log_id,usuario=request.user)
+    if capital.delete():
+        json_rsp['ok'] = True
+    else:
+        json_rsp['error'] = 'No es posible eliminar el registro'
     return JsonResponse(json_rsp)
-"""
