@@ -191,7 +191,6 @@ def view(request,backtest_id):
 
     else:  
         rango_fechas = {}  
-        context['tendencias'] = [prefix_backtest_file]      
         rango_fechas[prefix_backtest_file] = ''
 
         for periodo in resultados['periodos']:
@@ -209,12 +208,12 @@ def view(request,backtest_id):
             'html': plantilla.render({'df': df_resultados['Media']    }),
             'titulo':'General',
         })
-        for tendencia in context['tendencias']:
-            context['resultados'].append( {
-                'codigo': tendencia,
-                'html': plantilla.render({'df': df_resultados[tendencia]}),
-                'titulo': f'{tendencia} '+rango_fechas[tendencia],
-            })
+        
+        context['resultados'].append( {
+            'codigo': prefix_backtest_file,
+            'html': plantilla.render({'df': df_resultados[prefix_backtest_file]}),
+            'titulo': f'{prefix_backtest_file} '+rango_fechas[prefix_backtest_file],
+        })
 
         scoring = backtest.calcular_scoring_completo(df_resultados)
         score = backtest.prefix_backtest_file

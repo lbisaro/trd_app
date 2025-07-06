@@ -25,14 +25,17 @@
         <div class="col-2">Estado
             <div class="data">{{backtest.str_estado}}</div>
         </div>
+        <div class="col-2">Rango
+            <div class="data">{{backtest.prefix_backtest_file}}</div>
+        </div>
         <div class="col-2">Intervalo
             <div class="data">{{backtest.str_interval}}</div>
         </div>
-        <div class="col-3">Usuario
+        <div class="col-2">Usuario
             <div class="data">{{backtest.usuario.username}}</div>
         </div>
         {% if backtest.completo == 100 %}
-        <div class="col-3 rounded border border-1 text-center" >
+        <div class="col-2 rounded border border-1 text-center" >
            
                 SCORING <b>{{scoring}}</b>
                 <br>

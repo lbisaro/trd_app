@@ -10,6 +10,11 @@ django-pandas
 plotly
 mysqlclient
 
+#Modelos de prediccion
+statsmodels
+pmdarima
+arch
+
 #Libs for Backtesting
 tqdm==4.66.1
 scikit-optimize==0.9.0
