@@ -43,10 +43,15 @@ class Bot_Core_stats:
         pos___base_qty = 0
         pos___quote_qty = 0
         pos___orders_qty = 0
+        pos___quote_qty = 0
+        pos___avg_price = 0
+        pos___pnl = 0
+        pos___pnl_max = 0
 
         pos_quote = 0
         pos_order_ids = []
         last_order_id = 0
+
         for i in self._trades:
             order = self._trades[i]
             sign = -1 if order.side == Order.SIDE_BUY else 1
@@ -82,12 +87,12 @@ class Bot_Core_stats:
             else:
                 pos___pnl_max = pos___pnl
                 
-            self.status['pos___base_qty']   = {'l':'Pos. Base', 'v': round(pos___base_qty,self.qd_qty), 'r': pos___base_qty}
-            self.status['pos___quote_qty']  = {'l':'Pos. Quote', 'v': round(pos___quote_qty,self.qd_quote), 'r': pos___quote_qty}
-            self.status['pos___orders_qty'] = {'l':'Pos. Ordenes', 'v': pos___orders_qty, 'r': pos___orders_qty}
-            self.status['pos___avg_price']  = {'l':'Pos. Precio Promedio', 'v': round(pos___avg_price,self.qd_price), 'r': pos___avg_price}
-            self.status['pos___pnl']        = {'l':'Pos. PNL ',     'v': f'{pos___pnl:.2f} %', 'r': pos___pnl}
-            self.status['pos___pnl_max']    = {'l':'Pos. PNL Max.', 'v': f'{pos___pnl_max:.2f} %', 'r': pos___pnl_max}
+        self.status['pos___base_qty']   = {'l':'Pos. Base', 'v': round(pos___base_qty,self.qd_qty), 'r': pos___base_qty}
+        self.status['pos___quote_qty']  = {'l':'Pos. Quote', 'v': round(pos___quote_qty,self.qd_quote), 'r': pos___quote_qty}
+        self.status['pos___orders_qty'] = {'l':'Pos. Ordenes', 'v': pos___orders_qty, 'r': pos___orders_qty}
+        self.status['pos___avg_price']  = {'l':'Pos. Precio Promedio', 'v': round(pos___avg_price,self.qd_price), 'r': pos___avg_price}
+        self.status['pos___pnl']        = {'l':'Pos. PNL ',     'v': f'{pos___pnl:.2f} %', 'r': pos___pnl}
+        self.status['pos___pnl_max']    = {'l':'Pos. PNL Max.', 'v': f'{pos___pnl_max:.2f} %', 'r': pos___pnl_max}
         
             
         pos_quote += wallet_base_in_quote
