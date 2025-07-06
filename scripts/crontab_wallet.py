@@ -9,7 +9,7 @@ def run():
     today = datetime.now().date()
     now = datetime.now()
 
-    if now.minute == 0:
+    if now.minute == 59:
 
         exch_info = Exchange(type='info',exchange='bnc', prms=None)
         prices = exch_info.get_all_prices()
