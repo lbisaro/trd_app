@@ -64,6 +64,7 @@ def list(request):
             col=1,
         )  
 
+    """
     fig.add_trace(
             go.Scatter(
                 x=df["date"], y=df["wallet"], name='Wallet', mode="lines",  
@@ -85,6 +86,8 @@ def list(request):
             row=1,
             col=1,
         )  
+
+    """
     # Adjust layout for subplots
     fig.update_layout(
         font=dict(color="#ffffff", family="Helvetica"),
