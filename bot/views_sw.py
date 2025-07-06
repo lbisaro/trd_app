@@ -42,8 +42,11 @@ def list(request):
         df['capital'][df['date']>=date] = capital
 
     df['pnl'] = df['wallet']-df['capital']
+    df['pnl_p'] = np.where(df['pnl']>=-10500,df['pnl'],None)
+    df['pnl_n'] = np.where(df['pnl']<-10500,df['pnl'],None)
 
     #Creando Chart
+    """
     chart_rows = 1
     row_heights = [500]
     total_height = sum(row_heights)
@@ -55,7 +58,18 @@ def list(request):
 
     fig.add_trace(
             go.Scatter(
-                x=df["date"], y=df["pnl"], name='PNL', mode="lines",  
+                x=df["date"], y=df["pnl_p"], name='PNL', mode="lines",  
+                line={'width': 0.75},  
+                marker=dict(color='green'),
+                legendgroup = '1',
+            ),
+            row=1,
+            col=1,
+        )  
+
+    fig.add_trace(
+            go.Scatter(
+                x=df["date"], y=df["pnl_n"], name='PNL', mode="lines",  
                 line={'width': 0.75},  
                 marker=dict(color='red'),
                 legendgroup = '1',
@@ -63,8 +77,7 @@ def list(request):
             row=1,
             col=1,
         )  
-
-    """
+    
     fig.add_trace(
             go.Scatter(
                 x=df["date"], y=df["wallet"], name='Wallet', mode="lines",  
@@ -87,7 +100,7 @@ def list(request):
             col=1,
         )  
 
-    """
+    
     # Adjust layout for subplots
     fig.update_layout(
         font=dict(color="#ffffff", family="Helvetica"),
@@ -109,11 +122,13 @@ def list(request):
     fig.update_yaxes(showline=False, linewidth=2, zeroline= False, linecolor='#ff0000', gridcolor='rgba(50,50,50,255)')     
     pnl_chart = fig.to_html(config = {'scrollZoom': True, }) #'displayModeBar': False
 
+    """
 
     if request.method == 'GET':
         return render(request, 'sws.html',{
             'sws': formattedSw,
-            'pnl_chart': pnl_chart,
+            #'pnl_chart': pnl_chart,
+            'json_pnl_data': df[['date','pnl']].to_json(orient='records'),
         })
 
 @login_required
