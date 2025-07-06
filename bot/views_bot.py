@@ -21,7 +21,8 @@ def bots(request):
     bots = Bot.objects.filter(usuario=request.user).order_by('-activo','estrategia__nombre') 
     formattedBots = []
     for b in bots:
-        intervalo = fn.get_intervals(b.estrategia.interval_id,'name')
+        intervalo = fn.get_intervals(b.estrategia.interval_id,'binance')
+        status = eval(b.status) if len(b.status) > 0 else []
         formattedBots.append({'bot_id':b.id, 
                              'estrategia':b.estrategia.nombre,
                              'estrategia_activo':b.estrategia.activo,
@@ -29,6 +30,7 @@ def bots(request):
                              'usuario': b.usuario,
                              'intervalo': intervalo,
                              'activo': b.activo,
+                             'status': status,
                              })
     if request.method == 'GET':
         return render(request, 'bots.html',{
