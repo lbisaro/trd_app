@@ -45,9 +45,9 @@
             </div>
             {% for k,item in b.status.items %}
                 {% if item.l %}
-                    <div class="status_row">{{item.l}}: <i {% if item.cls %} class="{{item.cls}}"{% endif %}>{{item.v}}</i></div>
+                    <div class="status_row"><span class="text-secondary">{{item.l}}:</span> <span {% if item.cls %} class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
                 {% else %}
-                    <div class="status_row">{{k}}:<i>{{item}}</i></div>
+                    <div class="status_row"><span class="text-secondary">{{k}}:</span> <span>{{item}}</span></div>
                 
                 {% endif %}
 
