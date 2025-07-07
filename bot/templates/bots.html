@@ -15,7 +15,7 @@
     }
 
     .box {
-        width: 22%;  /* 1/3 del ancho */
+        /*width: 22%;   1/3 del ancho */
         padding: 0.5rem;
         margin: 0.5rem;
         box-sizing: border-box;
@@ -38,7 +38,7 @@
 <div class="container">
     <div class="d-flex flex-wrap">
         {% for b in bots %}
-        <div class="box {{alert.status_class}}" onclick="ver('{{b.bot_id}}')">
+        <div class="box" onclick="ver('{{b.bot_id}}')">
             <div class="row">
                 <div class="col-9 text-{% if b.estrategia_activo > 0 and b.activo %}success{% else %}danger{% endif %}">{{b.estrategia}}</div>
                 <div class="col-3 text-end">{{b.intervalo}}</div>
