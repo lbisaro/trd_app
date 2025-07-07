@@ -86,6 +86,7 @@ function sw_view(id)
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
+           
     var strDate = date.getFullYear() + "-" + 
         (date.getMonth() + 1).toString().padStart(2, '0') + "-" + 
         date.getDate().toString().padStart(2, '0');
@@ -106,6 +107,7 @@ $(document).ready(function () {
             month: 'short',
             year: 'numeric',
         };
+        fecha.setHours(fecha.getHours() + 10);
         return fecha.toLocaleDateString('es-ES', opcionesDeFormato);
     };
     
@@ -146,13 +148,14 @@ $(document).ready(function () {
         priceLineVisible: true,
     });
     pnlData = JSON.parse('{{ json_pnl_data|safe }}');
-        
+    console.log(pnlData);
     fullData = pnlData.map(rw => ({
-        time: formatDate(rw.date),
+        time: rw.str_date,
         value: rw.pnl,
         color: rw.pnl < 0 ? '#f6465d' : '#0ecb81',
     }));
     pnlSeries.setData(fullData);
+    console.log(fullData);
 
     const dataSize = fullData.length;
     if (dataSize >= 90) {
