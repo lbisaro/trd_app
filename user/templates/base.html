@@ -42,19 +42,22 @@
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-
+                    <!--
                     <li class="nav-item">
                         <a class="nav-link " href="{% url 'alerts_list' %}">Alertas</a>
                     </li>
+                    -->
                     <li class="nav-item">
                         <a class="nav-link " href="{% url 'sw_list' %}">Smart Wallet</a>
                     </li>
+                    <!--
                     <li class="nav-item">
                         <a class="nav-link " href="{% url 'ob_panel' %}">Libro de ordenes</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link " href="{% url 'indicator_panel' %}">Indicadores</a>
                     </li>
+                    -->
                     <li class="nav-item">
                         <a class="nav-link " href="{% url 'symbols' %}">Pares</a>
                     </li>
