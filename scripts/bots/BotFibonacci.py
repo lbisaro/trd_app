@@ -216,19 +216,18 @@ class BotFibonacci(Bot_Core):
                     buyed_qty = self._trades[orderid_buy].qty
                     
                     self.position = True
-                    self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price,tag="STOP_LOSS")
-                    
-                    if self.orderid_sl == 0:
-                        print('BotFibonacci.py -> \033[31mERROR\033[0m',self.row['datetime'],'STOP-LOSS',buyed_qty,' ',quote_to_sell,self.wallet_quote)  
+                    #self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price,tag="STOP_LOSS")
+                    #
+                    #if self.orderid_sl == 0:
+                    #    print('BotFibonacci.py -> \033[31mERROR\033[0m',self.row['datetime'],'STOP-LOSS',buyed_qty,' ',quote_to_sell,self.wallet_quote)  
                 
                 else:
                     print('BotFibonacci.py -> \033[31mERROR\033[0m',self.row['datetime'],'BUY price',self.price,'USD',quote_to_sell,self.wallet_quote)
         
-            else:
-                sl_order = self.get_order_by_tag(tag='STOP_LOSS')
-                sl_order.limit_price
-                if sl_order and sl_order.limit_price < stop_loss_price:
-                    self.update_order_by_tag('STOP_LOSS',limit_price=stop_loss_price)      
+            #else:
+            #    sl_order = self.get_order_by_tag(tag='STOP_LOSS')
+            #    if sl_order and sl_order.limit_price < stop_loss_price:
+            #        self.update_order_by_tag('STOP_LOSS',limit_price=stop_loss_price)      
 
         #if self.position and self.signal == 'VENTA':
         #    self.close(Order.FLAG_SIGNAL)
@@ -236,14 +235,25 @@ class BotFibonacci(Bot_Core):
         #    self.position = False
 
         if self.position:
-            mddpos = self.trail
-            if 'pos___pnl_max' in self.status and isinstance(self.status['pos___pnl_max'], dict):
-                if self.status['pos___pnl_max']['r'] > mddpos*4:
-                    mddpos = self.status['pos___pnl_max']['r']/4
-                if 'pos___pnl' in self.status and self.status['pos___pnl_max']['r']> mddpos:
-                    if self.status['pos___pnl_max']['r']-self.status['pos___pnl']['r'] > mddpos:
-                        self.close(flag=Order.FLAG_TAKEPROFIT)
-                        self.cancel_orders()
+            #mddpos = self.trail
+            #if 'pos___pnl_max' in self.status and isinstance(self.status['pos___pnl_max'], dict):
+            #    if self.status['pos___pnl_max']['r'] > mddpos*2:
+            #        mddpos = self.status['pos___pnl_max']['r']/2
+            #    if 'pos___pnl' in self.status and self.status['pos___pnl_max']['r'] > mddpos:
+            #        if self.status['pos___pnl_max']['r']-self.status['pos___pnl']['r'] > mddpos:
+            #            self.close(flag=Order.FLAG_TAKEPROFIT)
+            #            self.cancel_orders()
+
+            if 'pos___avg_price' in self.status and isinstance(self.status['pos___avg_price'], dict):
+                max_price = self.status['pos___max_price']['r']
+                trl_stop_price = max_price * (1-(self.trail/100))
+                buyed_qty = self.status['pos___base_qty']['r'] 
+                trl_order = self.get_order_by_tag(tag='STOP_LOSS_TRL')
+                if trl_order:
+                    if trl_order.limit_price < trl_stop_price:
+                        self.update_order_by_tag('STOP_LOSS_TRL',limit_price=trl_stop_price)  
+                else:
+                    self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,trl_stop_price,tag="STOP_LOSS_TRL")
 
     def on_order_execute(self, order):
         if order.side == Order.SIDE_SELL:

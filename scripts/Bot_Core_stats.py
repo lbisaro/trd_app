@@ -86,6 +86,8 @@ class Bot_Core_stats:
                 pos___pnl_max = pos___pnl if pos___pnl > self.status['pos___pnl_max']['r'] else self.status['pos___pnl_max']['r']
             else:
                 pos___pnl_max = pos___pnl
+
+        pos___max_price = pos___avg_price*(1+(pos___pnl_max/100))
                 
         self.status['pos___base_qty']   = {'l':'Pos. Base', 'v': round(pos___base_qty,self.qd_qty), 'r': pos___base_qty}
         self.status['pos___quote_qty']  = {'l':'Pos. Quote', 'v': round(pos___quote_qty,self.qd_quote), 'r': pos___quote_qty}
@@ -93,6 +95,7 @@ class Bot_Core_stats:
         self.status['pos___avg_price']  = {'l':'Pos. Precio Promedio', 'v': round(pos___avg_price,self.qd_price), 'r': pos___avg_price}
         self.status['pos___pnl']        = {'l':'Pos. PNL ',     'v': f'{pos___pnl:.2f} %', 'r': pos___pnl}
         self.status['pos___pnl_max']    = {'l':'Pos. PNL Max.', 'v': f'{pos___pnl_max:.2f} %', 'r': pos___pnl_max}
+        self.status['pos___max_price']    = {'l':'Pos. Price Max.', 'v': round(pos___max_price,self.qd_price), 'r': round(pos___max_price,self.qd_price)}
         
             
         pos_quote += wallet_base_in_quote
