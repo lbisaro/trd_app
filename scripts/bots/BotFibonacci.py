@@ -80,7 +80,7 @@ class BotFibonacci(Bot_Core):
                         'sn':'Rsmp', },
                  'trail': {
                         'c' :'trail',
-                        'd' :'Trail para posicion',
+                        'd' :'Trail Stop Loss',
                         'v' : '2',
                         'l' :'(0,100]',
                         't' :'perc',
