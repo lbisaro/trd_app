@@ -454,8 +454,16 @@ def telegram_send(MESSAGE):
         'parse_mode': 'HTML',
         'disable_web_page_preview': True,
     }
-    response = requests.post(url, data=payload)
-    return response
+
+    try:
+        response = requests.post(url, data=payload, timeout=10)  #timeout: espera máxima en segundos
+        return response
+    except requests.exceptions.Timeout:
+        print("La solicitud a Telegram se demoró demasiado y fue abortada.")
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"Ocurrió un error con la solicitud: {e}")
+        return None
 
 def map(x, in_min, in_max, out_min, out_max):
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
