@@ -103,6 +103,7 @@
             <tr>
                 
                 <td colspan="8">
+                    <button id="btn_{{tag_key}}" onclick="toogle_details('{{tag_key}}')" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-bar-up"></i></button>
                     <span class="text-info">{{tag_info.tag_name}}</span> 
                     <i >({{tag_info.perc}}%)</i>
                     <span class="text-info">USD {{tag_info.total}} </span> 
@@ -110,21 +111,23 @@
                 </td>
             </tr>
 
-            {% for asset_symbol, asset_details in tag_info.assets.items %}
-            <tr>
-                <td></td>
-                <td>{{ asset_symbol }}</td>
-                <td class="text-end" >{{ asset_details.total_usd }}</td>
-                <td class="text-end" >{{ asset_details.free_usd }}</td>
-                <td class="text-end" >{{ asset_details.locked_usd }}</td>
-                <td class="text-end" >{{ asset_details.total }}</td>
-                <td class="text-end" >{{ asset_details.free }}</td>
-                <td class="text-end" >{{ asset_details.locked }}</td>
-                <!--
-                <td>${{ asset_details.price|floatformat:4 }}</td>
-                -->
-            </tr>
-            {% endfor %}
+                {% for asset_symbol, asset_details in tag_info.assets.items %}
+                    {% if asset_details.total_usd != 0 %}
+                    <tr class="detail_{{tag_key}}">
+                        <td></td>
+                        <td>{{ asset_symbol }}</td>
+                        <td class="text-end" >{% if asset_details.total_usd != 0 %} {{ asset_details.total_usd }}{% endif %}</td>
+                        <td class="text-end" >{% if asset_details.free_usd != 0 %} {{ asset_details.free_usd }}{% endif %}</td>
+                        <td class="text-end" >{% if asset_details.locked_usd != 0 %} {{ asset_details.locked_usd }}{% endif %}</td>
+                        <td class="text-end" >{% if asset_details.total != 0 %} {{ asset_details.total }}{% endif %}</td>
+                        <td class="text-end" >{% if asset_details.free != 0 %} {{ asset_details.free }}{% endif %}</td>
+                        <td class="text-end" >{% if asset_details.locked != 0 %} {{ asset_details.locked }}{% endif %}</td>
+                        <!--
+                        <td>${{ asset_details.price|floatformat:4 }}</td>
+                        -->
+                    </tr>
+                    {% endif %}
+                {% endfor %}
 
             {% endfor %}
         </tbody>
@@ -143,6 +146,24 @@ function sw_view(id)
     window.location = '{% url "sw_view" 0 %}'.replace('0',id);
 }
 
+function toogle_details(tag_key)
+{
+    var i = $('#btn_'+tag_key+' i');
+    if (i.attr('class') == 'bi bi-arrow-bar-up')
+    {
+        i.attr('class','bi bi-arrow-bar-down');
+        $('.detail_'+tag_key).hide();
+    }
+    else
+    {
+        i.attr('class','bi bi-arrow-bar-up');
+        $('.detail_'+tag_key).show();
+    }
+
+    //bi bi-arrow-bar-up
+    //bi bi-arrow-bar-down
+}
+
 const formatDate = (dateString) => {
     const date = new Date(dateString);
            
@@ -154,6 +175,9 @@ const formatDate = (dateString) => {
 
 
 $(document).ready(function () {
+
+    toogle_details('OTHERS');
+
     const chartContainer = document.getElementById('chart');
 
     // Create the Lightweight Chart within the container element
