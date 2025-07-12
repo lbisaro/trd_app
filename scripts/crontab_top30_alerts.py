@@ -97,8 +97,7 @@ class top30_alerts:
         with open(self.breadth_file, "wb") as archivo:
             pickle.dump(status, archivo)
         
-        for k in status:
-            print(k,status[k])
+        print('Proceso completo')
 
 def run():
     
