@@ -43,11 +43,10 @@ class top30_alerts:
         print('Obteniendo informacion del eschange')
         self.history = {}
 
-        self.target_symbols = [
-                               #'XRPUSDT','SOLUSDT','TRXUSDT','DOGEUSDT','ADAUSDT','WBTCUSDT','BCHUSDT',\
-                               #'SUIUSDT','LINKUSDT','XLMUSDT','AVAXUSDT','SHIBUSDT','LTCUSDT','HBARUSDT',\
-                               #'DOTUSDT','UNIUSDT','PEPEUSDT','AAVEUSDT','APTUSDT','NEARUSDT','ICPUSDT',\
-                               #'ETCUSDT','VETUSDT','ATOMUSDT','FETUSDT','FILUSDT','WLDUSDT','ALGOUSDT',
+        self.target_symbols = ['XRPUSDT','SOLUSDT','TRXUSDT','DOGEUSDT','ADAUSDT','WBTCUSDT','BCHUSDT',\
+                               'SUIUSDT','LINKUSDT','XLMUSDT','AVAXUSDT','SHIBUSDT','LTCUSDT','HBARUSDT',\
+                               'DOTUSDT','UNIUSDT','PEPEUSDT','AAVEUSDT','APTUSDT','NEARUSDT','ICPUSDT',\
+                               'ETCUSDT','VETUSDT','ATOMUSDT','FETUSDT','FILUSDT','WLDUSDT','ALGOUSDT',
                                'NEXOUSDT','OPUSDT'] 
         tot_symbols = len(self.target_symbols)
         act_symbol = 0
