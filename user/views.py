@@ -14,7 +14,7 @@ import os
 
 from scripts.Exchange import Exchange
 from django.conf import settings 
-from bot.management.commands.kline_collector import breadth_file
+from scripts.crontab_top30_alerts import breadth_file
 
 @login_required
 def home(request):
