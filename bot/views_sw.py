@@ -122,10 +122,18 @@ def list(request):
         perc = (wallet_data['assets'][tag]['total'] / total_usd_assets) * 100
         wallet_data['assets'][tag]['perc'] = round(perc,2)
         for asset in wallet_data['assets'][tag]['assets']:
+            qd_qty = 8
+            if asset in sw_assets and 'qd_qty' in sw_assets[asset]:
+                qd_qty = sw_assets[asset]['qd_qty']
+            if Exchange.is_stable_coin(asset):
+                qd_qty = 2
             wallet_data['assets'][tag]['assets'][asset]['free_usd'] = round(wallet_data['assets'][tag]['assets'][asset]['free']*wallet_data['assets'][tag]['assets'][asset]['price'],2)
             wallet_data['assets'][tag]['assets'][asset]['locked_usd'] = round(wallet_data['assets'][tag]['assets'][asset]['locked']*wallet_data['assets'][tag]['assets'][asset]['price'],2)
             wallet_data['assets'][tag]['assets'][asset]['total_usd'] = round(wallet_data['assets'][tag]['assets'][asset]['total']*wallet_data['assets'][tag]['assets'][asset]['price'],2)
-
+            wallet_data['assets'][tag]['assets'][asset]['free'] = round(wallet_data['assets'][tag]['assets'][asset]['free'],qd_qty)
+            wallet_data['assets'][tag]['assets'][asset]['locked'] = round(wallet_data['assets'][tag]['assets'][asset]['locked'],qd_qty)
+            wallet_data['assets'][tag]['assets'][asset]['total'] = round(wallet_data['assets'][tag]['assets'][asset]['total'],qd_qty)
+    print(sw_assets)
     if request.method == 'GET':
         return render(request, 'sws.html',{
             'sws': formattedSw,
