@@ -22,8 +22,7 @@ class Symbol(models.Model):
     qty_decs_qty = models.IntegerField(null=False, blank=False)
     qty_decs_price = models.IntegerField(null=False, blank=False)
     qty_decs_quote = models.IntegerField(null=False, blank=False)
-    activo = models.IntegerField(default=0)  
-    tag = models.CharField(max_length = 50, null=True, blank=True)
+    activo = models.IntegerField(default=0)
     
     def __str__(self):
         return f'{self.base_asset} {self.quote_asset}'
