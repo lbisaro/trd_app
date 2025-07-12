@@ -17,6 +17,7 @@ from bot.model_sw import *
 def list(request):
     sws = Sw.objects.filter(usuario=request.user).order_by('-activo') 
     formattedSw = []
+    sw_assets = {}
     for sw in sws:
         assets = sw.get_assets()
         formattedSw.append({'sw_id':sw.id, 
@@ -25,6 +26,8 @@ def list(request):
                              'activo': sw.activo,
                              'quote_asset': sw.quote_asset,
                              })
+        for asset in assets:
+            sw_assets[asset] = {}
         
     #Procesando PNL historico
     wallet_log = WalletLog.objects.filter(usuario=request.user).order_by('date')
@@ -45,10 +48,88 @@ def list(request):
     df['pnl'] = df['wallet']-df['capital']
     df['str_date'] = df['date'].dt.strftime('%Y-%m-%d')
 
-    #Creando Chart
+    #Obteniendo informacion de la wallet
+    usuario=request.user
+    usuario_id = usuario.id
+    profile = UserProfile.objects.get(user_id=usuario_id)
+    profile_config = profile.parse_config()
+    prms = {}
+    prms['bnc_apk'] = profile_config['bnc']['bnc_apk']
+    prms['bnc_aps'] = profile_config['bnc']['bnc_aps']
+    prms['bnc_env'] = profile_config['bnc']['bnc_env']
+    exch = Exchange(type='user_apikey',exchange='bnc',prms=prms)      
+
+    symbols = Symbol.objects.filter()
+    for symbol in symbols:
+        sw_assets[symbol.base_asset] = {
+            'qd_qty': symbol.qty_decs_qty,
+            'qd_price': symbol.qty_decs_price,
+            'qd_quote': symbol.qty_decs_quote,
+        }
+    
+    wallet_full = exch.get_wallet()
+    wallet = {}
+    for asset in wallet_full:
+        free = wallet_full[asset]['free']
+        locked = wallet_full[asset]['locked']
+        total = free + locked
+
+        tag = 'OTHERS'
+        if Exchange.is_stable_coin(asset):
+            tag = 'STABLE'
+        elif Exchange.is_main_coin(asset):
+            tag = 'MAIN'
+        elif asset in sw_assets:
+            tag = 'ALT'
+
+        if total>0:
+            wallet[asset] = {
+                'free': free,
+                'locked': locked,
+                'total': total,
+                'price': 0.0,
+                'tag': tag,
+                }
+
+    prices = exch.get_all_prices()
+    total_usd_assets = 0
+    wallet_data = {}
+    wallet_data['assets'] = {
+        'STABLE': { 'tag_name': 'Stable Coins', 'total': 0.0, 'assets': {}} ,
+        'MAIN': {   'tag_name': 'Main Coins',   'total': 0.0, 'assets': {}} ,
+        'ALT': {    'tag_name': 'Alt Coins',    'total': 0.0, 'assets': {}} ,
+        'OTHERS': { 'tag_name': 'Otros',        'total': 0.0, 'assets': {}} ,
+    }
+    for asset in wallet:
+        if asset == 'USDT':
+            price = 1.0
+        elif asset+'USDT' in prices:
+            price = prices[asset+'USDT']
+        else:
+            price = 0.0
+        wallet[asset]['price'] = price
+        tag = 'OTHERS'
+        if wallet[asset]['tag'] in wallet_data['assets']:
+            tag = wallet[asset]['tag']
+        total_usd = price * wallet[asset]['total']
+        total_usd_assets += total_usd
+        if total_usd > 0:
+            wallet_data['assets'][tag]['total'] += total_usd
+            wallet_data['assets'][tag]['assets'][asset] = wallet[asset]
+
+    for tag in wallet_data['assets']:
+        wallet_data['assets'][tag]['total'] =  round(wallet_data['assets'][tag]['total'],2)
+        perc = (wallet_data['assets'][tag]['total'] / total_usd_assets) * 100
+        wallet_data['assets'][tag]['perc'] = round(perc,2)
+        for asset in wallet_data['assets'][tag]['assets']:
+            wallet_data['assets'][tag]['assets'][asset]['free_usd'] = round(wallet_data['assets'][tag]['assets'][asset]['free']*wallet_data['assets'][tag]['assets'][asset]['price'],2)
+            wallet_data['assets'][tag]['assets'][asset]['locked_usd'] = round(wallet_data['assets'][tag]['assets'][asset]['locked']*wallet_data['assets'][tag]['assets'][asset]['price'],2)
+            wallet_data['assets'][tag]['assets'][asset]['total_usd'] = round(wallet_data['assets'][tag]['assets'][asset]['total']*wallet_data['assets'][tag]['assets'][asset]['price'],2)
+
     if request.method == 'GET':
         return render(request, 'sws.html',{
             'sws': formattedSw,
+            'wallet_data': wallet_data,
             'json_pnl_data': df[['str_date','pnl']].to_json(orient='records'),
         })
 

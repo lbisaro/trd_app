@@ -69,11 +69,70 @@
         
     </table>
 </div>
+
 <div class="container pt-4">
     <h6 class="text-info text-center">PNL Historico</h6>
     <div class="text-secondary text-end" style="padding-right: 20px;">USDT</div>
     <div id="chart"></div>
 </div>
+
+<div class="container pt-4">
+    <h6 class="text-info text-center">Detalle de la Wallet</h6>
+    <table id="wallet_info" class="table-dg table-trade-info">
+        <thead>
+            <tr>
+                <th>Categoria</th>
+                <th></th>
+                <th class="text-center" colspan="3">USD</th>
+                <th class="text-center" colspan="3">Asset</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Asset</th>
+                <th class="text-end" style="width: 14%;">Total</th>
+                <th class="text-end" style="width: 14%;">Libre</th>
+                <th class="text-end" style="width: 14%;">Bloqueado</th>
+                <th class="text-end" style="width: 14%;">Total</th>
+                <th class="text-end" style="width: 14%;">Libre</th>
+                <th class="text-end" style="width: 14%;">Bloqueado</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            {% for tag_key, tag_info in wallet_data.assets.items %}
+            <tr>
+                
+                <td colspan="8">
+                    <span class="text-info">{{tag_info.tag_name}}</span> 
+                    <i >({{tag_info.perc}}%)</i>
+                    <span class="text-info">USD {{tag_info.total}} </span> 
+                    
+                </td>
+            </tr>
+
+            {% for asset_symbol, asset_details in tag_info.assets.items %}
+            <tr>
+                <td></td>
+                <td>{{ asset_symbol }}</td>
+                <td class="text-end" >{{ asset_details.total_usd }}</td>
+                <td class="text-end" >{{ asset_details.free_usd }}</td>
+                <td class="text-end" >{{ asset_details.locked_usd }}</td>
+                <td class="text-end" >{{ asset_details.total }}</td>
+                <td class="text-end" >{{ asset_details.free }}</td>
+                <td class="text-end" >{{ asset_details.locked }}</td>
+                <!--
+                <td>${{ asset_details.price|floatformat:4 }}</td>
+                -->
+            </tr>
+            {% endfor %}
+
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+
     
 {% endblock %}
 

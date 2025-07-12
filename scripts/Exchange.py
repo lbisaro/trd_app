@@ -42,10 +42,15 @@ class Exchange():
             errMsg = f'exchange::__init__() - Error de conexion exchange - type {type} - exchange: {exchange}'
             print(errMsg)
             raise Exception(errMsg)
+
         
     def is_stable_coin(asset):
-        stablecoins = {"USDT", "BUSD", "USDC", "DAI", "TUSD", "FDUSD"}
-        return asset in stablecoins
+        stable_coins = {"USDT", "BUSD", "USDC", "DAI", "TUSD", "FDUSD"}
+        return asset in stable_coins
+
+    def is_main_coin(asset):
+        main_coins = {"BTC", "ETH", "BNB"}
+        return asset in main_coins
 
     def check_connection(self):
         try:
