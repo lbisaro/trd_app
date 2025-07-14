@@ -224,10 +224,10 @@ class BotFibonacci(Bot_Core):
                 if sl_order and sl_order.limit_price < stop_loss_price:
                     self.update_order_by_tag('STOP_LOSS',limit_price=stop_loss_price)      
 
-        if self.position and self.signal == 'VENTA':
-            self.close(Order.FLAG_SIGNAL)
-            self.cancel_orders()
-            self.position = False
+        #if self.position and self.signal == 'VENTA':
+        #    self.close(Order.FLAG_SIGNAL)
+        #    self.cancel_orders()
+        #    self.position = False
 
         #Gestion del Trail Stop
         if self.position:
