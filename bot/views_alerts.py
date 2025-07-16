@@ -321,7 +321,7 @@ def ia_prompt(request):
     prompt = request.POST['prompt']
     json_rsp['prompt'] = prompt
 
-    url = 'http://app.bisaro.ar/ia/prompt/'
+    url = 'http://ia.bisaro.ar/prompt/'
     #url = 'http://localhost:5000/prompt/'
     data = {'prompt': prompt,
             'instruction': 'pivots'
