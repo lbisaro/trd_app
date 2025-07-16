@@ -770,13 +770,17 @@ class Bot(models.Model):
         
         self.save()
 
-        #Analizando si aplica registrar el PNL de acuerdo al timeframe del bot
+        #Analizando si aplica registrar el PNL y OrderLog de acuerdo al timeframe del bot
         apply_intervals = fn.get_apply_intervals(timezone.now())
         if self.estrategia.interval_id in apply_intervals:
             self.add_pnl(actual_status['wallet_tot']['r']-self.quote_qty,actual_status['price']['r'])
+            open_orders = self.get_orders_en_curso()
+            if len(open_orders)>0:
+                for order in open_orders:
+                    if order.limit_price>0:
+                        self.add_order_log(side=order.side,price=order.limit_price)
     
     def log_klines(self,klines, kline_file):
-        #print(f'Log bot_{self.bot_id}: {kline_file}')
         with open(kline_file, 'wb') as f:
             pickle.dump(klines, f)
 
@@ -792,6 +796,18 @@ class Bot(models.Model):
         pnl_df = pd.DataFrame.from_records(pnl.values())
         return pnl_df
 
+    def add_order_log(self,side,price):
+        botpnl = BotOrderLog()
+        botpnl.bot = self
+        botpnl.side = side
+        botpnl.price = price
+        botpnl.save()
+
+    def get_order_log(self):
+        olog = BotOrderLog.objects.filter(bot_id=self.id).order_by('datetime')
+        olog_df = pd.DataFrame.from_records(olog.values())
+        return olog_df
+    
     def get_klines_file(self):
         return f'log/bot_klines_{self.id}.DataFrame'
         
@@ -891,4 +907,15 @@ class BotPnl(models.Model):
     class Meta:
         verbose_name = "Bot PNL"
         verbose_name_plural='Bot PNL'
+        
+class BotOrderLog(models.Model):
+
+    bot = models.ForeignKey(Bot, on_delete = models.CASCADE)
+    datetime = models.DateTimeField(default=timezone.now)
+    side = models.IntegerField(null=False, blank=False)
+    price = models.FloatField(null=False, blank=False, default=0.0)
+    
+    class Meta:
+        verbose_name = "Bot Order Log"
+        verbose_name_plural='Bot Orders Log'
         
