@@ -86,6 +86,12 @@ def bot(request, bot_id):
         else:
             klines = pnl_log.copy()
 
+        #Obteniendo historico de ordenes
+        hst_orders = BotOrderLog.objects.filter(bot_id=bot_id)
+        hst_orders = pd.DataFrame.from_records(hst_orders.values())
+        hst_orders['buy'] = np.where(hst_orders['side'] == ord_u.SIDE_BUY,hst_orders['price'],None)
+        hst_orders['sell'] = np.where(hst_orders['side'] == ord_u.SIDE_SELL,hst_orders['price'],None)
+
         if not klines.empty:
             
             #Ordenes 
@@ -149,6 +155,10 @@ def bot(request, bot_id):
                         indicators.append(indicador)
             if not open_pos:
                 klines['price'] = klines['close']
+
+            if len(hst_orders) > 0:
+                events.append({'df':hst_orders,'col':'buy'    ,'name': 'BUY_ORDERS' ,    'color': "#2ca73c",'symbol': 'line-ew-open' })
+                events.append({'df':hst_orders,'col':'sell'    ,'name': 'SELL_ORDERS' ,    'color': "#a7302c",'symbol': 'line-ew-open' })
 
             fig = ohlc_chart(klines, indicators=indicators, open_orders=open_orders, events=events)  
             chart = fig.to_html(config = {'scrollZoom': True, }) 
