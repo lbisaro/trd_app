@@ -157,8 +157,8 @@ def bot(request, bot_id):
                 klines['price'] = klines['close']
 
             if len(hst_orders) > 0:
-                events.append({'df':hst_orders,'col':'buy'    ,'name': 'BUY_ORDERS' ,    'color': "#2ca73c",'symbol': 'line-ew-open' })
-                events.append({'df':hst_orders,'col':'sell'    ,'name': 'SELL_ORDERS' ,    'color': "#a7302c",'symbol': 'line-ew-open' })
+                events.append({'df':hst_orders,'col':'buy'    ,'name': 'Hst Buy' ,    'color': "#2ca73c",'symbol': 'line-ew-open' })
+                events.append({'df':hst_orders,'col':'sell'    ,'name': 'Hst Sell' ,    'color': "#a7302c",'symbol': 'line-ew-open' })
 
             fig = ohlc_chart(klines, indicators=indicators, open_orders=open_orders, events=events)  
             chart = fig.to_html(config = {'scrollZoom': True, }) 
