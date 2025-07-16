@@ -111,11 +111,11 @@ elif local.LOC_DB_TYPE == 'postgresql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME'),
-            'USER': os.environ.get('DB_USER'),
-            'PASSWORD': os.environ.get('DB_PASSWORD'),
-            'HOST': os.environ.get('DB_HOST'),
-            'PORT': os.environ.get('DB_PORT'),
+            'NAME': local.LOC_MYSQL_DB,
+            'USER': local.LOC_MYSQL_U,
+            'PASSWORD': local.LOC_MYSQL_P,
+            'HOST': local.LOC_MYSQL_H,
+            'PORT': 5432,
         }
     }
 
