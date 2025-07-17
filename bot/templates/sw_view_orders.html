@@ -91,7 +91,9 @@
                         {{data.total_pnl}}
                     </td>
                     <td class="text-end {% if data.price_distance_percent < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {{data.price_distance_percent}} %
+                        {% if data.price_distance_percent %}
+                            {{data.price_distance_percent}} %
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
