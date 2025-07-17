@@ -1,0 +1,12 @@
+.html_alert ul li {
+    list-style: none;
+
+}
+
+.data {
+    font-weight: bolder;
+}
+
+.table-dg thead tr th {
+    vertical-align: top;
+}
