@@ -50,6 +50,7 @@ class top30_alerts:
         self.history = {}
 
         self.target_symbols = Symbol.getTop30Symbols() 
+        self.target_symbols = self.target_symbols[0:30]
         tot_symbols = len(self.target_symbols)
         act_symbol = 0
         for symbol in self.target_symbols:
