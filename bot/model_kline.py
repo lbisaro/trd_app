@@ -52,7 +52,7 @@ class Symbol(models.Model):
             top30_symbols.append(str_symbol)
         
         for symbol in top30_base_symbols:
-            if symbol not in top30_symbols and len(top30_symbols)<30:
+            if symbol not in top30_symbols:
                 top30_symbols.append(symbol)
 
         return top30_symbols
