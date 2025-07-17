@@ -45,8 +45,8 @@ class BotFibonacci(Bot_Core):
         self.trail = 0
 
     descripcion = 'Bot Core v2 \n'\
-                  'Ejecuta la compra al recibir una señal de Compra por Extension de Fibonacci, con stoploss en nivel 0.0 , '\
-                  'Cierra la operación por Stop Loss o Señal de venta.'
+                  'Ejecuta la compra al recibir una señal de Compra por Extension de Fibonacci, con Stop-Loss en nivel 0.0 , '\
+                  'Cierra la operación por Stop-Loss o Trail-Stop.'
     
     parametros = {'symbol':  {  
                         'c' :'symbol',
