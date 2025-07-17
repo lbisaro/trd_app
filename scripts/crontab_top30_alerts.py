@@ -6,6 +6,7 @@ from scripts.Exchange import Exchange
 from scripts.functions import get_intervals
 from django.conf import settings
 from scripts.app_log import app_log
+from bot.model_kline import Symbol
 
 date_format = '%Y-%m-%d %H:%M'
 breadth_file = os.path.join(settings.BASE_DIR,f'log/top30_breadth.pkl')
@@ -48,11 +49,7 @@ class top30_alerts:
         print('Obteniendo informacion del eschange')
         self.history = {}
 
-        self.target_symbols = ['XRPUSDT','SOLUSDT','TRXUSDT','DOGEUSDT','ADAUSDT','WBTCUSDT','BCHUSDT',\
-                               'SUIUSDT','LINKUSDT','XLMUSDT','AVAXUSDT','SHIBUSDT','LTCUSDT','HBARUSDT',\
-                               'DOTUSDT','UNIUSDT','PEPEUSDT','AAVEUSDT','APTUSDT','NEARUSDT','ICPUSDT',\
-                               'ETCUSDT','VETUSDT','ATOMUSDT','FETUSDT','FILUSDT','WLDUSDT','ALGOUSDT',
-                               'NEXOUSDT','OPUSDT'] 
+        self.target_symbols = Symbol.getTop30Symbols() 
         tot_symbols = len(self.target_symbols)
         act_symbol = 0
         for symbol in self.target_symbols:

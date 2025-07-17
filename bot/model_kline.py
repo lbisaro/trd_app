@@ -39,6 +39,26 @@ class Symbol(models.Model):
         self.activo = 1
         self.save()
 
+    def getTop30Symbols():
+        top30_base_symbols = ['XRPUSDT','SOLUSDT','TRXUSDT','DOGEUSDT','ADAUSDT','WBTCUSDT','BCHUSDT',\
+                               'SUIUSDT','LINKUSDT','XLMUSDT','AVAXUSDT','SHIBUSDT','LTCUSDT','HBARUSDT',\
+                               'DOTUSDT','UNIUSDT','PEPEUSDT','AAVEUSDT','APTUSDT','NEARUSDT','ICPUSDT',\
+                               'ETHUSDT','VETUSDT','ATOMUSDT','FETUSDT','FILUSDT','WLDUSDT','ALGOUSDT',
+                               'NEXOUSDT','OPUSDT']
+        top30_symbols = []
+        db_symbols = Symbol.objects.filter()
+        for symbol in db_symbols:
+            str_symbol = symbol.base_asset+symbol.quote_asset
+            top30_symbols.append(str_symbol)
+        
+        for symbol in top30_base_symbols:
+            if symbol not in top30_symbols and len(top30_symbols)<30:
+                top30_symbols.append(symbol)
+
+        return top30_symbols
+        
+
+
 class Kline(models.Model):
     symbol = models.ForeignKey(Symbol, on_delete = models.CASCADE)
     datetime = models.DateTimeField(null=False, blank=False, db_index=True)
