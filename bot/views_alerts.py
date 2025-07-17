@@ -238,8 +238,8 @@ def execute(request):
         workingType='MARK_PRICE',
         timeInForce=client.TIME_IN_FORCE_GTC, 
         reduceOnly=True,
-        closePosition=True,
-    )
+        closePosition=True
+        )
     tp_order_id = tp_order['orderId']
     json_rsp['tp_order_id'] = tp_order_id
 
@@ -251,9 +251,9 @@ def execute(request):
         quantity=executed_qty, 
         stopprice=sl1, 
         workingType='CONTRACT_PRICE',
-        reduceOnly=True
-        closePosition=True,
-    )
+        reduceOnly=True,
+        closePosition=True
+        )
     sl_order_id = sl_order['orderId']
     json_rsp['sl_order_id'] = sl_order_id
     
