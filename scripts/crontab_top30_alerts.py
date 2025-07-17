@@ -38,7 +38,12 @@ class top30_alerts:
                 status = pickle.load(archivo)
                 self.breadth = status['breadth']
                 self.alerts_log = status['log']
-
+    
+    def get_live_breadth():
+        with open(breadth_file, "rb") as archivo:
+            status = pickle.load(archivo)
+            return status['breadth']
+        
     def bootstrap_klines(self):
         print('Obteniendo informacion del eschange')
         self.history = {}
