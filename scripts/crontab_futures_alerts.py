@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from scripts.app_log import app_log as Log
 from scripts.functions import get_intervals
 from django.conf import settings
+from bot.model_kline import Symbol
 
 from scripts.indicators import resample
 
@@ -16,10 +17,12 @@ from scripts.indicators import resample
 LOG_DIR = os.path.join(settings.BASE_DIR,'log')
 DATA_FILE = os.path.join(LOG_DIR, "futures_alerts_data.pkl")
 USDT_PAIR = "USDT"
-LIMIT_MINUTES = 3000
+LIMIT_MINUTES = 6000
 KLINES_TO_GET_ALERTS = 50
 INTERVAL_ID = '0m15'
 ALERT_THRESHOLD = 1.5
+
+top30_symbols = Symbol.getTop30Symbols()
 
 # Crear directorio de logs si no existe
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -111,11 +114,19 @@ def run():
     tickers = exchInfo.client.futures_symbol_ticker()
     for ticker in tickers:
         symbol = ticker['symbol']
-        if symbol.endswith(USDT_PAIR):
+        if symbol.endswith(USDT_PAIR) and symbol in top30_symbols:
             actual_prices[symbol] = float(ticker['price'])
 
     # Cargar data previos
     data = load_data_file(DATA_FILE)
+
+    #Limpiando los symbols que no estan en el Top30
+    if 'symbols' in data:
+        tmp = data['symbols'].copy()
+        for symbol in tmp:
+            if symbol not in top30_symbols:
+                del data['symbols'][symbol]
+                print('eliminando',symbol)
     
     #datetime almacena la fecha y hora del proceso en minutos
     lost_minutes = 0
