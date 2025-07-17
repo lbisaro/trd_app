@@ -12,7 +12,7 @@
 
 <script
     type="text/javascript"
-    src="/static/scripts/ta-library.js">
+    src="{% static 'scripts/ta-library.js' %}">
     </script>
 
 {% endblock %}
@@ -383,6 +383,7 @@
             updatePriceInPerc(parseFloat(kline.c));
 
             updateFullData(new_kline);
+            console.log(new_kline);
 
             tp1Series.update({
                 time: upd_time,
