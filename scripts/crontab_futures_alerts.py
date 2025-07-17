@@ -126,7 +126,6 @@ def run():
         for symbol in tmp:
             if symbol not in top30_symbols:
                 del data['symbols'][symbol]
-                print('eliminando',symbol)
     
     #datetime almacena la fecha y hora del proceso en minutos
     lost_minutes = 0
@@ -175,11 +174,12 @@ def run():
     #Limpiando el log de alertas cuando el precio esta fuera de rango
     log_alerts = {}
     for key, alert in data['log_alerts'].items():
-        price = actual_prices[alert['symbol']]
-        if alert['side'] > 0 and price<alert['tp1'] and price>alert['sl1']:
-            log_alerts[key] = alert
-        elif alert['side'] < 0 and price>alert['tp1'] and price<alert['sl1']:
-            log_alerts[key] = alert
+        if alert['symbol'] in top30_symbols:
+            price = actual_prices[alert['symbol']]
+            if alert['side'] > 0 and price<alert['tp1'] and price>alert['sl1']:
+                log_alerts[key] = alert
+            elif alert['side'] < 0 and price>alert['tp1'] and price<alert['sl1']:
+                log_alerts[key] = alert
     data['log_alerts'] = log_alerts
     
 
