@@ -233,13 +233,12 @@ def execute(request):
         symbol=symbol, 
         side=client.SIDE_SELL if side > 0 else client.SIDE_BUY, 
         type=client.FUTURE_ORDER_TYPE_TAKE_PROFIT_MARKET,
-        #quantity=executed_qty, 
+        quantity=executed_qty, 
         stopPrice=tp1,    
         workingType='MARK_PRICE',
         timeInForce=client.TIME_IN_FORCE_GTC, 
         reduceOnly=True,
-        closePosition=True
-        )
+    )
     tp_order_id = tp_order['orderId']
     json_rsp['tp_order_id'] = tp_order_id
 
@@ -248,12 +247,11 @@ def execute(request):
         symbol=symbol, 
         side=client.SIDE_SELL if side > 0 else client.SIDE_BUY, 
         type=client.FUTURE_ORDER_TYPE_STOP_MARKET,
-        #quantity=executed_qty, 
+        quantity=executed_qty, 
         stopprice=sl1, 
         workingType='CONTRACT_PRICE',
         reduceOnly=True,
-        closePosition=True
-        )
+    )
     sl_order_id = sl_order['orderId']
     json_rsp['sl_order_id'] = sl_order_id
     
