@@ -36,8 +36,8 @@ class BotTop30(Bot_Core):
         self.trail = 0
 
     descripcion = 'Bot Core v2 \n'\
-                  'Ejecuta la compra al recibir una señal de Compra por Extension de Fibonacci, con stoploss en nivel 0.0 , '\
-                  'Cierra la operación por Stop Loss o Señal de venta.'
+                  'Ejecuta compras parciales al recibir una señal de Compra por el indicador Top30, '\
+                  'Cierra la operación por Señal de venta.'
     
     parametros = {'symbol':  {  
                         'c' :'symbol',
@@ -49,7 +49,7 @@ class BotTop30(Bot_Core):
                  'quote_perc': {
                         'c' :'quote_perc',
                         'd' :'Operacion sobre capital',
-                        'v' :'100',
+                        'v' :'24',
                         'l' :'[10,100]',
                         't' :'perc',
                         'pub': True,
@@ -64,7 +64,7 @@ class BotTop30(Bot_Core):
                  'distance': {
                         'c' :'distance',
                         'd' :'Distancia de compras',
-                        'v' :'2',
+                        'v' :'5',
                         'l' :'[0,100]',
                         't' :'perc',
                         'pub': True,
