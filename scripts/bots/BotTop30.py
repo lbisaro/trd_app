@@ -90,14 +90,14 @@ class BotTop30(Bot_Core):
         
         #Cargando data del indicador Top30 1h
         self.klines['breadth'] = 50
-        if self.is_live_run():
-            live_breadth = top30Live().get_live_breadth()
-            print('live_breadth:',live_breadth)
-            self.klines['breadth'] = live_breadth
-        elif self.is_backtesting():
+        if self.is_backtesting():
             with open(self.top30_file, 'rb') as file:
                 top30 = pickle.load(file)
                 self.klines['breadth'] = top30['breadth']
+        elif self.is_live_run():
+            live_breadth = top30Live().get_live_breadth()
+            print('live_breadth:',live_breadth)
+            self.klines['breadth'] = live_breadth
 
         self.klines['signal'] = np.where(self.klines['breadth']==0,'COMPRA',self.klines['signal'])
         self.klines['signal'] = np.where(self.klines['breadth']==100 ,'VENTA',self.klines['signal'])
