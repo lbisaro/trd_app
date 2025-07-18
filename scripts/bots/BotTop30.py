@@ -5,6 +5,7 @@ import pickle
 from scripts.Bot_Core import Bot_Core
 from scripts.functions import round_down
 from scripts.Bot_Core_utils import *
+from scripts.crontab_top30_alerts import top30_alerts as top30Live 
 
 class BotTop30(Bot_Core):
 
@@ -28,7 +29,7 @@ class BotTop30(Bot_Core):
     def __init__(self):
         self.symbol = ''
         self.quote_perc = 0.0
-        self.stop_loss = 0.0
+        self.distance = 0.0
         self.take_profit = 0.0
         self.interes = 's'  
         self.rsmpl = 0
@@ -60,14 +61,14 @@ class BotTop30(Bot_Core):
                         't' :'t_int',
                         'pub': True,
                         'sn':'Int', },
-                 'stop_loss': {
-                        'c' :'stop_loss',
-                        'd' :'Stop Loss',
+                 'distance': {
+                        'c' :'distance',
+                        'd' :'Distancia de compras',
                         'v' :'2',
                         'l' :'[0,100]',
                         't' :'perc',
                         'pub': True,
-                        'sn':'SL', },
+                        'sn':'Dst', },
                 }
 
     def valid(self):
@@ -76,8 +77,8 @@ class BotTop30(Bot_Core):
             err.append("Se debe especificar el Par")
         if self.quote_perc <= 0 or self.quote_perc > 100:
             err.append("El Porcentaje de capital por operacion debe ser un valor entre 0.01 y 100")
-        if self.stop_loss < 0:
-            err.append("El Stop Loss debe ser mayor o igual a 0")
+        if self.distance < 0:
+            err.append("El Distancia de compra debe ser mayor o igual a 0")
         if len(err):
             raise Exception("\n".join(err))
         if self.interval_id != '1h01':
@@ -86,15 +87,24 @@ class BotTop30(Bot_Core):
     def start(self):
         
         self.klines['signal'] = 'NEUTRO'
-        #Cargando data del indicador Top30 1h
-        with open(self.top30_file, 'rb') as file:
-            top30 = pickle.load(file)
-            self.klines['breadth'] = top30['breadth']
-            self.klines['signal'] = np.where((self.klines['breadth']!=0) & (self.klines['breadth'].shift()==0),'COMPRA',self.klines['signal'])
-            self.klines['signal'] = np.where((self.klines['breadth']!=100) & (self.klines['breadth'].shift()==100),'VENTA',self.klines['signal'])
         
+        #Cargando data del indicador Top30 1h
+        self.klines['breadth'] = 50
+        if self.is_backtesting():
+            with open(self.top30_file, 'rb') as file:
+                top30 = pickle.load(file)
+                self.klines['breadth'] = top30['breadth']
+        elif self.is_live_run():
+            live_breadth = top30Live().get_live_breadth()
+            print('live_breadth:',live_breadth)
+            self.klines['breadth'] = live_breadth
+
+        self.klines['signal'] = np.where(self.klines['breadth']==0,'COMPRA',self.klines['signal'])
+        self.klines['signal'] = np.where(self.klines['breadth']==100 ,'VENTA',self.klines['signal'])
+
         self.print_orders = False
         self.graph_open_orders = True
+        self.graph_signals = True
 
     """
     def get_status(self):
@@ -125,26 +135,35 @@ class BotTop30(Bot_Core):
 
     def next(self):
 
-        open_orders = len(self._orders)
-        if self.row['signal'] == 'COMPRA' and open_orders < 1: 
-            start_cash = round(self.quote_qty * (self.quote_perc/100),self.qd_quote)
-            if self.interes == 's': #Interes Simple
-                cash = start_cash if start_cash <= self.wallet_quote else self.wallet_quote
-            else: #Interes Compuesto
-                cash = self.wallet_quote
-
-            qty = round_down(cash/self.price,self.qd_qty)
-            buy_order_id = self.buy(qty=qty,flag=Order.FLAG_SIGNAL,tag='BUY')
-            if buy_order_id:
-                buy_order = self.get_order(buy_order_id)
-                buyed_usd = round(buy_order.price*buy_order.qty,self.qd_quote)
+        self.position = False
+        avg_price = 0
+        if self.wallet_base*self.price >= 2:
+            self.position = True
+            if 'pos___avg_price' in self.status:
+                avg_price = self.status['pos___avg_price']['r']
+        
+        if self.row['signal'] == 'COMPRA': 
+            if avg_price == 0 or self.price < (avg_price * (1-self.distance/100)):
+                cash = 0
+                if self.interes == 's': #Interes Simple
+                    quote_to_buy = round(self.quote_qty * (self.quote_perc/100),self.qd_quote)
+                    cash = quote_to_buy if quote_to_buy <= self.wallet_quote else self.wallet_quote
+                else: #Interes Compuesto
+                    quote_to_buy = round(self.wallet_quote * (self.quote_perc/100),self.qd_quote)
+                    cash = quote_to_buy if quote_to_buy <= self.wallet_quote else self.wallet_quote
                 
-                #Stop-loss price
-                if self.stop_loss > 0:
-                    limit_price = round(buy_order.price * (1-(self.stop_loss/100)) ,self.qd_price)
-                    self.sell_limit(qty,Order.FLAG_STOPLOSS,limit_price,tag='STOP_LOSS')
+                if cash > 0:
+                    limit_price = round(self.price,self.qd_price)
+                    qty = round_down(cash/self.price,self.qd_qty)
+                    tp_buy_order = self.get_order_by_tag(tag='BUY_LIMIT')
+                    if tp_buy_order:
+                        if tp_buy_order.limit_price > limit_price:
+                            self.update_order_by_tag(tag="BUY_LIMIT",limit_price=limit_price,qty=qty)
+                    else:
+                        self.buy_limit(qty=qty,limit_price=limit_price,flag=Order.FLAG_STOPLOSS,tag='BUY_LIMIT')
 
-        elif self.row['signal'] == 'VENTA' and open_orders > 0:
+
+        elif self.row['signal'] == 'VENTA' and self.wallet_base>0:
             self.close(flag=Order.FLAG_TAKEPROFIT)
         
 
@@ -152,3 +171,6 @@ class BotTop30(Bot_Core):
     def on_order_execute(self, order):
         if order.side == Order.SIDE_SELL:
             self.cancel_orders()
+        #if order.side == Order.SIDE_BUY:
+        #    print('Ejecuto')
+
