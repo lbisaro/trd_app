@@ -95,7 +95,7 @@ class BotTop30(Bot_Core):
                 top30 = pickle.load(file)
                 self.klines['breadth'] = top30['breadth']
         elif self.is_live_run():
-            live_breadth = top30Live().get_live_breadth()
+            live_breadth = top30Live.get_live_breadth()
             print('live_breadth:',live_breadth)
             self.klines['breadth'] = live_breadth
 
