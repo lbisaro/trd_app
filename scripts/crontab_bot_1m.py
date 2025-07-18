@@ -56,6 +56,8 @@ def run():
     ### Buscar Señales
     for estr in estrategias:
         botClass = estr.get_instance()
+        botClass.live = True
+        botClass.backtesting = False
         timeframe_minutes = fn.get_intervals(botClass.interval_id,'minutes')
         klines = exchInfo.get_klines(botClass.symbol, estr.interval_id, limit=botClass.klines_lot)
         signal_row = botClass.live_get_signal(klines, timeframe_minutes, startDt)
