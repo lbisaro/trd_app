@@ -46,7 +46,8 @@ class BotFibonacci(Bot_Core):
 
     descripcion = 'Bot Core v2 \n'\
                   'Ejecuta la compra al recibir una señal de Compra por Extension de Fibonacci, con Stop-Loss en nivel 0.0 , '\
-                  'Cierra la operación por Stop-Loss o Trail-Stop.'
+                  'Genera ventas parciales cuando el PNL supera 1% la compra inicial, '\
+                  'Cierra la operación por Stop-Loss o Trail-Stop.'\
     
     parametros = {'symbol':  {  
                         'c' :'symbol',
@@ -225,11 +226,6 @@ class BotFibonacci(Bot_Core):
                     update_stop_loss = True
                     self.update_order_by_tag('STOP_LOSS',limit_price=stop_loss_price)      
 
-        #if self.position and self.signal == 'VENTA':
-        #    self.close(Order.FLAG_SIGNAL)
-        #    self.cancel_orders()
-        #    self.position = False
-
         #Gestion del Trail Stop
         if self.position:
             if 'pos___avg_price' in self.status and isinstance(self.status['pos___avg_price'], dict):
@@ -244,9 +240,8 @@ class BotFibonacci(Bot_Core):
                 else:
                     self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,trl_stop_price,tag="STOP_LOSS")
 
-
+        #Gestion de venta parcial
         if self.position and update_stop_loss and 'pos___avg_price' in self.status:
-        
             buyed_usd = self.status['pos___quote_qty']['r']
             actual_usd = self.status['pos___base_qty']['r'] * self.price
             #Ejecuta una venta parcial si la ganancia en QUOTE es mayor a 11 USD y mayor al 1% del capital inicial?
