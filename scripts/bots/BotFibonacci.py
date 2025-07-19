@@ -176,7 +176,7 @@ class BotFibonacci(Bot_Core):
     
     def next(self):
         price = self.price
-
+        update_stop_loss = False
         self.position = False
         if self.wallet_base*self.price >= 2:
             self.position = True
@@ -222,6 +222,7 @@ class BotFibonacci(Bot_Core):
             else:
                 sl_order = self.get_order_by_tag(tag='STOP_LOSS')
                 if sl_order and sl_order.limit_price < stop_loss_price:
+                    update_stop_loss = True
                     self.update_order_by_tag('STOP_LOSS',limit_price=stop_loss_price)      
 
         #if self.position and self.signal == 'VENTA':
@@ -238,10 +239,22 @@ class BotFibonacci(Bot_Core):
                 trl_order = self.get_order_by_tag(tag='STOP_LOSS')
                 if trl_order:
                     if trl_order.limit_price < trl_stop_price:
+                        update_stop_loss = True
                         self.update_order_by_tag('STOP_LOSS',limit_price=trl_stop_price)  
                 else:
                     self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,trl_stop_price,tag="STOP_LOSS")
 
+
+        if self.position and update_stop_loss and 'pos___avg_price' in self.status:
+        
+            buyed_usd = self.status['pos___quote_qty']['r']
+            actual_usd = self.status['pos___base_qty']['r'] * self.price
+            #Ejecuta una venta parcial si la ganancia en QUOTE es mayor a 11 USD y mayor al 1% del capital inicial?
+            if actual_usd-buyed_usd > 11 and actual_usd-buyed_usd > self.quote_qty*0.01:
+                usd_to_sell = actual_usd-buyed_usd
+                qty_to_sell = round(usd_to_sell/self.price,self.qd_qty)
+                self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT)
+
     def on_order_execute(self, order):
-        if order.side == Order.SIDE_SELL:
+        if order.side == Order.SIDE_SELL and order.tag == 'STOP_LOSS':
             self.cancel_orders()
