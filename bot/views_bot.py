@@ -120,7 +120,6 @@ def bot(request, bot_id):
                 df_orders['buy_sl']  = df_orders[(df_orders['side'] == ord_u.SIDE_BUY) &(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
                 df_orders['sell_sl'] = df_orders[(df_orders['side'] == ord_u.SIDE_SELL)&(df_orders['completed']>0)&(df_orders['type']==ord_u.FLAG_STOPLOSS)]['price']
                 
-                
                 #Ordenes Abiertas
                 for i in df_orders[df_orders['completed']<1].index:
                     open_pos = True
