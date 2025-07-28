@@ -43,7 +43,6 @@ class Bot_Core_stats:
         pos___base_qty = 0
         pos___quote_qty = 0
         pos___orders_qty = 0
-        pos___quote_qty = 0
         pos___avg_price = 0
         pos___pnl = 0
         pos___pnl_max = 0
