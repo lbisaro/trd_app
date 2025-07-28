@@ -248,7 +248,9 @@ class BotFibonacci(Bot_Core):
             if actual_usd-buyed_usd > 11 and actual_usd-buyed_usd > self.quote_qty*0.01:
                 usd_to_sell = actual_usd-buyed_usd
                 qty_to_sell = round(usd_to_sell/self.price,self.qd_qty)
-                self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT)
+                if self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT):
+                    self.update_order_by_tag('STOP_LOSS',qty=round_down(self.wallet_base,self.qd_qty)) 
+
 
     def on_order_execute(self, order):
         if order.side == Order.SIDE_SELL and order.tag == 'STOP_LOSS':
