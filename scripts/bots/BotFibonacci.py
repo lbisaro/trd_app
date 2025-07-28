@@ -251,6 +251,17 @@ class BotFibonacci(Bot_Core):
                 if self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT):
                     self.update_order_by_tag('STOP_LOSS',qty=round_down(self.wallet_base,self.qd_qty)) 
 
+        #Corrige Qty de venta por Stop Loss
+        if self.position:
+            trl_order = self.get_order_by_tag(tag='STOP_LOSS')
+            if trl_order is not None:
+                if trl_order.qty != round_down(self.wallet_base,self.qd_qty):
+                    self.update_order_by_tag('STOP_LOSS',
+                                qty=round_down(self.wallet_base,self.qd_qty),
+                                limit_price = round_down(trl_order.limit_price,self.qd_price) 
+                        ) 
+
+
 
     def on_order_execute(self, order):
         if order.side == Order.SIDE_SELL and order.tag == 'STOP_LOSS':
