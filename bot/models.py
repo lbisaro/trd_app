@@ -235,6 +235,7 @@ class Bot(models.Model):
                 sell = 0
 
     def desactivar(self,texto='',close=False):
+        self.update_status({})
         self.bloquear(texto=texto,close=close)
     
     def bloquear(self,texto='',close=False):
