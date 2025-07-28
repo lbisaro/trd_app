@@ -14,6 +14,7 @@ class BotFibonacci(Bot_Core):
     interes = 's'
     rsmpl = 0
     trail = 0
+    vp = 0
 
     indicadores = [
             {'col': 'ZigZag', 'name': 'ZigZag', 'color': 'gray', 'row': 1,  'mode':'lines',},             
@@ -71,6 +72,14 @@ class BotFibonacci(Bot_Core):
                         't' :'t_int',
                         'pub': True,
                         'sn':'Int', },
+                 'vp': {
+                        'c' :'vp',
+                        'd' :'Ventas parciales',
+                        'v' : '0',
+                        'l' :'[0,100]',
+                        't' :'perc',
+                        'pub': True,
+                        'sn':'VP', },
                  'rsmpl': {
                         'c' :'rsmpl',
                         'd' :'Resample para Pivots',
@@ -78,7 +87,7 @@ class BotFibonacci(Bot_Core):
                         'l' :'[1,100]',
                         't' :'int',
                         'pub': True,
-                        'sn':'Rsmp', },
+                        'sn':'Rsmpl', },
                  'trail': {
                         'c' :'trail',
                         'd' :'Trail Stop Loss',
@@ -240,28 +249,28 @@ class BotFibonacci(Bot_Core):
                 else:
                     self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,trl_stop_price,tag="STOP_LOSS")
 
+        
         #Gestion de venta parcial
-        if self.position and update_stop_loss and 'pos___avg_price' in self.status:
-            buyed_usd = self.status['pos___quote_qty']['r']
-            actual_usd = self.status['pos___base_qty']['r'] * self.price
-            #Ejecuta una venta parcial si la ganancia en QUOTE es mayor a 11 USD y mayor al 1% del capital inicial?
-            if actual_usd-buyed_usd > 11 and actual_usd-buyed_usd > self.quote_qty*0.01:
-                usd_to_sell = actual_usd-buyed_usd
-                qty_to_sell = round(usd_to_sell/self.price,self.qd_qty)
-                if self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT):
-                    self.update_order_by_tag('STOP_LOSS',qty=round_down(self.wallet_base,self.qd_qty)) 
+        if self.vp > 0 and update_stop_loss:
+            buyed_quote = 0
+            pos_quote = self.wallet_quote + self.wallet_base*self.price
 
-        #Corrige Qty de venta por Stop Loss
-        if self.position:
-            trl_order = self.get_order_by_tag(tag='STOP_LOSS')
-            if trl_order is not None:
-                if trl_order.qty != round_down(self.wallet_base,self.qd_qty):
-                    self.update_order_by_tag('STOP_LOSS',
-                                qty=round_down(self.wallet_base,self.qd_qty),
-                                limit_price = round_down(trl_order.limit_price,self.qd_price) 
-                        ) 
+            if self.position:
+                for i in self._trades:
+                    order = self._trades[i]
+                    sign = -1 if order.side == Order.SIDE_BUY else 1
 
+                    if order.pos_order_id == 0:
+                        if order.side == Order.SIDE_BUY:
+                            buyed_quote = order.price * order.qty
 
+                #Ejecuta una venta parcial si la ganancia en QUOTE es mayor a 11 USD y mayor al % establecido para venta parcial?
+                if pos_quote-buyed_quote > 11 and pos_quote-buyed_quote > buyed_quote*(self.vp/100):
+                    usd_to_sell = pos_quote-buyed_quote
+                    qty_to_sell = round(usd_to_sell/self.price,self.qd_qty)
+                    if self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT):
+                        self.update_order_by_tag('STOP_LOSS',qty=round_down(self.wallet_base,self.qd_qty)) 
+        
 
     def on_order_execute(self, order):
         if order.side == Order.SIDE_SELL and order.tag == 'STOP_LOSS':
