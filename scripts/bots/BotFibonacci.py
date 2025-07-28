@@ -224,7 +224,7 @@ class BotFibonacci(Bot_Core):
                 sl_order = self.get_order_by_tag(tag='STOP_LOSS')
                 if sl_order and sl_order.limit_price < stop_loss_price:
                     update_stop_loss = True
-                    self.update_order_by_tag('STOP_LOSS',limit_price=stop_loss_price)      
+                    self.update_order_by_tag('STOP_LOSS',limit_price=round_down(stop_loss_price,self.qd_price))      
 
         #Gestion del Trail Stop
         if self.position:
@@ -236,7 +236,7 @@ class BotFibonacci(Bot_Core):
                 if trl_order:
                     if trl_order.limit_price < trl_stop_price:
                         update_stop_loss = True
-                        self.update_order_by_tag('STOP_LOSS',limit_price=trl_stop_price)  
+                        self.update_order_by_tag('STOP_LOSS',limit_price=round_down(trl_stop_price,self.qd_price))  
                 else:
                     self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,trl_stop_price,tag="STOP_LOSS")
 
