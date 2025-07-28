@@ -251,25 +251,23 @@ class BotFibonacci(Bot_Core):
 
         
         #Gestion de venta parcial
-        if self.vp > 0 and update_stop_loss:
+        if self.position and self.vp > 0 and update_stop_loss:
             buyed_quote = 0
-            pos_quote = self.wallet_quote + self.wallet_base*self.price
+            wallet = self.wallet_quote + self.wallet_base*self.price
 
-            if self.position:
-                for i in self._trades:
-                    order = self._trades[i]
-                    sign = -1 if order.side == Order.SIDE_BUY else 1
-
-                    if order.pos_order_id == 0:
-                        if order.side == Order.SIDE_BUY:
-                            buyed_quote = order.price * order.qty
-
-                #Ejecuta una venta parcial si la ganancia en QUOTE es mayor a 11 USD y mayor al % establecido para venta parcial?
-                if pos_quote-buyed_quote > 11 and pos_quote-buyed_quote > buyed_quote*(self.vp/100):
-                    usd_to_sell = pos_quote-buyed_quote
-                    qty_to_sell = round(usd_to_sell/self.price,self.qd_qty)
-                    if self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT):
-                        self.update_order_by_tag('STOP_LOSS',qty=round_down(self.wallet_base,self.qd_qty)) 
+            for i in self._trades:
+                order = self._trades[i]
+                if order.pos_order_id == 0:
+                    if order.side == Order.SIDE_BUY:
+                        buyed_quote = order.price * order.qty
+            pnl_quote = wallet-buyed_quote
+            #Ejecuta una venta parcial si la ganancia en QUOTE es mayor a 11 USD y mayor al % establecido para venta parcial?
+            if pnl_quote > 11 and pnl_quote > buyed_quote*(self.vp/100):
+                usd_to_sell = pnl_quote
+                print(usd_to_sell)
+                qty_to_sell = round(usd_to_sell/self.price,self.qd_qty)
+                if self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT):
+                    self.update_order_by_tag('STOP_LOSS',qty=round_down(self.wallet_base,self.qd_qty)) 
         
 
     def on_order_execute(self, order):
