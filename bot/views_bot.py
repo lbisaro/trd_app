@@ -89,8 +89,11 @@ def bot(request, bot_id):
         #Obteniendo historico de ordenes
         hst_orders = BotOrderLog.objects.filter(bot_id=bot_id)
         hst_orders = pd.DataFrame.from_records(hst_orders.values())
-        hst_orders['buy'] = np.where(hst_orders['side'] == ord_u.SIDE_BUY,hst_orders['price'],None)
-        hst_orders['sell'] = np.where(hst_orders['side'] == ord_u.SIDE_SELL,hst_orders['price'],None)
+        hst_orders['buy'] = None
+        hst_orders['sell'] = None
+        if len(hst_orders) > 0:
+            hst_orders['buy'] = np.where(hst_orders['side'] == ord_u.SIDE_BUY,hst_orders['price'],None)
+            hst_orders['sell'] = np.where(hst_orders['side'] == ord_u.SIDE_SELL,hst_orders['price'],None)
 
         if not klines.empty:
             
@@ -153,7 +156,7 @@ def bot(request, bot_id):
                 for indicador in botClass.indicadores:
                     if indicador['col'] in klines:
                         indicators.append(indicador)
-            if not open_pos:
+            if not open_pos and 'close' in klines:
                 klines['price'] = klines['close']
 
             if len(hst_orders) > 0:
