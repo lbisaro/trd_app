@@ -15,7 +15,7 @@ def backtest(request):
     gen_bot = GenericBotClass()
     classList = gen_bot.get_clases()
 
-    backtests = Backtest.objects.filter().order_by('estado','clase','interval_id','creado')
+    backtests = Backtest.objects.filter().order_by('estado','clase','prefix_backtest_file','interval_id','creado')
     clases = []
     for c in classList:
         obj = gen_bot.get_instance(c)
