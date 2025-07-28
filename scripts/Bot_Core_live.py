@@ -157,6 +157,7 @@ class Bot_Core_live:
             
             self.on_order_execute(order)
             self.log.info(f'live_execute_order OK - {order}')
+            self.log.alert(f'Bot order - {order}')
             return True
         
         print('Exec. Order ERROR ',exch_order['status'],str(order))
