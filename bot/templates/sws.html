@@ -231,14 +231,12 @@ $(document).ready(function () {
         priceLineVisible: true,
     });
     pnlData = JSON.parse('{{ json_pnl_data|safe }}');
-    console.log(pnlData);
     fullData = pnlData.map(rw => ({
         time: rw.str_date,
         value: rw.pnl,
         color: rw.pnl < 0 ? '#f6465d' : '#0ecb81',
     }));
     pnlSeries.setData(fullData);
-    console.log(fullData);
 
     const dataSize = fullData.length;
     if (dataSize >= 90) {
