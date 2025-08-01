@@ -60,9 +60,11 @@
                     <li class="nav-item">
                         <a class="nav-link " href="{% url 'symbols' %}">Pares</a>
                     </li>
+                    {%if DEBUG %}
                     <li class="nav-item">
                         <a class="nav-link " href="{% url 'backtest' %}">BackTest</a>
                     </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link " href="{% url 'bots' %}">Bots</a>
                     </li>
@@ -131,5 +133,6 @@
         
 {% block script %}
 {% endblock %}
+<div class="text-secondary text-end">{{SERVER_IDENTIFIER}}-{%if DEBUG %}DEBUG{% endif %}</div>
 
 </html>
