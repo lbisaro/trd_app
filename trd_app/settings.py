@@ -163,7 +163,7 @@ USE_L10N = False
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = (os.path.join(BASE_DIR,'trd_app','static'),)
+STATICFILES_DIRS = (os.path.join(BASE_DIR,'static'),)
 
 CSRF_TRUSTED_ORIGINS = ['http://*','https://*',]
 
