@@ -133,12 +133,16 @@ def list(request):
             wallet_data['assets'][tag]['assets'][asset]['free'] = round(wallet_data['assets'][tag]['assets'][asset]['free'],qd_qty)
             wallet_data['assets'][tag]['assets'][asset]['locked'] = round(wallet_data['assets'][tag]['assets'][asset]['locked'],qd_qty)
             wallet_data['assets'][tag]['assets'][asset]['total'] = round(wallet_data['assets'][tag]['assets'][asset]['total'],qd_qty)
-    print(sw_assets)
+    
+    df['str_dt'] = df['date'].dt.strftime('%Y-%m-%d')
+    pnl_data = df[['str_date', 'pnl']].copy()
+    pnl_data = pnl_data.values.tolist()
+
     if request.method == 'GET':
         return render(request, 'sws.html',{
             'sws': formattedSw,
             'wallet_data': wallet_data,
-            'json_pnl_data': df[['str_date','pnl']].to_json(orient='records'),
+            'pnl_data': pnl_data,
         })
 
 @login_required

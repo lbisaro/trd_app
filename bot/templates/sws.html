@@ -9,6 +9,10 @@
     type="text/javascript"
     src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js">
     </script>
+<script
+    type="text/javascript"
+    src="{% static 'scripts/my-lightweight.js' %}">
+    </script>
 {% endblock %}
 
 {% block action_bar %}
@@ -20,17 +24,6 @@
 <style>
     table#sws tbody tr {
         cursor: pointer;
-    }
-
-    #chart button {
-        position: absolute;
-        z-index: 10; 
-        bottom: 4px;
-        padding: 0px 4px;
-        cursor: pointer;
-        border: 0px;
-        background-color: transparent;
-
     }
 
 </style>
@@ -140,6 +133,7 @@
 {% endblock %}
 
 {% block script %}
+{{ pnl_data|json_script:"pnl-data" }}
 <script>
 function sw_view(id)
 {
@@ -159,115 +153,35 @@ function toogle_details(tag_key)
         i.attr('class','bi bi-arrow-bar-up');
         $('.detail_'+tag_key).show();
     }
-
-    //bi bi-arrow-bar-up
-    //bi bi-arrow-bar-down
 }
-
-const formatDate = (dateString) => {
-    const date = new Date(dateString);
-           
-    var strDate = date.getFullYear() + "-" + 
-        (date.getMonth() + 1).toString().padStart(2, '0') + "-" + 
-        date.getDate().toString().padStart(2, '0');
-    return strDate;
-};
-
 
 $(document).ready(function () {
 
     toogle_details('OTHERS');
 
-    const chartContainer = document.getElementById('chart');
-
-    // Create the Lightweight Chart within the container element
-    const myPriceFormatter = p => p.toFixed(2);
-
-    const myTimeFormatter = (businessDay) => {
-        const fecha = new Date(businessDay);
-        const opcionesDeFormato = {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-        };
-        fecha.setHours(fecha.getHours() + 10);
-        return fecha.toLocaleDateString('es-ES', opcionesDeFormato);
-    };
-    
-    const chart = LightweightCharts.createChart(chartContainer, {
-        height: 400,
-        width: parseInt($('#chart').css('width')),
-        layout: {
-            background: { color: '#212529' },
-            textColor: '#DDD',
-        },
-        grid: {
-            vertLines: { color: '#444' },
-            horzLines: { color: '#444' },
-        },
-        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-        timeScale: { timeVisible: true, secondsVisible: false },
-        localization: {
-            priceFormatter: myPriceFormatter,
-            timeFormatter: myTimeFormatter, 
-            locale: 'es-ES',
-        }
-    });
-    chart.priceScale().applyOptions({
-        borderColor: '#71649C',
-    });
-    chart.timeScale().applyOptions({
-        borderColor: '#71649C',
-        barSpacing: 10,
-    });
-
-    window.addEventListener('resize', () => {
-        chart.resize(parseInt($('#chart').css('width')), 400);
-    });
-
-    const pnlSeries = chart.addSeries(LightweightCharts.LineSeries, {
-        lineWidth: 1,
-        lastValueVisible: true,
-        priceLineVisible: true,
-    });
-    pnlData = JSON.parse('{{ json_pnl_data|safe }}');
-    fullData = pnlData.map(rw => ({
-        time: rw.str_date,
-        value: rw.pnl,
-        color: rw.pnl < 0 ? '#f6465d' : '#0ecb81',
+    //Preparando los datos
+    const mainData = JSON.parse(document.getElementById('pnl-data').textContent);
+    const pnlData = mainData.map(d => ({
+        time: Date.parse(d[0])/1000,
+        value: d[1],
     }));
-    pnlSeries.setData(fullData);
 
-    const dataSize = fullData.length;
-    if (dataSize >= 90) {
-        chart.timeScale().setVisibleLogicalRange({
-            from: dataSize-90,
-            to: dataSize,
+    //Creando el chart
+    if (mainData.length>0){
+
+        const lwc = new LWC('chart',200);
+        
+        lwc.chart.applyOptions({
+            timeScale: { 
+                timeVisible: false, 
+            },
         });
+        
+        pnlSeries = lwc.addPnlSeries(pnlData);
+        
+        chart = lwc.getChart();
+
     }
-
-    //Elimina el link de TradingView y agrega botones de control
-    $('#chart').find('a').each( function () {
-        var parent = $(this).parent();
-        $(this).remove();
-        parent.append('<button id="full-button"  style="left: 5px;" title="Ver desde el inicio"><i class="bi bi-arrows-expand-vertical"></i></button>');
-        parent.append('<button id="reset-button" style="left: 30px;" title="Resetear vista"><i class="bi bi-bootstrap-reboot"></i></button>');
-    });
-
-    // Obtenemos la referencia al botón que creamos en el HTML
-    const resetButton = document.getElementById('reset-button');
-    const fullButton = document.getElementById('full-button');
-
-    resetButton.addEventListener('click', () => {
-        chart.timeScale().setVisibleLogicalRange({
-            from: dataSize-90,
-            to: dataSize,
-        });
-    });
-
-    fullButton.addEventListener('click', () => {
-        chart.timeScale().fitContent();
-    });
 
 });
 </script>
