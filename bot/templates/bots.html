@@ -94,10 +94,19 @@ $(document).ready(function () {
     if (mainData.length>0){
 
         const lwc = new LWC('chart',200);
-    
+        lwc.chart.applyOptions({
+            timeScale: { 
+                timeVisible: false, 
+            },
+        });
+        
         pnlSeries = lwc.addPnlSeries(pnlData);
-    
+        
         chart = lwc.getChart();
+        
+        
+        chart.timeScale().fitContent();
+
     }
 });
 

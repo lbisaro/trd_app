@@ -62,23 +62,28 @@ class LWC {
 
         addContainer.prepend('<div id="add-legends" style="position: absolute;z-index: 10; top: 0; left: 0; padding: 0px; border: 0px;background-color: transparent; "></div>');
         
+        addContainer.append('<button id="reset-button" style="'+this.btnStyle+' right: 30px;" title="Resetear vista"><i class="bi bi-bootstrap-reboot"></i></button>');
+        const resetButton = document.getElementById('reset-button');
+
         if (this.maxDataSize>100) {
             addContainer.append('<button id="full-button"  style="'+this.btnStyle+'  right: 5px;" title="Ver desde el inicio"><i class="bi bi-arrows-expand-vertical"></i></button>');
-            addContainer.append('<button id="reset-button" style="'+this.btnStyle+' right: 30px;" title="Resetear vista"><i class="bi bi-bootstrap-reboot"></i></button>');
-            
-            const resetButton = document.getElementById('reset-button');
             const fullButton = document.getElementById('full-button');
-    
+            fullButton.addEventListener('click', () => {
+                this.fullView();
+            });
             resetButton.addEventListener('click', () => {
                 this.minView();
             });
             
-            fullButton.addEventListener('click', () => {
+            this.minView();
+        }
+        else {
+            resetButton.addEventListener('click', () => {
                 this.fullView();
             });
+            this.fullView();
         }
         
-        this.minView();
         
         return this.chart;
     }
