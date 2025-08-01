@@ -1,6 +1,5 @@
 .html_alert ul li {
     list-style: none;
-
 }
 
 .data {
@@ -10,3 +9,8 @@
 .table-dg thead tr th {
     vertical-align: top;
 }
+
+#tv-attr-logo {
+    display: none;
+}
+
