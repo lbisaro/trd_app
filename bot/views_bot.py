@@ -19,6 +19,7 @@ from scripts.Bot_Core_utils import Order as ord_u
 @login_required
 def bots(request):
     bots = Bot.objects.filter(usuario=request.user).order_by('-activo','estrategia__nombre') 
+    
     formattedBots = []
     for b in bots:
         intervalo = fn.get_intervals(b.estrategia.interval_id,'binance')
@@ -32,9 +33,17 @@ def bots(request):
                              'activo': b.activo,
                              'status': status,
                              })
+
+    pnl_diario = BotPnl.get_pnl_diario_general()
+    pnl_diario['date'] = pd.to_datetime(pnl_diario['date'])
+    pnl_diario['str_dt'] = pnl_diario['date'].dt.strftime('%Y-%m-%d')
+    pnl_diario = pnl_diario[['str_dt', 'pnl']].copy()
+    pnl_diario = pnl_diario.values.tolist()
+
     if request.method == 'GET':
         return render(request, 'bots.html',{
             'bots': formattedBots,
+            'pnl_diario': pnl_diario,
         })
 
 @login_required

@@ -4,6 +4,19 @@
 
 {% load static %}
 
+{% block head %}
+<script
+    type="text/javascript"
+    src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js">
+    </script>
+
+<script
+    type="text/javascript"
+    src="{% static 'scripts/my-lightweight.js' %}">
+    </script>
+
+{% endblock %}
+
 {% block action_bar %}
 <a class="btn btn-primary btn-sm" href="{% url 'bot_create' %}">Crear bot</a>
 {% endblock %}
@@ -33,7 +46,9 @@
 {% endblock %}
 
 {% block content %}
-
+<h6 class="text-info text-center">PNL General</h6>
+<div class="container" id="chart"></div>
+<h6 class="text-info text-center">Bots</h6>
 <div class="container">
     <div class="d-flex flex-wrap">
         {% for b in bots %}
@@ -57,11 +72,35 @@
         {% endfor %}
     </div>
 </div>
+
+
     
 {% endblock %}
 
 {% block script %}
+{{ pnl_diario|json_script:"pnl-diario" }}
 <script>
+
+$(document).ready(function () {
+
+    //Preparando los datos
+    const mainData = JSON.parse(document.getElementById('pnl-diario').textContent);
+    const pnlData = mainData.map(d => ({
+        time: Date.parse(d[0])/1000,
+        value: d[1],
+    }));
+
+    //Creando el chart
+    if (mainData.length>0){
+
+        const lwc = new LWC('chart',200);
+    
+        pnlSeries = lwc.addPnlSeries(pnlData);
+    
+        chart = lwc.getChart();
+    }
+});
+
 function ver(id)
 {
     window.location = '{% url "bot" 0 %}'.replace('0',id);

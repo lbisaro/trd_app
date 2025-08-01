@@ -3,7 +3,8 @@ from django.db import models, connection
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from django.db.models import Sum, F, Case, When, Value, FloatField
+from django.db.models import Sum, F, Case, When, Value, FloatField, Max
+from django.db.models.functions import TruncDay
 
 import scripts.functions as fn
 import os, fnmatch
@@ -908,6 +909,36 @@ class BotPnl(models.Model):
     class Meta:
         verbose_name = "Bot PNL"
         verbose_name_plural='Bot PNL'
+
+    def get_pnl_diario_general():
+        """
+        Genera un DataFrame de pandas con el PNL total diario de todos los bots,
+        tomando el último valor registrado de cada bot por día.
+        """
+        # Paso 1: Obtener la última entrada de PNL para cada bot en cada día
+        latest_entries_per_day = BotPnl.objects.annotate(
+            date=TruncDay('datetime')
+        ).values('date', 'bot_id').annotate(
+            latest_datetime=Max('datetime')
+        ).values('latest_datetime')
+
+        # Paso 2: Obtener los datos de PNL correspondientes a esas últimas entradas
+        latest_pnl_data = BotPnl.objects.filter(
+            datetime__in=latest_entries_per_day
+        ).values('datetime', 'pnl')
+
+        # Paso 3: Crear el DataFrame de pandas
+        df = pd.DataFrame(list(latest_pnl_data))
+
+        # Paso 4: Procesar el DataFrame para obtener el PNL total diario
+        # Convertir 'datetime' a formato de fecha para agrupar por día
+        df['date'] = df['datetime'].dt.date
+
+        # Agrupar por fecha y sumar el PNL
+        pnl_diario = df.groupby('date')['pnl'].sum().reset_index()
+
+        return pnl_diario
+
         
 class BotOrderLog(models.Model):
 
