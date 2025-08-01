@@ -103,7 +103,7 @@ class LWC {
         const priceSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
             priceFormat: {
                 type: 'custom',
-                formatter: (price) => `${price.toFixed(precision)} USDT`,
+                formatter: (price) => `${price.toFixed(precision)}`,
             },
             lastValueVisible: true,
             priceLineVisible: true,
@@ -125,7 +125,7 @@ class LWC {
         const pnlSeries = this.chart.addSeries(LightweightCharts.BaselineSeries, {
             priceFormat: {
                 type: 'custom',
-                formatter: (price) => `${price.toFixed(precision)} USDT`,
+                formatter: (price) => `${price.toFixed(precision)}`,
             },
             baseValue: { type: 'price', price: -0.0001 },
             topLineColor: '#0ecb81',
