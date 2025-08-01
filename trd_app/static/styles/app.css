@@ -10,3 +10,7 @@
 .table-dg thead tr th {
     vertical-align: top;
 }
+
+#tv-attr-logo {
+    display: none;
+}

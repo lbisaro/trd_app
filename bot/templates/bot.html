@@ -5,6 +5,19 @@
 {% load static %}
 {% load tz %}
 
+{% block head %}
+<script
+    type="text/javascript"
+    src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js">
+    </script>
+
+<script
+    type="text/javascript"
+    src="{% static 'scripts/my-lightweight.js' %}">
+    </script>
+
+{% endblock %}
+
 {% block action_bar %}
 
 <a class="btn btn-secondary  btn-sm" href="{% url 'get_resultados' bot_id %}">Ver resultados</a>
@@ -150,12 +163,10 @@
                         </table>
                     </div>
                 </div>
-                {% if chart %}
                 <div class="row pt-4">  
                     <h6 class="text-info">Grafico</h6>
-                    {{ chart|safe }}
+                    <div id="chart"></div>
                 </div>
-                {% endif %}
             </div>
             
             <div class="tab-pane fade" id="trades-tab-pane" role="tabpanel" aria-labelledby="trades-tab" tabindex="0">
@@ -223,14 +234,72 @@
 
 <input type="hidden" id="bot_id" value="{bot_id}" >
 
+
+
+
+
 {% endblock %}
 
 {% block script %}
+{{ main_data|json_script:"main-data" }}
 <script>
 
 $(document).ready( function () {
-    //get_resultados()
     $('#open_orders').show()
+
+    const qd_price =  {{qd_price}};
+    const symbol = '{{symbol}}';
+    
+    //Preparando los datos
+    const mainData = JSON.parse(document.getElementById('main-data').textContent);
+    const priceData = mainData.map(d => ({
+        time: Date.parse(d[0])/1000,
+        value: d[1]
+    }));
+    const pnlData = mainData.map(d => ({
+        time: Date.parse(d[0])/1000,
+        value: d[2],
+    }));
+
+    //Creando el chart
+    if (mainData.length>0){
+
+        const lwc = new LWC('chart',400);
+    
+        priceSeries = lwc.addPriceSeries(priceData,0 ,0 , qd_price, symbol);
+        
+            pnlSeries = lwc.addPnlSeries(pnlData, 1, 100);
+    
+        chart = lwc.getChart();
+    
+    
+        /////////////////////////////////////////////////////////////////////////////////////
+        /*
+        var panes = chart.panes();
+        
+        // Itera a través de cada panel
+        for (const pane of panes) {
+            // Obtiene una lista de todas las series en el panel actual
+            const seriesList = pane.getSeries();
+            
+            legends = $('#add-legends');
+            
+            // Itera a través de cada serie en la lista
+            for (const series of seriesList) {
+                const options = series.options();            
+                const title = options.title || '';
+                const color = options.color || '#d2cdcd';
+                
+                if (title)
+                legends.append(`<span style="color:${color};padding: 0px 4px 0px 0px;">${title}</span>`);
+                
+            }
+        }
+        
+        */
+    }
+
+
 })
 function get_resultados() {
     url = '{% url "get_resultados" bot_id %}';
