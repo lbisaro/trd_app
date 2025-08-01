@@ -18,12 +18,7 @@ class BotTop30(Bot_Core):
     rsmpl = 0
     trail = 0
 
-    indicadores = [
-            #{'col': 'ZigZag', 'name': 'ZigZag', 'color': 'gray', 'row': 1,  'mode':'lines',},             
-            #{'col': 'long_fbe_0', 'name': 'Fibonacci Signal', 'color': 'gray', 'row': 1,  'mode':'markers','symbol':'circle-dot',},             
-            #{'col': 'long_fbe_1', 'name': 'Fibonacci TakeProfit', 'color': 'green', 'row': 1,  'mode':'markers','symbol':'circle-dot',},             
-            #{'col': 'long_fbe_2', 'name': 'Fibonacci StopLoss', 'color': 'red', 'row': 1,  'mode':'markers','symbol':'circle-dot',},             
-            ]
+    indicadores = []
 
 
     def __init__(self):
@@ -106,33 +101,6 @@ class BotTop30(Bot_Core):
         self.graph_open_orders = True
         self.graph_signals = True
 
-    """
-    def get_status(self):
-        status_datetime = dt.datetime.now()
-        status = super().get_status()
-        
-        if 'trend' in self.row:
-            if self.row['trend'] >= 2:
-                cls = 'text-success'
-                trend = 'Alza+'
-            elif self.row['trend'] == 1:
-                cls = 'text-success'
-                trend = 'Alza'
-            elif self.row['trend'] == -1:
-                cls = 'text-danger'
-                trend = 'Baja'
-            elif self.row['trend'] <= -2:
-                cls = 'text-danger'
-                trend = 'Baja+'
-            else: 
-                cls = ''
-                trend = 'Neutral'
-            status['trend'] = {'l': 'Tendencia','v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.row['trend'], 'cls': cls}
-
-            status['pivots'] = None
-        return status    
-    """
-
     def next(self):
 
         self.position = False
@@ -171,6 +139,4 @@ class BotTop30(Bot_Core):
     def on_order_execute(self, order):
         if order.side == Order.SIDE_SELL:
             self.cancel_orders()
-        #if order.side == Order.SIDE_BUY:
-        #    print('Ejecuto')
 
