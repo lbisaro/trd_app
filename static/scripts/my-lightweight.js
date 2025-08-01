@@ -65,7 +65,7 @@ class LWC {
         addContainer.append('<button id="reset-button" style="'+this.btnStyle+' right: 30px;" title="Resetear vista"><i class="bi bi-bootstrap-reboot"></i></button>');
         const resetButton = document.getElementById('reset-button');
 
-        if (this.maxDataSize>100) {
+        if (this.maxDataSize>this.minDataSize) {
             addContainer.append('<button id="full-button"  style="'+this.btnStyle+'  right: 5px;" title="Ver desde el inicio"><i class="bi bi-arrows-expand-vertical"></i></button>');
             const fullButton = document.getElementById('full-button');
             fullButton.addEventListener('click', () => {
