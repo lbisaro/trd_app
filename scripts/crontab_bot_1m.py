@@ -9,7 +9,6 @@ from scripts.app_log import app_log as Log
 import time
 
 def run():
-
     #Delay para obtener la vela correcta
     time.sleep(5)
     
@@ -150,6 +149,7 @@ def run():
             botClass.exchange = exch
             botClass.price = price
             botClass.exchange_wallet = exchange_wallet
+            botClass.estrategia_nombre = estr.nombre 
             execRes = botClass.live_execute(just_check_orders)
 
             #if len(execRes) > 0:

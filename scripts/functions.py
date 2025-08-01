@@ -459,6 +459,7 @@ def telegram_send(MESSAGE):
         response = requests.post(url, data=payload, timeout=10)  #timeout: espera máxima en segundos
         return response
     except requests.exceptions.Timeout:
+        print(MESSAGE)
         print("La solicitud a Telegram se demoró demasiado y fue abortada.")
         return None
     except requests.exceptions.RequestException as e:

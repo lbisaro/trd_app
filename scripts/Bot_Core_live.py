@@ -40,6 +40,7 @@ class Bot_Core_live:
         self.live = True
 
         self.log.bot_id = self.bot_id
+        self.log.bot_strategy = self.estrategia_nombre
         self.log.username = self.username
         
         jsonRsp = {}

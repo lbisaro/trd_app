@@ -1,12 +1,13 @@
 from scripts.app_log import app_log as Log
 
 class BotCoreLog(Log):
+    bot_strategy = ''
     bot_id = 0
     username = ''
 
     def write(self,type,msg):
         if self.bot_id>0:
-            bot_ref = f'Bot#{self.bot_id}'
+            bot_ref = f'Bot#{self.bot_id} {self.bot_strategy}'
         else:
             bot_ref = 'Strat'
         msg = f'{self.username} {bot_ref} {msg}'
