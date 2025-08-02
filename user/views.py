@@ -15,6 +15,7 @@ import os
 from scripts.Exchange import Exchange
 from django.conf import settings 
 from scripts.crontab_top30_alerts import breadth_file, top30_alerts
+from scripts.functions import get_intervals
 
 @login_required
 def home(request):
@@ -24,10 +25,12 @@ def home(request):
     timeframe_base = ''
     timeframe_agregado = ''
     status = {}
+    tf_data = {}
 
     interval_ids = top30_alerts.interval_ids
     print('Live:','default',top30_alerts.get_live_breadth())
     for interval_id in interval_ids:
+        tf_data[interval_id] = {}
         print('Live:',interval_id,top30_alerts.get_live_breadth(interval_id))
 
 
@@ -40,6 +43,12 @@ def home(request):
             last_update = status['last_update']
             timeframe_base = status['timeframe_base']
             timeframe_agregado = status['timeframe_agregado']
+            tf_data = status['tf_data']
+    
+    for interval_id in interval_ids:
+        tf_data[interval_id]['interval'] = get_intervals(interval_id,'binance')
+
+    print(tf_data)
     breadth_class = 'text-secondary'
     if breadth == 100:
         str_breadth = 'En alerta de Venta'
@@ -54,12 +63,17 @@ def home(request):
     else:
         str_breadth = 'Neutral'
     
+    for interval_id in interval_ids:
+        tf_data[interval_id]['interval'] = get_intervals(interval_id,'binance')
+
+    print(tf_data)
 
     return render(request, 'home.html', context = {
         'breadth': breadth, 
         'alerts_log': alerts_log, 
         'str_breadth': str_breadth,
         'breadth_class': breadth_class,
+        'tf_data': tf_data,
         'last_update': last_update,
         'timeframe_base': timeframe_base,
         'timeframe_agregado': timeframe_agregado,
