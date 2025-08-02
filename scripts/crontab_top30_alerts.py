@@ -156,8 +156,8 @@ class top30_alerts:
                 self.alerts_log.append(f'{last_update} - {str_alert}')
         
         self.breadth = 50
-        if self.interval in tf_data and 'breadth' in tf_data[self.interval]:
-            self.breadth = tf_data[self.interval]['breadth']
+        if self.interval_id in tf_data and 'breadth' in tf_data[self.interval]:
+            self.breadth = tf_data[self.interval_id]['breadth']
         
         
         status = {'breadth': self.breadth,
