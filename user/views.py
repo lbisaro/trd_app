@@ -14,7 +14,7 @@ import os
 
 from scripts.Exchange import Exchange
 from django.conf import settings 
-from scripts.crontab_top30_alerts import breadth_file
+from scripts.crontab_top30_alerts import breadth_file, top30_alerts
 
 @login_required
 def home(request):
@@ -24,6 +24,13 @@ def home(request):
     timeframe_base = ''
     timeframe_agregado = ''
     status = {}
+
+    interval_ids = top30_alerts.interval_ids
+    print('Live:','default',top30_alerts.get_live_breadth())
+    for interval_id in interval_ids:
+        print('Live:',interval_id,top30_alerts.get_live_breadth(interval_id))
+
+
     
     if os.path.exists(breadth_file):
         with open(breadth_file, "rb") as archivo:
