@@ -65,7 +65,6 @@
 
 <div class="container pt-4">
     <h6 class="text-info text-center">PNL Historico</h6>
-    <div class="text-secondary text-end" style="padding-right: 20px;">USDT</div>
     <div id="chart"></div>
 </div>
 
@@ -178,6 +177,13 @@ $(document).ready(function () {
         });
         
         pnlSeries = lwc.addPnlSeries(pnlData);
+        pnlSeries.applyOptions({
+            title: '',
+            priceFormat: {
+                type: 'custom',
+                formatter: (price) => `${price.toFixed(2)}`,
+            },
+            });
         
         chart = lwc.getChart();
 
