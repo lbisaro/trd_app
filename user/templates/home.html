@@ -25,7 +25,7 @@
             <div>
                 <ul>
                 {% for clave, item in tf_data.items %}
-                    <li>Breadth #{{ item.interval }}: {{ item.breadth }}</li>
+                    <li>Breadth #{{ item.interval }}: {{ item.breadth }} ({{ item.total_ok }} Pares)</li>
                 {% endfor %}
                 </ul>
             </div>
