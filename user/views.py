@@ -48,7 +48,6 @@ def home(request):
     for interval_id in interval_ids:
         tf_data[interval_id]['interval'] = get_intervals(interval_id,'binance')
 
-    print(tf_data)
     breadth_class = 'text-secondary'
     if breadth == 100:
         str_breadth = 'En alerta de Venta'
@@ -65,8 +64,6 @@ def home(request):
     
     for interval_id in interval_ids:
         tf_data[interval_id]['interval'] = get_intervals(interval_id,'binance')
-
-    print(tf_data)
 
     return render(request, 'home.html', context = {
         'breadth': breadth, 
