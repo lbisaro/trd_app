@@ -64,10 +64,13 @@ class top30_alerts:
                         self.history = {}
 
     
-    def get_live_breadth(interval_id='1h04'):
+    def get_live_breadth(interval_id='default'):
         with open(breadth_file, "rb") as archivo:
             status = pickle.load(archivo)
-            return status['tf_data'][interval_id]['breadth']
+            if interval_id == 'default':
+                return status['breadth']
+            else:
+                return status['tf_data'][interval_id]['breadth']
         
     def bootstrap_klines(self):
         print('Obteniendo informacion del exchange')
