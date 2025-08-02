@@ -136,9 +136,9 @@ class top30_alerts:
             total_above = tf_data[interval_id]['total_above'] 
             breadth = (total_above/total_ok)*100
             pre_breadth = 50
-            if 'breadth' in tf_data[interval_id]:
+            if interval_id in self.tf_data and 'breadth' in tf_data[interval_id]:
                 pre_breadth = self.tf_data[interval_id]['breadth']
-            print(interval_id,pre_breadth)
+            
             tf_data[interval_id]['breadth'] = round(breadth,2)
             str_alert = ''
             if pre_breadth < 100 and breadth == 100:
