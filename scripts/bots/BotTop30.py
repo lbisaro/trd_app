@@ -99,19 +99,22 @@ class BotTop30(Bot_Core):
 
         self.print_orders = False
         self.graph_open_orders = True
-        self.graph_signals = True
+        self.graph_signals = False
 
     def next(self):
 
         self.position = False
-        avg_price = 0
-        if self.wallet_base*self.price >= 2:
-            self.position = True
-            if 'pos___avg_price' in self.status:
-                avg_price = self.status['pos___avg_price']['r']
+        last_buy_price = 0
+
+        for id in self._trades:
+            o = self._trades[id]
+            if o.side == Order.SIDE_BUY and o.pos_order_id == 0:
+                self.position = True
+                last_buy_price = o.price
         
         if self.row['signal'] == 'COMPRA': 
-            if avg_price == 0 or self.price < (avg_price * (1-self.distance/100)):
+            if not self.position or self.price < (last_buy_price * (1-self.distance/100)):
+                
                 cash = 0
                 if self.interes == 's': #Interes Simple
                     quote_to_buy = round(self.quote_qty * (self.quote_perc/100),self.qd_quote)
@@ -129,8 +132,7 @@ class BotTop30(Bot_Core):
                             self.update_order_by_tag(tag="BUY_LIMIT",limit_price=limit_price,qty=qty)
                     else:
                         self.buy_limit(qty=qty,limit_price=limit_price,flag=Order.FLAG_STOPLOSS,tag='BUY_LIMIT')
-
-
+            
         elif self.row['signal'] == 'VENTA' and self.wallet_base>0:
             self.close(flag=Order.FLAG_TAKEPROFIT)
         
