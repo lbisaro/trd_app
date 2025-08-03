@@ -243,6 +243,7 @@
 {% block script %}
 {{ main_data|json_script:"main-data" }}
 {{ orders_data|json_script:"orders-data" }}
+{{ trades_data|json_script:"trades-data" }}
 <script>
 
 $(document).ready( function () {
@@ -261,6 +262,12 @@ $(document).ready( function () {
         time: Date.parse(d[0])/1000,
         value: d[2],
     }));
+    const tradesDataJSON = JSON.parse(document.getElementById('trades-data').textContent);
+    const tradesData = tradesDataJSON.map(d => ({
+        time: Date.parse(d[0])/1000,
+        value: d[1],
+        side: d[2],
+    }));
     const ordersDataJSON = JSON.parse(document.getElementById('orders-data').textContent);
     const ordersData = ordersDataJSON.map(d => ({
         time: Date.parse(d[0])/1000,
@@ -278,10 +285,13 @@ $(document).ready( function () {
         
         pnlSeries = lwc.addPnlSeries(pnlData, 1, 100);
 
-        orderSeries = lwc.addOrdersSeries(ordersData )
+        tradesSeries = lwc.addTradesSeries(tradesData )
+
+        ordersSeries = lwc.addOrdersSeries(ordersData )
         
         chart = lwc.getChart();
             
+        
 
     
     

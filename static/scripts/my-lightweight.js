@@ -146,6 +146,43 @@ class LWC {
         return pnlSeries;
     }
 
+    addTradesSeries(tradesData, pane = 0) {
+        const tradesSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
+            lineWidth: 1,
+            priceLineVisible: false,
+            crosshairMarkerVisible: false,
+            color: 'transparent',
+        }, pane);
+        tradesSeries.setData(tradesData);
+
+        var markers = []
+        for (let i = 0; i < tradesData.length; i++) {
+        
+            if (tradesData[i].side == 0)
+            {
+                markers.push({
+                    time: tradesData[i].time,
+                    position: 'inBar',
+                    color: tradesData[i].side = '#0ecb81',
+                    shape: 'arrowUp',
+                });
+
+            }
+            else
+            {
+                markers.push({
+                    time: tradesData[i].time,
+                    position: 'inBar',
+                    color: tradesData[i].side = '#f6465d',
+                    shape: 'arrowDown',
+                });
+
+            }
+            
+        }
+        return LightweightCharts.createSeriesMarkers(tradesSeries, markers);
+    }
+
 
     addOrdersSeries(ordersData, pane = 0) {
         const ordersSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
@@ -165,7 +202,7 @@ class LWC {
                     time: ordersData[i].time,
                     position: 'inBar',
                     color: ordersData[i].side = '#0ecb81',
-                    shape: 'arrowUp',
+                    shape: 'circle',
                 });
 
             }
@@ -173,16 +210,19 @@ class LWC {
             {
                 markers.push({
                     time: ordersData[i].time,
-                    position: 'belowBar',
+                    position: 'inBar',
                     color: ordersData[i].side = '#f6465d',
-                    shape: 'arrowDown',
+                    shape: 'circle',
+                    size: 0.5,
                 });
 
             }
             
         }
         return LightweightCharts.createSeriesMarkers(ordersSeries, markers);
-
     }
+
+
+    
     
 }
