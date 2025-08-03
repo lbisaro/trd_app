@@ -177,14 +177,7 @@ $(document).ready(function () {
         });
         
         pnlSeries = lwc.addPnlSeries(pnlData);
-        pnlSeries.applyOptions({
-            title: '',
-            priceFormat: {
-                type: 'custom',
-                formatter: (price) => `${price.toFixed(2)}`,
-            },
-            });
-        
+                
         chart = lwc.getChart();
 
     }
