@@ -134,7 +134,7 @@ class LWC {
             bottomLineColor: '#f6465d',
             bottomFillColor1: 'transparent',
             bottomFillColor2: 'rgba( 239, 83, 80, 0.28)',
-            title: 'PNL',
+            //title: 'PNL',
             lineWidth: 1,
             priceLineVisible: false,
             crosshairMarkerVisible: false,
