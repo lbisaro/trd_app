@@ -106,7 +106,6 @@ class LWC {
                 formatter: (price) => `${price.toFixed(precision)}`,
             },
             lastValueVisible: true,
-            priceLineVisible: true,
             lineWidth: 1,
             title: title,
             color: '#f8b935',
@@ -146,4 +145,44 @@ class LWC {
             this.maxDataSize = pnlData.length
         return pnlSeries;
     }
+
+
+    addOrdersSeries(ordersData, pane = 0) {
+        const ordersSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
+            lineWidth: 1,
+            priceLineVisible: false,
+            crosshairMarkerVisible: false,
+            color: 'transparent',
+        }, pane);
+        ordersSeries.setData(ordersData);
+
+        var markers = []
+        for (let i = 0; i < ordersData.length; i++) {
+        
+            if (ordersData[i].side == 0)
+            {
+                markers.push({
+                    time: ordersData[i].time,
+                    position: 'inBar',
+                    color: ordersData[i].side = '#0ecb81',
+                    shape: 'arrowUp',
+                });
+
+            }
+            else
+            {
+                markers.push({
+                    time: ordersData[i].time,
+                    position: 'belowBar',
+                    color: ordersData[i].side = '#f6465d',
+                    shape: 'arrowDown',
+                });
+
+            }
+            
+        }
+        return LightweightCharts.createSeriesMarkers(ordersSeries, markers);
+
+    }
+    
 }

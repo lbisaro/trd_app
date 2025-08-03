@@ -242,6 +242,7 @@
 
 {% block script %}
 {{ main_data|json_script:"main-data" }}
+{{ orders_data|json_script:"orders-data" }}
 <script>
 
 $(document).ready( function () {
@@ -260,6 +261,13 @@ $(document).ready( function () {
         time: Date.parse(d[0])/1000,
         value: d[2],
     }));
+    const ordersDataJSON = JSON.parse(document.getElementById('orders-data').textContent);
+    const ordersData = ordersDataJSON.map(d => ({
+        time: Date.parse(d[0])/1000,
+        value: d[1],
+        side: d[2],
+    }));
+
 
     //Creando el chart
     if (mainData.length>0){
@@ -268,9 +276,13 @@ $(document).ready( function () {
     
         priceSeries = lwc.addPriceSeries(priceData,0 ,0 , qd_price, symbol);
         
-            pnlSeries = lwc.addPnlSeries(pnlData, 1, 100);
-    
+        pnlSeries = lwc.addPnlSeries(pnlData, 1, 100);
+
+        orderSeries = lwc.addOrdersSeries(ordersData )
+        
         chart = lwc.getChart();
+            
+
     
     
         /////////////////////////////////////////////////////////////////////////////////////
