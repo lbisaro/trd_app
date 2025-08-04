@@ -11179,9 +11179,9 @@
                       , h = i.ut - e;
                     t.fillRect(r, h, n * i.hb, n * i.hb)
                 }(i, s, t.zr)
-            case "line":
+            case "dashLine":
                 return void function(t, i, s) {
-                    const n = qe("square", s); // / 3; // Usa el tamaño del cuadrado/3 como referencia
+                    const n = qe("square", s)/2; // Usa el tamaño del cuadrado/2 como referencia
                     const e = (n - 1) * i.hb / 2;
                     const r = i._t - e; // Coordenada X inicial
                     const h = i.ut;      // Coordenada Y
@@ -11194,8 +11194,24 @@
                         t.moveTo(ji, h);
                         t.lineTo(ji+inc/2, h);                    
                     }
-                    //t.moveTo(r, h);
-                    //t.lineTo(r + n * i.hb, h); // Dibuja la línea horizontal
+                    t.strokeStyle = t.fillStyle; // Usa el color del marcador
+                    t.lineWidth = 1; // Un grosor de 1 píxel
+                    t.stroke();
+                    t.closePath();
+
+                }(i, s, t.zr);
+            case "line":
+                return void function(t, i, s) {
+                    const n = qe("square", s)/2; // Usa el tamaño del cuadrado/2 como referencia
+                    const e = (n - 1) * i.hb / 2;
+                    const r = i._t - e; // Coordenada X inicial
+                    const h = i.ut;      // Coordenada Y
+                    
+                    t.beginPath();
+                    const start = r;
+                    const end = r + n * i.hb;
+                    t.moveTo(start, h);
+                    t.lineTo(end, h);                    
                     t.strokeStyle = t.fillStyle; // Usa el color del marcador
                     t.lineWidth = 1; // Un grosor de 1 píxel
                     t.stroke();
@@ -11240,6 +11256,17 @@
                       , l = i - h;
                     return n >= a && n <= a + r && e >= l && e <= l + r
                 }(t._t, t.ut, t.zr, i, s)
+            case "dashLine":
+                return function(t, i, s, n, e) {
+                    const r = qe("square", s);
+                    const h = (r - 1) / 2;
+                    const a = t - h; // X inicial
+                    const l = i;      // Y
+
+                    // Comprueba si el mouse (n, e) está en el rectángulo del "dashLine"
+                    // Se da una tolerancia vertical de 2 píxeles para que sea más fácil hacer clic
+                    return n >= a && n <= a + r && e >= l - 2 && e <= l + 2;
+                }(t._t, t.ut, t.zr, i, s);
             case "line":
                 return function(t, i, s, n, e) {
                     const r = qe("square", s);
@@ -11247,7 +11274,7 @@
                     const a = t - h; // X inicial
                     const l = i;      // Y
 
-                    // Comprueba si el mouse (n, e) está en el rectángulo del "line"
+                    // Comprueba si el mouse (n, e) está en el rectángulo del "dashLine"
                     // Se da una tolerancia vertical de 2 píxeles para que sea más fácil hacer clic
                     return n >= a && n <= a + r && e >= l - 2 && e <= l + 2;
                 }(t._t, t.ut, t.zr, i, s);
