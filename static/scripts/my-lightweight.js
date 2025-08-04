@@ -213,7 +213,6 @@ class LWC {
                     position: 'inBar',
                     color: ordersData[i].side = '#f6465d',
                     shape: 'circle',
-                    size: 0.5,
                 });
 
             }
@@ -222,7 +221,4 @@ class LWC {
         return LightweightCharts.createSeriesMarkers(ordersSeries, markers);
     }
 
-
-    
-    
 }
