@@ -6,19 +6,19 @@
 {% load tz %}
 
 {% block head %}
-<script
+<!--
+    <script
     type="text/javascript"
     src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js">
-    </script>
-
-    <!--
-    
-         https://unpkg.com/lightweight-charts@4.0.1/dist/lightweight-charts.standalone.production.js
-    -->
-
+</script>
+-->
 <script
     type="text/javascript"
-    src="{% static 'scripts/my-lightweight.js' %}">
+    src="{% static 'scripts/lwc.original.js' %}?v1">
+    </script>
+<script
+    type="text/javascript"
+    src="{% static 'scripts/my-lightweight.js' %}?v1">
     </script>
 
 {% endblock %}

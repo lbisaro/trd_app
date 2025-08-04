@@ -153,20 +153,20 @@ class LWC {
         return pnlSeries;
     }
 
-    addTradesSeries(tradesData, pane = 0) {
-        const tradesSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
+    addTradesSeries(data, pane = 0) {
+        const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
             lineWidth: 1,
             priceLineVisible: false,
             crosshairMarkerVisible: false,
             color: 'transparent',
         }, pane);
-        tradesSeries.setData(tradesData);
+        serie.setData(data);
 
         var markers = []
-        for (let i = 0; i < tradesData.length; i++) {
-            if (tradesData[i].side == 0) {
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].side == 0) {
                 markers.push({
-                    time: tradesData[i].time,
+                    time: data[i].time,
                     position: 'inBar',
                     color: '#0ecb81',
                     shape: 'arrowUp',
@@ -174,17 +174,50 @@ class LWC {
             }
             else {
                 markers.push({
-                    time: tradesData[i].time,
+                    time: data[i].time,
                     position: 'inBar',
                     color: '#f6465d',
                     shape: 'arrowDown',
                 });
             }
         }
-        return LightweightCharts.createSeriesMarkers(tradesSeries, markers);
+        return LightweightCharts.createSeriesMarkers(serie, markers);
     }
 
-    addOrdersSeries(ordersData, pane = 0) {
+    addOrdersSeries(data, pane = 0) {
+        const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
+            lineWidth: 1,
+            priceLineVisible: false,
+            crosshairMarkerVisible: false,
+            color: 'transparent',
+        }, pane);
+        serie.setData(data);
+
+        var markers = []
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].side == 0) {
+                markers.push({
+                    time: data[i].time,
+                    position: 'inBar',
+                    color: '#0ecb81',
+                    shape: 'dash',
+                    size: 1,
+                });
+            }
+            else {
+                markers.push({
+                    time: data[i].time,
+                    position: 'inBar',
+                    color: '#f6465d',
+                    shape: 'dash',
+                    size: 1,
+                });
+            }
+        }
+        return LightweightCharts.createSeriesMarkers(serie, markers);
+    }
+
+    __addOrdersSeries(ordersData, pane = 0) {
         const myCustomSeries = new MyCustomSeries();
 
         const data = ordersData.map(d => ({
