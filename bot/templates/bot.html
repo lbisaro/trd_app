@@ -285,6 +285,7 @@ $(document).ready( function () {
     if (mainData.length>0){
 
         const lwc = new LWC('chart',400);
+        lwc.minDataSize = 500
     
         priceSeries = lwc.addPriceSeries(priceData,0 ,0 , qd_price, '');
         
