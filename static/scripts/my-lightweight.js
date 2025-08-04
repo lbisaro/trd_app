@@ -200,8 +200,7 @@ class LWC {
                     time: data[i].time,
                     position: 'inBar',
                     color: '#0ecb81',
-                    shape: 'line',
-                    size: 1,
+                    shape: 'dashLine',
                 });
             }
             else {
@@ -209,155 +208,11 @@ class LWC {
                     time: data[i].time,
                     position: 'inBar',
                     color: '#f6465d',
-                    shape: 'line',
-                    size: 1,
+                    shape: 'dashLine',
                 });
             }
         }
         return LightweightCharts.createSeriesMarkers(serie, markers);
     }
 
-    __addOrdersSeries(ordersData, pane = 0) {
-        const myCustomSeries = new MyCustomSeries();
-
-        const data = ordersData.map(d => ({
-            time: d.time,
-            value: d.value,
-            color: d.side>0 ? '#f6465d' : '#0ecb81',
-        }));
-        const ordersSeries = this.chart.addCustomSeries(myCustomSeries, {
-            priceLineVisible: false,
-            lastValueVisible: false,
-            pattern: 'circle',
-            size: 3,
-        }, pane);
-        ordersSeries.setData(data);
-
-        
-        return ordersSeries;
-    }
 } 
-
-// ===============================================================
-// CLASES PARA LA SERIE PERSONALIZADA 
-// ===============================================================
-
-// La colección de SVGs no cambia.
-const svgTemplates = {
-    circle: `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="{size}" height="{size}">
-            <circle cx="50" cy="50" r="50" fill="{color}" />
-        </svg>`,
-    square: `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="{size}" height="{size}">
-            <rect width="100" height="100" fill="{color}" />
-        </svg>`,
-    triangle: `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="{size}" height="{size}">
-            <polygon points="50,0 100,100 0,100" fill="{color}" />
-        </svg>`,
-};
-
-class MyCustomSeriesRenderer {
-    constructor(primitive) {
-        this._primitive = primitive;
-        this._data = null;
-        this._options = null;
-        this._imageCache = new Map();
-    }
-
-    update(data, options) {
-        this._data = data;
-        this._options = options;
-    }
-
-    draw(target, priceToCoordinate) {
-        if (!this._data?.bars.length || !this._data.visibleRange || !this._options) {
-            return;
-        }
-
-        target.useBitmapCoordinateSpace(scope => {
-            const ctx = scope.context;
-            for (let i = this._data.visibleRange.from; i < this._data.visibleRange.to; i++) {
-                const bar = this._data.bars[i];
-                const y = priceToCoordinate(bar.originalData.value);
-                const x = bar.x;
-                const pointPattern = bar.originalData.pattern || this._options.pattern;
-                const pointColor = bar.barColor || this._options.color;
-                const pointSize = bar.originalData.size || this._options.size;
-
-                if (x !== null && y !== null) {
-                    this._drawShape(ctx, x, y, pointSize, pointSize, pointColor, pointPattern);
-                }
-            }
-        });
-    }
-
-    _drawShape(ctx, x, y, width, height, color, pattern) {
-        const cacheKey = `${pattern}_${color}_${width}`;
-        let imageInfo = this._imageCache.get(cacheKey);
-
-        if (!imageInfo) {
-            const template = svgTemplates[pattern] || svgTemplates['circle'];
-            const finalSvg = template
-                .replace('{color}', color)
-                .replace(/{size}/g, width);
-            const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
-            const image = new Image(width, height);
-            image.src = url;
-            imageInfo = { image: image, loaded: false };
-            this._imageCache.set(cacheKey, imageInfo);
-
-            image.onload = () => {
-                imageInfo.loaded = true;
-                URL.revokeObjectURL(url);
-                this._primitive.requestUpdate();
-            };
-        }
-        
-        if (imageInfo.loaded) {
-            ctx.drawImage(imageInfo.image, x - width / 2, y - height / 2, width, height);
-        }
-    }
-}
-
-
-class MyCustomSeries {
-    constructor() {
-        this._renderer = new MyCustomSeriesRenderer(this);
-        this._requestUpdate = () => {};
-    }
-
-    attached({ requestUpdate }) {
-		this._requestUpdate = requestUpdate;
-	}
-
-    requestUpdate() {
-        this._requestUpdate();
-    }
-
-    renderer() {
-        return this._renderer;
-    }
-
-    update(data, options) {
-        this._renderer.update(data, options);
-    }
-    
-    // ... (resto de la clase sin cambios) ...
-    defaultOptions() {
-        return {
-            ...LightweightCharts.customSeriesDefaultOptions,
-            color: 'gray',
-            size: 5,
-            pattern: 'circle',
-        };
-    }
-    priceValueBuilder(plotRow) {
-		return [plotRow.value];
-	}
-	isWhitespace(data) {
-		return data.value === undefined;
-	}
-}
