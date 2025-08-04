@@ -149,7 +149,7 @@ def run():
             botClass.exchange = exch
             botClass.price = price
             botClass.exchange_wallet = exchange_wallet
-            botClass.estrategia_nombre = estr.nombre 
+            botClass.estrategia_nombre = 'Bot.Estrategia.Nombre.Not.Found'#estr.nombre 
             execRes = botClass.live_execute(just_check_orders)
 
             #if len(execRes) > 0:
