@@ -11181,16 +11181,17 @@
                 }(i, s, t.zr)
             case "dash":
                 return void function(t, i, s) {
-                    const n = qe("square", s); // Usa el tamaño del cuadrado como referencia
+                    const n = qe("square", s) / 3; // Usa el tamaño del cuadrado/3 como referencia
                     const e = (n - 1) * i.hb / 2;
                     const r = i._t - e; // Coordenada X inicial
                     const h = i.ut;      // Coordenada Y
                     
                     t.beginPath();
+                    console.log('r + n * i.hb', r , n , i.hb)
                     t.moveTo(r, h);
                     t.lineTo(r + n * i.hb, h); // Dibuja la línea horizontal
                     t.strokeStyle = t.fillStyle; // Usa el color del marcador
-                    t.lineWidth = 2; // Un grosor de 2 píxeles
+                    t.lineWidth = 1; // Un grosor de 1 píxel
                     t.stroke();
                     t.closePath();
 
