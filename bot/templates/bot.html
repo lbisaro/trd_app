@@ -286,7 +286,7 @@ $(document).ready( function () {
 
         const lwc = new LWC('chart',400);
     
-        priceSeries = lwc.addPriceSeries(priceData,0 ,0 , qd_price, symbol);
+        priceSeries = lwc.addPriceSeries(priceData,0 ,0 , qd_price, '');
         
         pnlSeries = lwc.addPnlSeries(pnlData, 1, 100);
 
@@ -295,7 +295,6 @@ $(document).ready( function () {
         ordersSeries = lwc.addOrdersSeries(ordersData )
         
         chart = lwc.getChart();
-            
         
 
     

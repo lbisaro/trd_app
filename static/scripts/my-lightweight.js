@@ -1,3 +1,6 @@
+// ===============================================================
+// CLASE PRINCIPAL LWC
+// ===============================================================
 class LWC {
     constructor(containerId, height = 400) {
         this.containerId = containerId;
@@ -20,7 +23,7 @@ class LWC {
 
         this.chart = LightweightCharts.createChart(chartContainer, {
             height: height,
-            width: parseInt($('#'+this.containerId).css('width')),
+            width: parseInt($('#' + this.containerId).css('width')),
             layout: {
                 background: { color: '#212529' },
                 textColor: '#DDD',
@@ -42,8 +45,8 @@ class LWC {
                 borderColor: '#444',
                 barSpacing: 5,
             },
-            timeScale: { 
-                timeVisible: true, 
+            timeScale: {
+                timeVisible: true,
                 secondsVisible: false,
                 borderColor: '#444',
             },
@@ -51,9 +54,9 @@ class LWC {
                 locale: 'es-ES',
             },
         });
-    
+
         window.addEventListener('resize', () => {
-            this.chart.resize(parseInt($('#'+this.containerId).css('width')), height);
+            this.chart.resize(parseInt($('#' + this.containerId).css('width')), height);
         });
     }
 
@@ -61,12 +64,12 @@ class LWC {
         var addContainer = $('#tv-attr-logo').parent();
 
         addContainer.prepend('<div id="add-legends" style="position: absolute;z-index: 10; top: 0; left: 0; padding: 0px; border: 0px;background-color: transparent; "></div>');
-        
-        addContainer.append('<button id="reset-button" style="'+this.btnStyle+' right: 30px;" title="Resetear vista"><i class="bi bi-bootstrap-reboot"></i></button>');
+
+        addContainer.append('<button id="reset-button" style="' + this.btnStyle + ' right: 30px;" title="Resetear vista"><i class="bi bi-bootstrap-reboot"></i></button>');
         const resetButton = document.getElementById('reset-button');
 
-        if (this.maxDataSize>this.minDataSize) {
-            addContainer.append('<button id="full-button"  style="'+this.btnStyle+'  right: 5px;" title="Ver desde el inicio"><i class="bi bi-arrows-expand-vertical"></i></button>');
+        if (this.maxDataSize > this.minDataSize) {
+            addContainer.append('<button id="full-button"  style="' + this.btnStyle + '  right: 5px;" title="Ver desde el inicio"><i class="bi bi-arrows-expand-vertical"></i></button>');
             const fullButton = document.getElementById('full-button');
             fullButton.addEventListener('click', () => {
                 this.fullView();
@@ -74,23 +77,28 @@ class LWC {
             resetButton.addEventListener('click', () => {
                 this.minView();
             });
-            
+
             this.minView();
         }
         else {
             resetButton.addEventListener('click', () => {
                 this.fullView();
             });
+
             this.fullView();
         }
-        
-        
+
+        //Esta linea se ejecuta luego de garcar el grafico para que se carguen las imagenes SVG
+        setTimeout(() => {
+            this.chart.applyOptions({});
+        }, 100);
         return this.chart;
     }
 
     minView() {
+        
         this.chart.timeScale().setVisibleLogicalRange({
-            from: this.maxDataSize-this.minDataSize,
+            from: this.maxDataSize - this.minDataSize,
             to: this.maxDataSize,
         });
     }
@@ -98,8 +106,8 @@ class LWC {
     fullView() {
         this.chart.timeScale().fitContent();
     }
-    
-    addPriceSeries(priceData, pane = 0, height=100, precision = 2, title='') {
+
+    addPriceSeries(priceData, pane = 0, height = 100, precision = 2, title = '') {
         const priceSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
             priceFormat: {
                 type: 'custom',
@@ -111,16 +119,16 @@ class LWC {
             color: '#f8b935',
             crosshairMarkerVisible: false,
             priceLineVisible: false,
-        }, pane );
+        }, pane);
         priceSeries.setData(priceData);
-        if (pane>0)
+        if (pane > 0)
             this.chart.panes()[[pane]].setHeight(height);
-        if (priceData.length>this.maxDataSize)
+        if (priceData.length > this.maxDataSize)
             this.maxDataSize = priceData.length
         return priceSeries;
     }
 
-    addPnlSeries(pnlData, pane = 0, height=100, precision = 2) {
+    addPnlSeries(pnlData, pane = 0, height = 100, precision = 2) {
         const pnlSeries = this.chart.addSeries(LightweightCharts.BaselineSeries, {
             priceFormat: {
                 type: 'custom',
@@ -133,15 +141,14 @@ class LWC {
             bottomLineColor: '#f6465d',
             bottomFillColor1: 'transparent',
             bottomFillColor2: 'rgba( 239, 83, 80, 0.28)',
-            //title: 'PNL',
             lineWidth: 1,
             priceLineVisible: false,
             crosshairMarkerVisible: false,
         }, pane);
         pnlSeries.setData(pnlData);
-        if (pane>0)
+        if (pane > 0)
             this.chart.panes()[[pane]].setHeight(height);
-        if (pnlData.length>this.maxDataSize)
+        if (pnlData.length > this.maxDataSize)
             this.maxDataSize = pnlData.length
         return pnlSeries;
     }
@@ -157,68 +164,167 @@ class LWC {
 
         var markers = []
         for (let i = 0; i < tradesData.length; i++) {
-        
-            if (tradesData[i].side == 0)
-            {
+            if (tradesData[i].side == 0) {
                 markers.push({
                     time: tradesData[i].time,
                     position: 'inBar',
-                    color: tradesData[i].side = '#0ecb81',
+                    color: '#0ecb81',
                     shape: 'arrowUp',
                 });
-
             }
-            else
-            {
+            else {
                 markers.push({
                     time: tradesData[i].time,
                     position: 'inBar',
-                    color: tradesData[i].side = '#f6465d',
+                    color: '#f6465d',
                     shape: 'arrowDown',
                 });
-
             }
-            
         }
         return LightweightCharts.createSeriesMarkers(tradesSeries, markers);
     }
 
-
     addOrdersSeries(ordersData, pane = 0) {
-        const ordersSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
-            lineWidth: 1,
+        const myCustomSeries = new MyCustomSeries();
+
+        const data = ordersData.map(d => ({
+            time: d.time,
+            value: d.value,
+            color: d.side>0 ? '#f6465d' : '#0ecb81',
+        }));
+        const ordersSeries = this.chart.addCustomSeries(myCustomSeries, {
             priceLineVisible: false,
-            crosshairMarkerVisible: false,
-            color: 'transparent',
+            lastValueVisible: false,
+            pattern: 'circle',
+            size: 3,
         }, pane);
-        ordersSeries.setData(ordersData);
+        ordersSeries.setData(data);
 
-        var markers = []
-        for (let i = 0; i < ordersData.length; i++) {
         
-            if (ordersData[i].side == 0)
-            {
-                markers.push({
-                    time: ordersData[i].time,
-                    position: 'inBar',
-                    color: ordersData[i].side = '#0ecb81',
-                    shape: 'circle',
-                });
+        return ordersSeries;
+    }
+} 
 
-            }
-            else
-            {
-                markers.push({
-                    time: ordersData[i].time,
-                    position: 'inBar',
-                    color: ordersData[i].side = '#f6465d',
-                    shape: 'circle',
-                });
+// ===============================================================
+// CLASES PARA LA SERIE PERSONALIZADA 
+// ===============================================================
 
-            }
-            
-        }
-        return LightweightCharts.createSeriesMarkers(ordersSeries, markers);
+// La colección de SVGs no cambia.
+const svgTemplates = {
+    circle: `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="{size}" height="{size}">
+            <circle cx="50" cy="50" r="50" fill="{color}" />
+        </svg>`,
+    square: `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="{size}" height="{size}">
+            <rect width="100" height="100" fill="{color}" />
+        </svg>`,
+    triangle: `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="{size}" height="{size}">
+            <polygon points="50,0 100,100 0,100" fill="{color}" />
+        </svg>`,
+};
+
+class MyCustomSeriesRenderer {
+    constructor(primitive) {
+        this._primitive = primitive;
+        this._data = null;
+        this._options = null;
+        this._imageCache = new Map();
     }
 
+    update(data, options) {
+        this._data = data;
+        this._options = options;
+    }
+
+    draw(target, priceToCoordinate) {
+        if (!this._data?.bars.length || !this._data.visibleRange || !this._options) {
+            return;
+        }
+
+        target.useBitmapCoordinateSpace(scope => {
+            const ctx = scope.context;
+            for (let i = this._data.visibleRange.from; i < this._data.visibleRange.to; i++) {
+                const bar = this._data.bars[i];
+                const y = priceToCoordinate(bar.originalData.value);
+                const x = bar.x;
+                const pointPattern = bar.originalData.pattern || this._options.pattern;
+                const pointColor = bar.barColor || this._options.color;
+                const pointSize = bar.originalData.size || this._options.size;
+
+                if (x !== null && y !== null) {
+                    this._drawShape(ctx, x, y, pointSize, pointSize, pointColor, pointPattern);
+                }
+            }
+        });
+    }
+
+    _drawShape(ctx, x, y, width, height, color, pattern) {
+        const cacheKey = `${pattern}_${color}_${width}`;
+        let imageInfo = this._imageCache.get(cacheKey);
+
+        if (!imageInfo) {
+            const template = svgTemplates[pattern] || svgTemplates['circle'];
+            const finalSvg = template
+                .replace('{color}', color)
+                .replace(/{size}/g, width);
+            const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const image = new Image(width, height);
+            image.src = url;
+            imageInfo = { image: image, loaded: false };
+            this._imageCache.set(cacheKey, imageInfo);
+
+            image.onload = () => {
+                imageInfo.loaded = true;
+                URL.revokeObjectURL(url);
+                this._primitive.requestUpdate();
+            };
+        }
+        
+        if (imageInfo.loaded) {
+            ctx.drawImage(imageInfo.image, x - width / 2, y - height / 2, width, height);
+        }
+    }
+}
+
+
+class MyCustomSeries {
+    constructor() {
+        this._renderer = new MyCustomSeriesRenderer(this);
+        this._requestUpdate = () => {};
+    }
+
+    attached({ requestUpdate }) {
+		this._requestUpdate = requestUpdate;
+	}
+
+    requestUpdate() {
+        this._requestUpdate();
+    }
+
+    renderer() {
+        return this._renderer;
+    }
+
+    update(data, options) {
+        this._renderer.update(data, options);
+    }
+    
+    // ... (resto de la clase sin cambios) ...
+    defaultOptions() {
+        return {
+            ...LightweightCharts.customSeriesDefaultOptions,
+            color: 'gray',
+            size: 5,
+            pattern: 'circle',
+        };
+    }
+    priceValueBuilder(plotRow) {
+		return [plotRow.value];
+	}
+	isWhitespace(data) {
+		return data.value === undefined;
+	}
 }
