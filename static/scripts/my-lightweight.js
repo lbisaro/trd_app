@@ -200,7 +200,7 @@ class LWC {
                     time: data[i].time,
                     position: 'inBar',
                     color: '#0ecb81',
-                    shape: 'dash',
+                    shape: 'line',
                     size: 1,
                 });
             }
@@ -209,7 +209,7 @@ class LWC {
                     time: data[i].time,
                     position: 'inBar',
                     color: '#f6465d',
-                    shape: 'dash',
+                    shape: 'line',
                     size: 1,
                 });
             }
