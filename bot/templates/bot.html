@@ -285,7 +285,7 @@ $(document).ready( function () {
     if (mainData.length>0){
 
         const lwc = new LWC('chart',400);
-        lwc.minDataSize = 500
+        lwc.minDataSize = 200
     
         priceSeries = lwc.addPriceSeries(priceData,0 ,0 , qd_price, '');
         
@@ -296,34 +296,6 @@ $(document).ready( function () {
         ordersSeries = lwc.addOrdersSeries(ordersData )
         
         chart = lwc.getChart();
-        
-
-    
-    
-        /////////////////////////////////////////////////////////////////////////////////////
-        /*
-        var panes = chart.panes();
-        
-        // Itera a través de cada panel
-        for (const pane of panes) {
-            // Obtiene una lista de todas las series en el panel actual
-            const seriesList = pane.getSeries();
-            
-            legends = $('#add-legends');
-            
-            // Itera a través de cada serie en la lista
-            for (const series of seriesList) {
-                const options = series.options();            
-                const title = options.title || '';
-                const color = options.color || '#d2cdcd';
-                
-                if (title)
-                legends.append(`<span style="color:${color};padding: 0px 4px 0px 0px;">${title}</span>`);
-                
-            }
-        }
-        
-        */
     }
 
 
