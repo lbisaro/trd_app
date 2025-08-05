@@ -779,8 +779,8 @@ class Bot(models.Model):
             open_orders = self.get_orders_en_curso()
             if len(open_orders)>0:
                 for order in open_orders:
-                    if order.limit_price>0:
-                        self.add_order_log(side=order.side,price=order.limit_price)
+                    if order.completed<1:
+                        self.add_order_log(id=order.id,side=order.side,price=order.limit_price)
     
     def log_klines(self,klines, kline_file):
         with open(kline_file, 'wb') as f:
@@ -798,8 +798,9 @@ class Bot(models.Model):
         pnl_df = pd.DataFrame.from_records(pnl.values())
         return pnl_df
 
-    def add_order_log(self,side,price):
+    def add_order_log(self,id,side,price):
         botpnl = BotOrderLog()
+        botpnl.order_id = id
         botpnl.bot = self
         botpnl.side = side
         botpnl.price = price
@@ -943,6 +944,7 @@ class BotPnl(models.Model):
 class BotOrderLog(models.Model):
 
     bot = models.ForeignKey(Bot, on_delete = models.CASCADE)
+    order_id = models.IntegerField(null=False, blank=False)
     datetime = models.DateTimeField(default=timezone.now)
     side = models.IntegerField(null=False, blank=False)
     price = models.FloatField(null=False, blank=False, default=0.0)
