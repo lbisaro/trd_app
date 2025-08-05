@@ -134,7 +134,7 @@ class LWC {
                 type: 'custom',
                 formatter: (price) => `${price.toFixed(precision)}`,
             },
-            baseValue: { type: 'price', price: -0.0001 },
+            baseValue: { type: 'price', price: -0.1 },
             topLineColor: '#0ecb81',
             topFillColor1: 'rgba( 38, 166, 154, 0.28)',
             topFillColor2: 'transparent',
