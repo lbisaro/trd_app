@@ -107,6 +107,11 @@ class Bot_Core_stats:
                 pos___pnl_max = pos___pnl
 
         pos___max_price = pos___avg_price*(1+(pos___pnl_max/100))
+
+
+        pos_quote += wallet_base_in_quote
+        pos_quote_sign = '' if pos_quote <= 0 else '+'
+        v = f'{pos_quote_sign}{pos_quote:.2f}  {self.quote_asset}'
                 
         self.status['pos___base_qty']   = {'l':'Pos. Base', 
                                            'v': round(pos___base_qty,self.qd_qty), 
@@ -121,7 +126,7 @@ class Bot_Core_stats:
                                            'v': round(pos___avg_price,self.qd_price), 
                                            'r': pos___avg_price}
         self.status['pos___pnl']        = {'l':'Pos. PNL ',     
-                                           'v': f'{pos___pnl:.2f} %', 
+                                           'v': f'{pos___pnl:.2f} % {pos_quote_sign}{pos_quote:.2f}  {self.quote_asset}', 
                                            'r': pos___pnl,
                                            's': True,
                                            'cls': 'text-success' if pos___pnl>=0 else 'text-danger'}
@@ -132,19 +137,6 @@ class Bot_Core_stats:
                                            'v': round(pos___max_price,self.qd_price), 
                                            'r': round(pos___max_price,self.qd_price)}
         
-            
-        pos_quote += wallet_base_in_quote
-        pos_quote_sign = '' if pos_quote <= 0 else '+'
-        v = f'{pos_quote_sign}{pos_quote:.2f}  {self.quote_asset}'
-        cls = 'text-success' if pos_quote > 0 else ('text-danger' if pos_quote < 0 else '')
-        if wallet_base_in_quote>3:
-            self.status['pos_pnl'] = {'l': 'PNL',
-                                      'v': v,
-                                      'r':pos_quote, 
-                                      'cls': cls,
-                                      's': True}
-        elif 'pos_pnl' in self.status:
-            self.status['pos_pnl'] = None 
         return self.status
 
     def get_brief(self):
