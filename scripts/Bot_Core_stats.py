@@ -123,7 +123,8 @@ class Bot_Core_stats:
         self.status['pos___pnl']        = {'l':'Pos. PNL ',     
                                            'v': f'{pos___pnl:.2f} %', 
                                            'r': pos___pnl,
-                                           's': True,}
+                                           's': True,
+                                           'cls': 'text-success' if pos___pnl>=0 else 'text-danger'}
         self.status['pos___pnl_max']    = {'l':'Pos. PNL Max.', 
                                            'v': f'{pos___pnl_max:.2f} %', 
                                            'r': pos___pnl_max}
