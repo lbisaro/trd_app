@@ -187,10 +187,10 @@ class LWC {
     addOrdersSeries(data, pane = 0) {
         const color = data[0].side == 0 ? '#0ecb81' : '#f6465d';
         const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
-            lastValueVisible: false,
             lineWidth: 1,
             color: color,
             lineStyle: 2, //Solid: 0 | Dotted: 1 | Dashed: 2 | LargeDashed: 3 | SparseDotted: 4
+            lastValueVisible: false,
             crosshairMarkerVisible: false,
             priceLineVisible: false,
         }, pane);
