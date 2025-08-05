@@ -799,7 +799,6 @@ class Bot(models.Model):
     def add_order_log(self,order_id,side,price):
         exist = BotOrderLog.objects.filter(bot=self,order_id=order_id)
         if len(exist) <= 1:
-            print('Nueva 1')
             botpnl = BotOrderLog()
             botpnl.order_id = order_id
             botpnl.bot = self
@@ -809,12 +808,10 @@ class Bot(models.Model):
         elif len(exist) > 1:
             last = exist.last()
             if last.price-price == 0:
-                print('Update')
                 last.datetime = timezone.now()
                 last.price = price
                 last.save()
             else:
-                print('Nueva 2')
                 botpnl = BotOrderLog()
                 botpnl.order_id = order_id
                 botpnl.bot = self
