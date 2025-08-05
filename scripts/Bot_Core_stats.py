@@ -122,7 +122,8 @@ class Bot_Core_stats:
                                            'r': pos___avg_price}
         self.status['pos___pnl']        = {'l':'Pos. PNL ',     
                                            'v': f'{pos___pnl:.2f} %', 
-                                           'r': pos___pnl}
+                                           'r': pos___pnl,
+                                           's': True,}
         self.status['pos___pnl_max']    = {'l':'Pos. PNL Max.', 
                                            'v': f'{pos___pnl_max:.2f} %', 
                                            'r': pos___pnl_max}
@@ -135,7 +136,7 @@ class Bot_Core_stats:
         pos_quote_sign = '' if pos_quote <= 0 else '+'
         v = f'{pos_quote_sign}{pos_quote:.2f}  {self.quote_asset}'
         cls = 'text-success' if pos_quote > 0 else ('text-danger' if pos_quote < 0 else '')
-        if wallet_base>0:
+        if wallet_base_in_quote>3:
             self.status['pos_pnl'] = {'l': 'PNL',
                                       'v': v,
                                       'r':pos_quote, 
