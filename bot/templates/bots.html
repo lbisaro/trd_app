@@ -37,6 +37,14 @@
         min-width: 250px;
     }
 
+    .box_activo {
+        border-top: 3px solid #0dcaf0;
+    }
+
+    .box_inactivo {
+        border-top: 3px solid #6c757d;
+    }
+
     .status_row {
         font-family: var(--bs-font-monospace);
         font-size: 0.8em;
@@ -53,9 +61,9 @@
 <div class="container">
     <div class="d-flex flex-wrap">
         {% for b in bots %}
-        <div class="box" onclick="ver('{{b.bot_id}}')">
+        <div class="box {% if b.estrategia_activo > 0 and b.activo %}box_activo{% else %}box_inactivo{% endif %}" onclick="ver('{{b.bot_id}}')">
             <div class="row">
-                <div class="col-9 text-{% if b.estrategia_activo > 0 and b.activo %}success{% else %}danger{% endif %}">{{b.estrategia}}</div>
+                <div class="col-9">{{b.estrategia}}</div>
                 <div class="col-3 text-end">{{b.intervalo}}</div>
             </div>
             {% for k,item in b.status.items %}
