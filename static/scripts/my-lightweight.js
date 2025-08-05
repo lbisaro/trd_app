@@ -185,34 +185,17 @@ class LWC {
     }
 
     addOrdersSeries(data, pane = 0) {
+        const color = data[0].side == 0 ? '#0ecb81' : '#f6465d';
         const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
+            lastValueVisible: false,
             lineWidth: 1,
-            priceLineVisible: false,
+            color: color,
+            lineStyle: 2, //Solid: 0 | Dotted: 1 | Dashed: 2 | LargeDashed: 3 | SparseDotted: 4
             crosshairMarkerVisible: false,
-            color: 'transparent',
+            priceLineVisible: false,
         }, pane);
+
         serie.setData(data);
-
-        var markers = []
-        for (let i = 0; i < data.length; i++) {
-            if (data[i].side == 0) {
-                markers.push({
-                    time: data[i].time,
-                    position: 'inBar',
-                    color: '#0ecb81',
-                    shape: 'dashLine',
-                });
-            }
-            else {
-                markers.push({
-                    time: data[i].time,
-                    position: 'inBar',
-                    color: '#f6465d',
-                    shape: 'dashLine',
-                });
-            }
-        }
-        return LightweightCharts.createSeriesMarkers(serie, markers);
+        return serie;
     }
-
 } 

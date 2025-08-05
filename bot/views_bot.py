@@ -77,6 +77,8 @@ def bot(request, bot_id):
     main_data = []
     orders_data = []
     trades_data = []
+
+    #bot.add_order_log(order_id=2,side=0,price=0.094)
     
     #Obteniendo datos de PNL y Price registrado por el Bot
     pnl_log = bot.get_pnl()
@@ -90,15 +92,21 @@ def bot(request, bot_id):
             pnl_log['str_dt'] = pnl_log['datetime'].dt.strftime('%Y-%m-%d %H:%M')
             main_data = pnl_log[['str_dt', 'price', 'pnl']].copy()
             main_data = main_data.values.tolist()
-
+            
         #Historico de ordenes
         hst_orders = BotOrderLog.objects.filter(bot_id=bot_id)
         hst_orders = pd.DataFrame.from_records(hst_orders.values())
+        
         if len(hst_orders)>0:
+            order_ids = hst_orders['order_id'].unique().tolist()
             hst_orders['str_dt'] = hst_orders['datetime'].dt.strftime('%Y-%m-%d %H:%M')
-            orders_data = hst_orders[['str_dt', 'price', 'side']].copy()
-            orders_data = orders_data.values.tolist()
+            hst_orders = hst_orders[['str_dt', 'price', 'side','order_id']].copy()
+            orders_data = []
+            for order_id in order_ids:
+                orders_data.append(hst_orders[hst_orders['order_id']==order_id].values.tolist())
                 
+            for i in orders_data:
+                print(i)
         #Ordenes 
         open_pos = False
         db_trades = bot.get_orders()

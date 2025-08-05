@@ -274,27 +274,31 @@ $(document).ready( function () {
         side: d[2],
     }));
     const ordersDataJSON = JSON.parse(document.getElementById('orders-data').textContent);
-    const ordersData = ordersDataJSON.map(d => ({
-        time: Date.parse(d[0])/1000,
-        value: d[1],
-        side: d[2],
-    }));
-
-
+    const ordersData = [];
+    for (const serie of ordersDataJSON) {
+        const serieData = serie.map(d => ({
+            time: Date.parse(d[0])/1000,
+            value: d[1],
+            side: d[2],
+        }));
+        ordersData.push(serieData);
+    }
+    
     //Creando el chart
     if (mainData.length>0){
 
         const lwc = new LWC('chart',400);
         lwc.minDataSize = 200
     
-        priceSeries = lwc.addPriceSeries(priceData,0 ,0 , qd_price, '');
+        lwc.addPriceSeries(priceData,0 ,0 , qd_price, '');
         
-        pnlSeries = lwc.addPnlSeries(pnlData, 1, 100);
+        lwc.addPnlSeries(pnlData, 1, 100);
 
-        tradesSeries = lwc.addTradesSeries(tradesData )
+        lwc.addTradesSeries(tradesData )
 
-        ordersSeries = lwc.addOrdersSeries(ordersData )
-        
+        for (const serie of ordersData) {
+            lwc.addOrdersSeries(serie )
+        }
         chart = lwc.getChart();
     }
 

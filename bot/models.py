@@ -596,8 +596,6 @@ class Bot(models.Model):
         json_rsp['indicadores'].append({'t':'Volatilidad del par','v':       f'{volatilidad_sym:.2f} %'})
         json_rsp['indicadores'].append({'t':'Max DrawDown del capital','v':  f'{max_drawdown_cap:.2f} %'})
         json_rsp['indicadores'].append({'t':'Max DrawDown del par','v':      f'{max_drawdown_sym:.2f} %'})
-                              
-
 
         return json_rsp
 
@@ -781,7 +779,6 @@ class Bot(models.Model):
                 for order in open_orders:
                     if order.completed<1:
                         self.add_order_log(id=order.id,side=order.side,price=order.limit_price)
-                        print(f'add_order_log(id={order.id},side={order.side},price={order.limit_price})')
     
     def log_klines(self,klines, kline_file):
         with open(kline_file, 'wb') as f:
@@ -799,13 +796,18 @@ class Bot(models.Model):
         pnl_df = pd.DataFrame.from_records(pnl.values())
         return pnl_df
 
-    def add_order_log(self,id,side,price):
-        botpnl = BotOrderLog()
-        botpnl.order_id = id
-        botpnl.bot = self
-        botpnl.side = side
-        botpnl.price = price
-        botpnl.save()
+    def add_order_log(self,order_id,side,price):
+        exist = BotOrderLog.objects.filter(bot=self, side=side, price=price, order_id=order_id)
+        print('Entrando',end=' -> ')
+        if len(exist) ==0:
+            botpnl = BotOrderLog()
+            botpnl.order_id = order_id
+            botpnl.bot = self
+            botpnl.side = side
+            botpnl.price = price
+            botpnl.save()
+            print('Grabando',end=' -> ')
+        print('Fin')
 
     def get_order_log(self):
         olog = BotOrderLog.objects.filter(bot_id=self.id).order_by('datetime')
