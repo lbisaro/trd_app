@@ -798,7 +798,6 @@ class Bot(models.Model):
 
     def add_order_log(self,order_id,side,price):
         exist = BotOrderLog.objects.filter(bot=self, side=side, price=price, order_id=order_id)
-        print('Entrando',end=' -> ')
         if len(exist) ==0:
             botpnl = BotOrderLog()
             botpnl.order_id = order_id
@@ -806,9 +805,7 @@ class Bot(models.Model):
             botpnl.side = side
             botpnl.price = price
             botpnl.save()
-            print('Grabando',end=' -> ')
-        print('Fin')
-
+        
     def get_order_log(self):
         olog = BotOrderLog.objects.filter(bot_id=self.id).order_by('datetime')
         olog_df = pd.DataFrame.from_records(olog.values())
