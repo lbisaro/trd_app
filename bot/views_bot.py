@@ -78,7 +78,7 @@ def bot(request, bot_id):
     orders_data = []
     trades_data = []
 
-    #bot.add_order_log(order_id=2,side=0,price=0.094)
+    bot.add_order_log(order_id=2,side=0,price=0.09242)
     
     #Obteniendo datos de PNL y Price registrado por el Bot
     pnl_log = bot.get_pnl()
@@ -104,9 +104,7 @@ def bot(request, bot_id):
             orders_data = []
             for order_id in order_ids:
                 orders_data.append(hst_orders[hst_orders['order_id']==order_id].values.tolist())
-                
-            for i in orders_data:
-                print(i)
+
         #Ordenes 
         open_pos = False
         db_trades = bot.get_orders()

@@ -797,14 +797,32 @@ class Bot(models.Model):
         return pnl_df
 
     def add_order_log(self,order_id,side,price):
-        exist = BotOrderLog.objects.filter(bot=self, side=side, price=price, order_id=order_id)
-        if len(exist) ==0:
+        exist = BotOrderLog.objects.filter(bot=self,order_id=order_id)
+        if len(exist) <= 1:
+            print('Nueva 1')
             botpnl = BotOrderLog()
             botpnl.order_id = order_id
             botpnl.bot = self
             botpnl.side = side
             botpnl.price = price
             botpnl.save()
+        elif len(exist) > 1:
+            last = exist.last()
+            if last.price-price == 0:
+                print('Update')
+                last.datetime = timezone.now()
+                last.price = price
+                last.save()
+            else:
+                print('Nueva 2')
+                botpnl = BotOrderLog()
+                botpnl.order_id = order_id
+                botpnl.bot = self
+                botpnl.side = side
+                botpnl.price = price
+                botpnl.save()
+
+
         
     def get_order_log(self):
         olog = BotOrderLog.objects.filter(bot_id=self.id).order_by('datetime')
