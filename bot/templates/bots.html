@@ -34,6 +34,7 @@
         border-radius: 5px;
         border: 1px solid #444;
         cursor: pointer;
+        min-width: 250px;
     }
 
     .status_row {
@@ -58,7 +59,7 @@
                 <div class="col-3 text-end">{{b.intervalo}}</div>
             </div>
             {% for k,item in b.status.items %}
-                {% if item.r != 0 %}
+                {% if item.s and item.r != 0%}
                     {% if item.l %}
                         <div class="status_row"><span class="text-secondary">{{item.l}}:</span> <span {% if item.cls %} class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
                     {% else %}

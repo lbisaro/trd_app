@@ -179,7 +179,10 @@ class BotFibonacci(Bot_Core):
             else: 
                 cls = ''
                 trend = 'Neutral'
-            status['trend'] = {'l': 'Tendencia','v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.row['trend'], 'cls': cls}
+            status['trend'] = {'l': 'Tendencia',
+                               'v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 
+                               'r': self.row['trend'], 
+                               'cls': cls}
 
             status['pivots'] = None
         return status    

@@ -13,31 +13,51 @@ class Bot_Core_stats:
         status_datetime = dt.datetime.now()
         if self.signal == 'COMPRA':
             cls = 'text-success'
-            self.status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
+            self.status['signal'] = {'l': 'Ultima señal',
+                                     'v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 
+                                     'r': self.signal, 
+                                     'cls': cls}
         elif self.signal == 'VENTA': 
             cls = 'text-danger'
-            self.status['signal'] = {'l': 'Ultima señal','v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 'r': self.signal, 'cls': cls}
+            self.status['signal'] = {'l': 'Ultima señal',
+                                     'v': self.signal+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 
+                                     'r': self.signal, 
+                                     'cls': cls}
 
 
         last_exec = dt.datetime.now()
-        self.status['last_exec'] = {'l': 'Ultima ejecucion','v': last_exec.strftime('%d-%m-%Y %H:%M'), 'r': last_exec.strftime('%d-%m-%Y %H:%M')}
+        self.status['last_exec'] = {'l': 'Ultima ejecucion',
+                                    'v': last_exec.strftime('%d-%m-%Y %H:%M'), 
+                                    'r': last_exec.strftime('%d-%m-%Y %H:%M'),
+                                    's': True}
         
         price = round(self.price,self.qd_price)
-        self.status['price'] = {'l': 'Ultimo precio','v': f'{price}', 'r': price}
+        self.status['price'] = {'l': 'Ultimo precio',
+                                'v': f'{price}', 
+                                'r': price,
+                                's': True}
 
         wallet_base = round(self.wallet_base,self.qd_qty)
         wallet_base_in_quote = round(self.wallet_base*self.price,self.qd_quote+3)
         v = f'{wallet_base} {self.base_asset} ({wallet_base_in_quote} {self.quote_asset})'
-        self.status['wallet_base'] = {'l': 'Comprado','v': v,'r':wallet_base}
+        self.status['wallet_base'] = {'l': 'Comprado',
+                                      'v': v,
+                                      'r':wallet_base}
         
         wallet_quote = round(self.wallet_quote,self.qd_quote+3)
         v = f'{wallet_quote:.2f} {self.quote_asset}'
-        self.status['wallet_quote'] = {'l': 'Disponible','v': v,'r':wallet_quote}
+        self.status['wallet_quote'] = {'l': 'Disponible',
+                                       'v': v,
+                                       'r':wallet_quote,
+                                       's': True}
         
         wallet_tot = round(self.wallet_quote+wallet_base_in_quote,self.qd_quote+3)
 
         v = f'{wallet_tot:.2f} {self.quote_asset}'
-        self.status['wallet_tot'] = {'l': 'Capital actual','v': v,'r':wallet_tot}
+        self.status['wallet_tot'] = {'l': 'Capital actual',
+                                     'v': v,
+                                     'r':wallet_tot,
+                                     's': True}
 
         #self.make_trades()
         pos___base_qty = 0
@@ -88,13 +108,27 @@ class Bot_Core_stats:
 
         pos___max_price = pos___avg_price*(1+(pos___pnl_max/100))
                 
-        self.status['pos___base_qty']   = {'l':'Pos. Base', 'v': round(pos___base_qty,self.qd_qty), 'r': pos___base_qty}
-        self.status['pos___quote_qty']  = {'l':'Pos. Quote', 'v': round(pos___quote_qty,self.qd_quote), 'r': pos___quote_qty}
-        self.status['pos___orders_qty'] = {'l':'Pos. Ordenes', 'v': pos___orders_qty, 'r': pos___orders_qty}
-        self.status['pos___avg_price']  = {'l':'Pos. Precio Promedio', 'v': round(pos___avg_price,self.qd_price), 'r': pos___avg_price}
-        self.status['pos___pnl']        = {'l':'Pos. PNL ',     'v': f'{pos___pnl:.2f} %', 'r': pos___pnl}
-        self.status['pos___pnl_max']    = {'l':'Pos. PNL Max.', 'v': f'{pos___pnl_max:.2f} %', 'r': pos___pnl_max}
-        self.status['pos___max_price']    = {'l':'Pos. Price Max.', 'v': round(pos___max_price,self.qd_price), 'r': round(pos___max_price,self.qd_price)}
+        self.status['pos___base_qty']   = {'l':'Pos. Base', 
+                                           'v': round(pos___base_qty,self.qd_qty), 
+                                           'r': pos___base_qty}
+        self.status['pos___quote_qty']  = {'l':'Pos. Quote', 
+                                           'v': round(pos___quote_qty,self.qd_quote), 
+                                           'r': pos___quote_qty}
+        self.status['pos___orders_qty'] = {'l':'Pos. Ordenes', 
+                                           'v': pos___orders_qty, 
+                                           'r': pos___orders_qty}
+        self.status['pos___avg_price']  = {'l':'Pos. Precio Promedio', 
+                                           'v': round(pos___avg_price,self.qd_price), 
+                                           'r': pos___avg_price}
+        self.status['pos___pnl']        = {'l':'Pos. PNL ',     
+                                           'v': f'{pos___pnl:.2f} %', 
+                                           'r': pos___pnl}
+        self.status['pos___pnl_max']    = {'l':'Pos. PNL Max.', 
+                                           'v': f'{pos___pnl_max:.2f} %', 
+                                           'r': pos___pnl_max}
+        self.status['pos___max_price']  = {'l':'Pos. Price Max.', 
+                                           'v': round(pos___max_price,self.qd_price), 
+                                           'r': round(pos___max_price,self.qd_price)}
         
             
         pos_quote += wallet_base_in_quote
@@ -102,7 +136,11 @@ class Bot_Core_stats:
         v = f'{pos_quote_sign}{pos_quote:.2f}  {self.quote_asset}'
         cls = 'text-success' if pos_quote > 0 else ('text-danger' if pos_quote < 0 else '')
         if wallet_base>0:
-            self.status['pos_pnl'] = {'l': 'PNL','v': v,'r':pos_quote, 'cls': cls}
+            self.status['pos_pnl'] = {'l': 'PNL',
+                                      'v': v,
+                                      'r':pos_quote, 
+                                      'cls': cls,
+                                      's': True}
         elif 'pos_pnl' in self.status:
             self.status['pos_pnl'] = None 
         return self.status
