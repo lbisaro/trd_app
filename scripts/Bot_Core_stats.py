@@ -48,8 +48,7 @@ class Bot_Core_stats:
         v = f'{wallet_quote:.2f} {self.quote_asset}'
         self.status['wallet_quote'] = {'l': 'Disponible',
                                        'v': v,
-                                       'r':wallet_quote,
-                                       's': True}
+                                       'r':wallet_quote}
         
         wallet_tot = round(self.wallet_quote+wallet_base_in_quote,self.qd_quote+3)
 
@@ -137,7 +136,7 @@ class Bot_Core_stats:
                                            'v': round(pos___max_price,self.qd_price), 
                                            'r': round(pos___max_price,self.qd_price)}
         if 'pos_pnl' in self.status:
-            del self.status['pos_pnl']
+            self.status['pos_pnl'] = None
         return self.status
 
     def get_brief(self):
