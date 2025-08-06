@@ -91,13 +91,13 @@ class BotTop30(Bot_Core):
                 self.klines['breadth'] = top30['breadth']
         elif self.is_live_run():
             live_breadth = top30Live.get_live_breadth()
-            self.log.alert(f'live_breadth {live_breadth}')
-            print('live_breadth:',live_breadth)
             self.klines['breadth'] = live_breadth
 
         self.klines['signal'] = np.where(self.klines['breadth']==0,'COMPRA',self.klines['signal'])
         self.klines['signal'] = np.where(self.klines['breadth']==100 ,'VENTA',self.klines['signal'])
-
+        if live_breadth==0 or live_breadth==100:
+            self.log.alert(f'live_breadth {live_breadth}')
+            
         self.print_orders = False
         self.graph_open_orders = True
         self.graph_signals = False
