@@ -158,6 +158,7 @@ class LWC {
             lineWidth: 1,
             priceLineVisible: false,
             crosshairMarkerVisible: false,
+            lastValueVisible: false,
             color: 'transparent',
         }, pane);
         serie.setData(data);
