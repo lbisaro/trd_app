@@ -136,8 +136,8 @@ class Bot_Core_stats:
         self.status['pos___max_price']  = {'l':'Pos. Price Max.', 
                                            'v': round(pos___max_price,self.qd_price), 
                                            'r': round(pos___max_price,self.qd_price)}
-        if 'PNL' in self.status:
-            del self.status['PNL']
+        if 'pos_pnl' in self.status:
+            del self.status['pos_pnl']
         return self.status
 
     def get_brief(self):
