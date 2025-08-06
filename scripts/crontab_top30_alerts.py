@@ -146,13 +146,13 @@ class top30_alerts:
             str_alert = ''
             if pre_breadth < 100 and breadth == 100:
                 str_alert = f'Top30 - {interval} - Vender'
-                print(str_alert)
-                self.tlg.alert(str_alert)
+                if interval_id == '1h04':
+                    self.tlg.alert(str_alert)
                 self.alerts_log.append(f'{last_update} - {str_alert}')
             elif pre_breadth > 0 and breadth == 0:
                 str_alert = f'Top30 - {self.interval} - Comprar'
-                print(str_alert)
-                self.tlg.alert(str_alert)
+                if interval_id == '1h04':
+                    self.tlg.alert(str_alert)
                 self.alerts_log.append(f'{last_update} - {str_alert}')
         
         self.breadth = 50
