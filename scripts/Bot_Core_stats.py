@@ -125,7 +125,7 @@ class Bot_Core_stats:
                                            'v': round(pos___avg_price,self.qd_price), 
                                            'r': pos___avg_price}
         self.status['pos___pnl']        = {'l':'Pos. PNL ',     
-                                           'v': f'{pos___pnl:.2f}% <i class="text-secondary"><small>({pos_quote_sign}{pos_quote:.2f} {self.quote_asset})</small></i>', 
+                                           'v': f'{pos___pnl:.2f}% ({pos_quote_sign}{pos_quote:.2f} {self.quote_asset})', 
                                            'r': pos___pnl,
                                            's': True,
                                            'cls': 'text-success' if pos___pnl>=0 else 'text-danger'}
@@ -135,8 +135,6 @@ class Bot_Core_stats:
         self.status['pos___max_price']  = {'l':'Pos. Price Max.', 
                                            'v': round(pos___max_price,self.qd_price), 
                                            'r': round(pos___max_price,self.qd_price)}
-        if 'pos_pnl' in self.status:
-            self.status['pos_pnl'] = None
         return self.status
 
     def get_brief(self):
