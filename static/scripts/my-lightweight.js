@@ -190,10 +190,10 @@ class LWC {
         const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
             lineWidth: 1,
             color: color,
-            lineStyle: 2, //Solid: 0 | Dotted: 1 | Dashed: 2 | LargeDashed: 3 | SparseDotted: 4
-            lastValueVisible: false,
+            lineStyle: 1, //Solid: 0 | Dotted: 1 | Dashed: 2 | LargeDashed: 3 | SparseDotted: 4
             crosshairMarkerVisible: false,
             priceLineVisible: false,
+            lastValueVisible: false,
         }, pane);
 
         serie.setData(data);
