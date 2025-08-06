@@ -125,7 +125,7 @@ class Bot_Core_stats:
                                            'v': round(pos___avg_price,self.qd_price), 
                                            'r': pos___avg_price}
         self.status['pos___pnl']        = {'l':'Pos. PNL ',     
-                                           'v': f'{pos___pnl:.2f}% ({pos_quote_sign}{pos_quote:.2f}  {self.quote_asset})', 
+                                           'v': f'{pos___pnl:.2f}% <i class="text-secondary"><small>({pos_quote_sign}{pos_quote:.2f} {self.quote_asset})</small></i>', 
                                            'r': pos___pnl,
                                            's': True,
                                            'cls': 'text-success' if pos___pnl>=0 else 'text-danger'}
