@@ -91,6 +91,7 @@ class BotTop30(Bot_Core):
                 self.klines['breadth'] = top30['breadth']
         elif self.is_live_run():
             live_breadth = top30Live.get_live_breadth()
+            self.log.alert(f'live_breadth {live_breadth}')
             print('live_breadth:',live_breadth)
             self.klines['breadth'] = live_breadth
 
