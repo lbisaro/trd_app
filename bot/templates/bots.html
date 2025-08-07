@@ -95,7 +95,7 @@ $(document).ready(function () {
     //Preparando los datos
     const mainData = JSON.parse(document.getElementById('pnl-diario').textContent);
     const pnlData = mainData.map(d => ({
-        time: Date.parse(d[0])/1000,
+        time: formatTime(d[0]),
         value: d[1],
     }));
 

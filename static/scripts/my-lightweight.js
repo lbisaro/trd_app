@@ -1,6 +1,11 @@
 // ===============================================================
 // CLASE PRINCIPAL LWC
 // ===============================================================
+
+function formatTime(time) {
+    return (Date.parse(time)/1000) - (3 * 3600);
+}
+
 class LWC {
     constructor(containerId, height = 400) {
         this.containerId = containerId;

@@ -260,16 +260,16 @@ $(document).ready( function () {
     //Preparando los datos
     const mainData = JSON.parse(document.getElementById('main-data').textContent);
     const priceData = mainData.map(d => ({
-        time: Date.parse(d[0])/1000,
+        time: formatTime(d[0]),
         value: d[1]
     }));
     const pnlData = mainData.map(d => ({
-        time: Date.parse(d[0])/1000,
+        time: formatTime(d[0]),
         value: d[2],
     }));
     const tradesDataJSON = JSON.parse(document.getElementById('trades-data').textContent);
     const tradesData = tradesDataJSON.map(d => ({
-        time: Date.parse(d[0])/1000,
+        time: formatTime(d[0]),
         value: d[1],
         side: d[2],
     }));
@@ -277,7 +277,7 @@ $(document).ready( function () {
     const ordersData = [];
     for (const serie of ordersDataJSON) {
         const serieData = serie.map(d => ({
-            time: Date.parse(d[0])/1000,
+            time: formatTime(d[0]),
             value: d[1],
             side: d[2],
         }));
