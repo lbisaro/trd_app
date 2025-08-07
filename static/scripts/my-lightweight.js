@@ -30,6 +30,7 @@ class LWC {
             layout: {
                 background: { color: '#212529' },
                 textColor: '#DDD',
+                fontSize: 10,
                 panes: {
                     separatorColor: '#444',
                     separatorHoverColor: 'rgba(233, 233, 233, 0.09)',
