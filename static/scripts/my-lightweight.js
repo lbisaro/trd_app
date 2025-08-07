@@ -101,11 +101,10 @@ class LWC {
     }
 
     minView() {
-        console.log(this.maxDataSize-1);
-        this.chart.timeScale().setVisibleLogicalRange({
-            from: this.maxDataSize - this.minDataSize,
-            to: this.maxDataSize-1,
-        });
+        //this.chart.timeScale().setVisibleLogicalRange({
+        //    from: this.maxDataSize - this.minDataSize,
+        //    to: this.maxDataSize-1,
+        //});
     }
 
     fullView() {
