@@ -10,8 +10,6 @@ class LWC {
     constructor(containerId, height = 400) {
         this.containerId = containerId;
         this.height = height;
-        this.maxDataSize = 0;
-        this.minDataSize = 100;
 
         this.btnStyle = "position: absolute;z-index: 10; top: 0; padding: 0px 4px; border: 0px;background-color: transparent; ";
 
@@ -73,42 +71,29 @@ class LWC {
         addContainer.append('<button id="reset-button" style="' + this.btnStyle + ' right: 30px;" title="Resetear vista"><i class="bi bi-bootstrap-reboot"></i></button>');
         const resetButton = document.getElementById('reset-button');
 
-        if (this.maxDataSize > this.minDataSize) {
-            addContainer.append('<button id="full-button"  style="' + this.btnStyle + '  right: 5px;" title="Ver desde el inicio"><i class="bi bi-arrows-expand-vertical"></i></button>');
-            const fullButton = document.getElementById('full-button');
-            fullButton.addEventListener('click', () => {
-                this.fullView();
-            });
-            resetButton.addEventListener('click', () => {
-                this.minView();
-            });
-
-            this.minView();
-        }
-        else {
-            resetButton.addEventListener('click', () => {
-                this.fullView();
-            });
-
+    
+        addContainer.append('<button id="full-button"  style="' + this.btnStyle + '  right: 5px;" title="Ver desde el inicio"><i class="bi bi-arrows-expand-vertical"></i></button>');
+        const fullButton = document.getElementById('full-button');
+        fullButton.addEventListener('click', () => {
             this.fullView();
-        }
+        });
+        resetButton.addEventListener('click', () => {
+            this.minView();
+        });
 
-        //Esta linea se ejecuta luego de garcar el grafico para que se carguen las imagenes SVG
-        setTimeout(() => {
-            this.chart.applyOptions({});
-        }, 100);
+        this.minView();
+
         return this.chart;
     }
 
     minView() {
-        //this.chart.timeScale().setVisibleLogicalRange({
-        //    from: this.maxDataSize - this.minDataSize,
-        //    to: this.maxDataSize-1,
-        //});
+        this.chart.timeScale().resetTimeScale();
+        this.chart.priceScale('right').applyOptions({mode: 0,});
     }
 
     fullView() {
         this.chart.timeScale().fitContent();
+        this.chart.priceScale('right').applyOptions({mode: 0,});
     }
 
     addPriceSeries(priceData, pane = 0, height = 100, precision = 2, title = '') {
@@ -127,8 +112,6 @@ class LWC {
         priceSeries.setData(priceData);
         if (pane > 0)
             this.chart.panes()[[pane]].setHeight(height);
-        if (priceData.length > this.maxDataSize)
-            this.maxDataSize = priceData.length
         return priceSeries;
     }
 
@@ -152,8 +135,6 @@ class LWC {
         pnlSeries.setData(pnlData);
         if (pane > 0)
             this.chart.panes()[[pane]].setHeight(height);
-        if (pnlData.length > this.maxDataSize)
-            this.maxDataSize = pnlData.length
         return pnlSeries;
     }
 
