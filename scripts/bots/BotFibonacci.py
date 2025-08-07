@@ -240,7 +240,7 @@ class BotFibonacci(Bot_Core):
 
         #Gestion del Trail Stop
         if self.position:
-            if 'pos___avg_price' in self.status and isinstance(self.status['pos___avg_price'], dict):
+            if 'pos___max_price' in self.status and isinstance(self.status['pos___max_price'], dict):
                 max_price = self.status['pos___max_price']['r']
                 trl_stop_price = max_price * (1-(self.trail/100))
                 buyed_qty = self.status['pos___base_qty']['r'] 
