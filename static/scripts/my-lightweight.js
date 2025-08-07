@@ -104,7 +104,7 @@ class LWC {
         
         this.chart.timeScale().setVisibleLogicalRange({
             from: this.maxDataSize - this.minDataSize,
-            //to: this.maxDataSize-1,
+            to: this.maxDataSize-1,
         });
     }
 
