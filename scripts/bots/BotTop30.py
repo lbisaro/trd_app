@@ -16,10 +16,8 @@ class BotTop30(Bot_Core):
     quote_perc = 0.0
     interes = ''
     rsmpl = 0
-    trail = 0
-
+    
     indicadores = []
-
 
     def __init__(self):
         self.symbol = ''
@@ -28,7 +26,6 @@ class BotTop30(Bot_Core):
         self.take_profit = 0.0
         self.interes = 's'  
         self.rsmpl = 0
-        self.trail = 0
 
     descripcion = 'Bot Core v2 \n'\
                   'Ejecuta compras parciales al recibir una señal de Compra por el indicador Top30, '\
@@ -92,11 +89,11 @@ class BotTop30(Bot_Core):
         elif self.is_live_run():
             live_breadth = top30Live.get_live_breadth()
             self.klines['breadth'] = live_breadth
+            if live_breadth==0 or live_breadth==100:
+                self.log.alert(f'live_breadth {live_breadth}')
 
         self.klines['signal'] = np.where(self.klines['breadth']==0,'COMPRA',self.klines['signal'])
         self.klines['signal'] = np.where(self.klines['breadth']==100 ,'VENTA',self.klines['signal'])
-        if live_breadth==0 or live_breadth==100:
-            self.log.alert(f'live_breadth {live_breadth}')
             
         self.print_orders = False
         self.graph_open_orders = True
@@ -136,8 +133,6 @@ class BotTop30(Bot_Core):
             
         elif self.row['signal'] == 'VENTA' and self.wallet_base>0:
             self.close(flag=Order.FLAG_TAKEPROFIT)
-        
-
         
     def on_order_execute(self, order):
         if order.side == Order.SIDE_SELL:
