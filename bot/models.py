@@ -776,6 +776,7 @@ class Bot(models.Model):
             self.add_pnl(actual_status['wallet_tot']['r']-self.quote_qty,actual_status['price']['r'])
             open_orders = self.get_orders_en_curso()
             if len(open_orders)>0:
+                print(order.pk, order)
                 for order in open_orders:
                     if order.completed<1:
                         self.add_order_log(id=order.pk ,side=order.side,price=order.limit_price)
@@ -797,6 +798,7 @@ class Bot(models.Model):
         return pnl_df
 
     def add_order_log(self,order_id,side,price):
+        print(order_id,side,price)
         exist = BotOrderLog.objects.filter(bot=self,order_id=order_id)
         if len(exist) <= 1:
             botpnl = BotOrderLog()
