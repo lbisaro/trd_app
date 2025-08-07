@@ -776,7 +776,7 @@ class Bot(models.Model):
         if len(open_orders)>0:
             for order in open_orders:
                 if order.completed<1:
-                    self.add_order_log(id=order.pk ,side=order.side,price=order.limit_price)
+                    self.add_order_log(order_id=order.pk ,side=order.side,price=order.limit_price)
         if self.estrategia.interval_id in apply_intervals:
             self.add_pnl(actual_status['wallet_tot']['r']-self.quote_qty,actual_status['price']['r'])
     
