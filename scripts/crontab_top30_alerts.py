@@ -24,12 +24,14 @@ class top30_alerts:
 
     history = {}
     tf_data = {}
+    top30_history = {}
 
     def execute(self, *args, **options):
         print('Iniciando')
         self.breadth = 50
         self.alerts_log = []
         self.history = {}
+        self.top30_history = {'0m15':[],'1h01':[],'1h04':[],}
         self.breadth_file = breadth_file
         self.exchange = Exchange(type='info',exchange='bnc',prms=None)
         self.tlg = app_log()
@@ -56,12 +58,16 @@ class top30_alerts:
                 else:
                     self.tf_data = {}
 
+                if 'top30_history' in status:
+                    self.top30_history = status['top30_history']
+
                 #Si excede el limite de minutos entre el ultimo update y este, resetea el history para que vuelva a cargarlo
                 if 'last_update_dt' in status:
                     diffMinutes = (datetime.now()-status['last_update_dt']).total_seconds()/60
                     if diffMinutes > 30:
                         self.tf_data = {}
                         self.history = {}
+                
 
     
     def get_live_breadth(interval_id='default'):
@@ -141,7 +147,7 @@ class top30_alerts:
             pre_breadth = 50
             if interval_id in self.tf_data and 'breadth' in tf_data[interval_id]:
                 pre_breadth = self.tf_data[interval_id]['breadth']
-            
+            self.top30_history[interval_id].append(round(breadth,2))
             tf_data[interval_id]['breadth'] = round(breadth,2)
             str_alert = ''
             if pre_breadth < 100 and breadth == 100:
@@ -168,11 +174,11 @@ class top30_alerts:
                   'tf_data': tf_data,
                   'log': self.alerts_log,
                   'history': self.history,
-
+                  'top30_history': self.top30_history,  
                   }
         with open(self.breadth_file, "wb") as archivo:
             pickle.dump(status, archivo)
-
+        print(self.top30_history)
         print('Proceso completo')
 
 
