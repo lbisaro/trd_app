@@ -772,14 +772,13 @@ class Bot(models.Model):
 
         #Analizando si aplica registrar el PNL y OrderLog de acuerdo al timeframe del bot
         apply_intervals = fn.get_apply_intervals(timezone.now())
+        open_orders = self.get_orders_en_curso()
+        if len(open_orders)>0:
+            for order in open_orders:
+                if order.completed<1:
+                    self.add_order_log(id=order.pk ,side=order.side,price=order.limit_price)
         if self.estrategia.interval_id in apply_intervals:
             self.add_pnl(actual_status['wallet_tot']['r']-self.quote_qty,actual_status['price']['r'])
-            open_orders = self.get_orders_en_curso()
-            if len(open_orders)>0:
-                print(order.pk, order)
-                for order in open_orders:
-                    if order.completed<1:
-                        self.add_order_log(id=order.pk ,side=order.side,price=order.limit_price)
     
     def log_klines(self,klines, kline_file):
         with open(kline_file, 'wb') as f:
