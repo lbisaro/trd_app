@@ -49,6 +49,9 @@ class LWC {
                 borderColor: '#444',
                 barSpacing: 5,
             },
+            crosshair: {
+                mode: 0,
+            },
             timeScale: {
                 timeVisible: true,
                 secondsVisible: false,
