@@ -778,7 +778,7 @@ class Bot(models.Model):
             if len(open_orders)>0:
                 for order in open_orders:
                     if order.completed<1:
-                        self.add_order_log(id=order.id,side=order.side,price=order.limit_price)
+                        self.add_order_log(id=order.pk ,side=order.side,price=order.limit_price)
     
     def log_klines(self,klines, kline_file):
         with open(kline_file, 'wb') as f:
