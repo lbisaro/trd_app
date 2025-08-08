@@ -139,8 +139,6 @@ class BotSWSupertrend(Bot_Core):
         price = self.price
 
         hold = round(self.wallet_base*price,self.qd_quote)
-        if hold < 10:
-            del self.status['buyed_usd'] 
         
         """
         La linea
@@ -159,21 +157,20 @@ class BotSWSupertrend(Bot_Core):
             buy_order_id = self.buy(qty,Order.FLAG_SIGNAL)
             if buy_order_id:
                 buy_order = self.get_order(buy_order_id)
-                buyed_usd = round(buy_order.price*buy_order.qty,self.qd_quote)
-                self.status['buyed_usd'] = {'l': 'Compra inicial','v': buyed_usd, 'r': buyed_usd}
-                
+                                
                 #Stop-loss price
                 if self.stop_loss > 0:
                     limit_price = round(buy_order.price * (1-(self.stop_loss/100)) ,self.qd_price)
                     self.sell_limit(qty,Order.FLAG_STOPLOSS,limit_price,tag='STOP_LOSS')
                 
         elif 'st_trend' in self.row and hold > 10 and self.signal == 'VENTA': 
-            del self.status['buyed_usd']
             self.close(Order.FLAG_SIGNAL)
         
         else:
-            if 'buyed_usd' in self.status:
-                buyed_usd = self.status['buyed_usd']['r']
+            buyed_usd = 0
+            if 'pos___base_qty' in self.status:
+                buyed_usd = self.status['pos___base_qty']['r']*self.status['pos___avg_price']['r']
+            if buyed_usd > 0:
                 if self.lot_to_safe > 0 and hold > buyed_usd*(1+(self.lot_to_safe/100)):
                     usd_to_sell = hold - buyed_usd
                     qty = round_down((usd_to_sell/price) , self.qd_qty)
