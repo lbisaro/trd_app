@@ -267,7 +267,6 @@ class BotFibonacci(Bot_Core):
             #Ejecuta una venta parcial si la ganancia en QUOTE es mayor a 11 USD y mayor al % establecido para venta parcial?
             if pnl_quote > 11 and pnl_quote > buyed_quote*(self.vp/100):
                 usd_to_sell = pnl_quote
-                print(usd_to_sell)
                 qty_to_sell = round(usd_to_sell/self.price,self.qd_qty)
                 if self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT):
                     self.update_order_by_tag('STOP_LOSS',qty=round_down(self.wallet_base,self.qd_qty)) 
