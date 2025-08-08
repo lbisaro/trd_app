@@ -178,7 +178,6 @@ class top30_alerts:
                   }
         with open(self.breadth_file, "wb") as archivo:
             pickle.dump(status, archivo)
-        print(self.top30_history)
         print('Proceso completo')
 
 
