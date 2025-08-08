@@ -123,13 +123,14 @@
                     <h6 class="text-info">Estado</h6>
                     <div class="d-flex flex-row flex-wrap rounded pb-1 mb-1">
                         {% for k,item in status.items %}
-                            {% if item.l %}
-                                <div class="w-50 py-1">{{item.l}}:<br><b {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</b></div>
-                            {% else %}
-                                <div class="w-50 py-1">{{k}}:<br><b>{{item}}</b></div>
-                            
+                            {% if item.r != 0%}
+                                {% if item.l %}
+                                    <div class="w-50 py-1">{{item.l}}:<br><b {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</b></div>
+                                {% else %}
+                                    <div class="w-50 py-1">{{k}}:<br><b>{{item}}</b></div>
+                                
+                                {% endif %}
                             {% endif %}
-
                         {% endfor %}
                     </div>
                 </div>
