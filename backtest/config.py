@@ -11,7 +11,7 @@ intervals = pd.DataFrame([
                             #['0m05','0m05','5 minutos','5m','5T',5],
                             #['0m15','0m15','15 minutos','15m','15T',15],
                             #['0m30','0m30','30 minutos','30m','30T',30],
-                            ['1h01','1h01','1 hora','1h','1H',60],
+                            #['1h01','1h01','1 hora','1h','1H',60],
                             #['1h04','1h04','4 horas','4h','4H',(60*4)],
                             #['2d01','2d01','1 dia','1d','1D',(60*24)],
                             ],columns=columns)
@@ -21,6 +21,7 @@ symbols = {
     'BNBUSDT', 
     'BTCUSDT',
     'ETHUSDT', 
+    'TRXUSDT', 
     
     #Top 30 MarketCap
     #'XRPUSDT',
