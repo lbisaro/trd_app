@@ -111,21 +111,6 @@ def bot(request, bot_id):
         trades_data = df_trades[df_trades['completed']>0][['str_dt', 'price', 'side']].copy()
         trades_data = trades_data.values.tolist()
 
-
-
-
-
-        """
-        #Indicadores
-        indicators = []
-        if len(botClass.indicadores)>0:
-            for indicador in botClass.indicadores:
-                if indicador['col'] in klines:
-                    indicators.append(indicador)
-        if not open_pos and 'close' in klines:
-            klines['price'] = klines['close']
-        """
-    
     return render(request, 'bot.html',{
         'symbol': botClass.symbol,
         'title': str(bot),
