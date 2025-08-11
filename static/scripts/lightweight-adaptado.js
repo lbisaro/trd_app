@@ -11174,17 +11174,17 @@
                 return void function(t, i, s) {
                     console.log(t)
                     const n = qe("square", s)
-                      , e = (n - 1) * i.hb / 2
-                      , r = i._t - e
-                      , h = i.ut - e;
+                    , e = (n - 1) * i.hb / 2
+                    , r = i._t - e
+                    , h = i.ut - e;
                     t.fillRect(r, h, n * i.hb, n * i.hb)
-                }(i, s, t.zr)
+                }(i, s, t.zr);
             case "dashLine":
                 return void function(t, i, s) {
-                    const n = qe("square", s)/2; // Usa el tamaño del cuadrado/2 como referencia
+                    const n = qe("square", s)/2; 
                     const e = (n - 1) * i.hb / 2;
-                    const r = i._t - e; // Coordenada X inicial
-                    const h = i.ut;      // Coordenada Y
+                    const r = i._t - e; 
+                    const h = i.ut;      
                     
                     t.beginPath();
                     const start = r;
@@ -11194,29 +11194,75 @@
                         t.moveTo(ji, h);
                         t.lineTo(ji+inc/2, h);                    
                     }
-                    t.strokeStyle = t.fillStyle; // Usa el color del marcador
-                    t.lineWidth = 1; // Un grosor de 1 píxel
+                    t.strokeStyle = t.fillStyle; 
+                    t.lineWidth = 1; 
                     t.stroke();
                     t.closePath();
 
                 }(i, s, t.zr);
             case "line":
                 return void function(t, i, s) {
-                    const n = qe("square", s)/2; // Usa el tamaño del cuadrado/2 como referencia
+                    const n = qe("square", s)/2; 
                     const e = (n - 1) * i.hb / 2;
-                    const r = i._t - e; // Coordenada X inicial
-                    const h = i.ut;      // Coordenada Y
+                    const r = i._t - e; 
+                    const h = i.ut;      
                     
                     t.beginPath();
                     const start = r;
                     const end = r + n * i.hb;
                     t.moveTo(start, h);
                     t.lineTo(end, h);                    
-                    t.strokeStyle = t.fillStyle; // Usa el color del marcador
-                    t.lineWidth = 1; // Un grosor de 1 píxel
+                    t.strokeStyle = t.fillStyle; 
+                    t.lineWidth = 1; 
                     t.stroke();
                     t.closePath();
 
+                }(i, s, t.zr);
+                
+            case "signalUp":
+                return void function(t, i, s) {
+                    const tamano = qe("square", s);
+                    const x = i._t;
+                    const y = i.ut;
+
+                    t.beginPath();
+                    // Línea vertical
+                    t.moveTo(x, y + tamano / 2);
+                    t.lineTo(x, y - tamano / 2);
+                    // Punta de la flecha (izquierda)
+                    t.moveTo(x, y - tamano / 2);
+                    t.lineTo(x - tamano / 4, y - tamano / 4);
+                    // Punta de la flecha (derecha)
+                    t.moveTo(x, y - tamano / 2);
+                    t.lineTo(x + tamano / 4, y - tamano / 4);
+
+                    t.strokeStyle = t.fillStyle;
+                    t.lineWidth = 1;
+                    t.stroke();
+                    t.closePath();
+                }(i, s, t.zr);
+
+            case "signalDown":
+                return void function(t, i, s) {
+                    const tamano = qe("square", s);
+                    const x = i._t;
+                    const y = i.ut;
+
+                    t.beginPath();
+                    // Línea vertical
+                    t.moveTo(x, y - tamano / 2);
+                    t.lineTo(x, y + tamano / 2);
+                    // Punta de la flecha (izquierda)
+                    t.moveTo(x, y + tamano / 2);
+                    t.lineTo(x - tamano / 4, y + tamano / 4);
+                    // Punta de la flecha (derecha)
+                    t.moveTo(x, y + tamano / 2);
+                    t.lineTo(x + tamano / 4, y + tamano / 4);
+
+                    t.strokeStyle = t.fillStyle;
+                    t.lineWidth = 1;
+                    t.stroke();
+                    t.closePath();
                 }(i, s, t.zr);
             }
             t.ob
@@ -11277,6 +11323,21 @@
                     // Comprueba si el mouse (n, e) está en el rectángulo del "dashLine"
                     // Se da una tolerancia vertical de 2 píxeles para que sea más fácil hacer clic
                     return n >= a && n <= a + r && e >= l - 2 && e <= l + 2;
+                }(t._t, t.ut, t.zr, i, s);
+            case "signalUp":
+            case "signalDown":
+                return function(t, i, s, n, e) {
+                    // Se usa un cuadro delimitador simple para la detección
+                    const tamano = qe("square", s);
+                    const x = t;
+                    const y = i;
+                    
+                    const izquierda = x - tamano / 4;
+                    const derecha = x + tamano / 4;
+                    const arriba = y - tamano / 2;
+                    const abajo = y + tamano / 2;
+
+                    return n >= izquierda && n <= derecha && e >= arriba && e <= abajo;
                 }(t._t, t.ut, t.zr, i, s);
             }
         }(t, i, s)
