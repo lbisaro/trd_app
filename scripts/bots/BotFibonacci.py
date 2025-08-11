@@ -158,6 +158,13 @@ class BotFibonacci(Bot_Core):
         self.print_orders = False
         self.graph_signals = False
         self.graph_open_orders = True
+
+    def get_status(self):
+        status_datetime = dt.datetime.now()
+        status = super().get_status()
+        status['trend'] = None
+        status['pivots'] = None
+        return status    
     
     def next(self):
         price = self.price
