@@ -95,12 +95,14 @@ class BotTop30(Bot_Core):
             
         self.print_orders = False
         self.graph_open_orders = True
-        self.graph_signals = False
+        self.graph_signals = True
 
     def next(self):
 
         self.position = False
         last_buy_price = 0
+        self.high = self.row['high']
+        self.low = self.row['low']
 
         for id in self._trades:
             o = self._trades[id]
