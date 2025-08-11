@@ -943,18 +943,20 @@ class BotPnl(models.Model):
         latest_pnl_data = BotPnl.objects.filter(
             datetime__in=latest_entries_per_day
         ).values('datetime', 'pnl')
+        if len(latest_pnl_data) > 0:
+            # Paso 3: Crear el DataFrame de pandas
+            df = pd.DataFrame(list(latest_pnl_data))
 
-        # Paso 3: Crear el DataFrame de pandas
-        df = pd.DataFrame(list(latest_pnl_data))
+            # Paso 4: Procesar el DataFrame para obtener el PNL total diario
+            # Convertir 'datetime' a formato de fecha para agrupar por día
+            df['date'] = df['datetime'].dt.date
 
-        # Paso 4: Procesar el DataFrame para obtener el PNL total diario
-        # Convertir 'datetime' a formato de fecha para agrupar por día
-        df['date'] = df['datetime'].dt.date
+            # Agrupar por fecha y sumar el PNL
+            pnl_diario = df.groupby('date')['pnl'].sum().reset_index()
 
-        # Agrupar por fecha y sumar el PNL
-        pnl_diario = df.groupby('date')['pnl'].sum().reset_index()
-
-        return pnl_diario
+            return pnl_diario
+        else:
+            return pd.DataFrame()
 
         
 class BotOrderLog(models.Model):

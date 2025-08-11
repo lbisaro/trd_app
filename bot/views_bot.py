@@ -35,10 +35,13 @@ def bots(request):
                              })
 
     pnl_diario = BotPnl.get_pnl_diario_general()
-    pnl_diario['date'] = pd.to_datetime(pnl_diario['date'])
-    pnl_diario['str_dt'] = pnl_diario['date'].dt.strftime('%Y-%m-%d')
-    pnl_diario = pnl_diario[['str_dt', 'pnl']].copy()
-    pnl_diario = pnl_diario.values.tolist()
+    if len(pnl_diario)>0:
+        pnl_diario['date'] = pd.to_datetime(pnl_diario['date'])
+        pnl_diario['str_dt'] = pnl_diario['date'].dt.strftime('%Y-%m-%d')
+        pnl_diario = pnl_diario[['str_dt', 'pnl']].copy()
+        pnl_diario = pnl_diario.values.tolist()
+    else:
+        pnl_diario = []
 
     if request.method == 'GET':
         return render(request, 'bots.html',{
@@ -110,6 +113,8 @@ def bot(request, bot_id):
         df_trades['str_dt'] = df_trades['datetime'].dt.strftime('%Y-%m-%d %H:%M')
         trades_data = df_trades[df_trades['completed']>0][['str_dt', 'price', 'side']].copy()
         trades_data = trades_data.values.tolist()
+        
+        print(df_trades[df_trades['completed']>0][['str_dt', 'price', 'side']])
 
     return render(request, 'bot.html',{
         'symbol': botClass.symbol,
