@@ -292,12 +292,12 @@ $(document).ready( function () {
         
         lwc.addPriceSeries(priceData,0 ,0 , qd_price, '');
         lwc.addPnlSeries(pnlData, 1, 100);
-
-        lwc.addTradesSeries(tradesData )
-
+        
         for (const serie of ordersData) {
             lwc.addOrdersSeries(serie )
         }
+
+        lwc.addTradesSeries(tradesData )
         chart = lwc.getChart();
     }
 
