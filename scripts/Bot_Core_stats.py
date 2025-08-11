@@ -87,7 +87,7 @@ class Bot_Core_stats:
                 pos___orders_qty += 1
                 last_order_id = order.id
         
-        if pos___base_qty*self.price <= 5:
+        if pos___base_qty*self.price <= 2:
             if len(pos_order_ids)>0:
                 for oid in pos_order_ids:
                     self._trades[oid].pos_order_id = last_order_id
