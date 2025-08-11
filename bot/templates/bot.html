@@ -5,13 +5,19 @@
 {% load static %}
 {% load tz %}
 
+{% block css %}
+<style>
+    .box {
+        padding: 0px;
+        margin: 0px 5px 3px 0px;
+        box-sizing: border-box;
+        border: 0px none;
+        min-width: 16em;
+    }
+</style>
+{% endblock %}
+
 {% block head %}
-<!--
-    <script
-    type="text/javascript"
-    src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js">
-</script>
--->
 <script
     type="text/javascript"
     src="{% static 'scripts/lightweight-adaptado.js' %}?v0">
@@ -85,22 +91,22 @@
     </div>
     {% endif %}
     <div class="row pt-2" style="font-size: 0.8em;">
-        <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
-            <div class="w-50 py-1"><span class="text-secondary">Intervalo:</span><br><b>{{intervalo}}</b></div>
+        <div class="d-flex flex-wrap rounded border border-1 pb-1 mb-1">
+            <div class="box"><span class="text-secondary">Intervalo:</span><br><b>{{intervalo}}</b></div>
             {% for k,prm in parametros.items %}
                 {% if prm.pub %}
-                    <div class="w-50 py-1"><span class="text-secondary">{{prm.d}}:</span><br>{{prm.str}}</div>
+                    <div class="box"><span class="text-secondary">{{prm.d}}:</span><br>{{prm.str}}</div>
                 {% endif %}
             {% endfor %}
         </div>
     </div>
 
     <div class="row pb-2" style="font-size: 0.8em;">
-        <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
-            <div class="w-50 py-1"><span class="text-secondary">Capital:</span><br><span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{quote_actual|stringformat:".2f"}} {{quote_asset}} / {{quote_qty|stringformat:".2f"}}</span></div>
-            <div class="w-50 py-1"><span class="text-secondary">PNL:</span><br><span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{pnl_perc|stringformat:".2f"}}% ({{pnl|stringformat:".2f"}} {{quote_asset}})</span></div>
-            <div class="w-50 py-1"><span class="text-secondary">Stop Loss General:</span><br>{{stop_loss|stringformat:".2f"}} %</div>
-            <div class="w-50 py-1"><span class="text-secondary">Maximo DrowDawn:</span><br>{{max_drawdown_reg|stringformat:".2f" }}/{{max_drawdown|stringformat:".2f" }} %</div>
+        <div class="d-flex flex-wrap rounded border border-1 pb-1 mb-1">
+            <div class="box"><span class="text-secondary">Capital:</span><br><span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{quote_actual|stringformat:".2f"}} {{quote_asset}} / {{quote_qty|stringformat:".2f"}}</span></div>
+            <div class="box"><span class="text-secondary">PNL:</span><br><span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{pnl_perc|stringformat:".2f"}}% ({{pnl|stringformat:".2f"}} {{quote_asset}})</span></div>
+            <div class="box"><span class="text-secondary">Stop Loss General:</span><br>{{stop_loss|stringformat:".2f"}} %</div>
+            <div class="box"><span class="text-secondary">Maximo DrowDawn:</span><br>{{max_drawdown_reg|stringformat:".2f" }}/{{max_drawdown|stringformat:".2f" }} %</div>
         </div>
     </div>
     
@@ -121,10 +127,10 @@
                 {% if status %}
                 <div class="row pt-4" style="font-size: 0.8em;">
                     <h6 class="text-info">Estado</h6>
-                    <div class="d-flex flex-row flex-wrap rounded pb-1 mb-1">
+                    <div class="d-flex flex-wrap">
                         {% for k,item in status.items %}
                             {% if item.r != 0 %}
-                                <div class="w-50 py-1"><span class="text-secondary">{{item.l}}:</span><br><span {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
+                                <div class="box"><span class="text-secondary">{{item.l}}:</span><br><span {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
                             {% endif %}
                         {% endfor %}
                     </div>
