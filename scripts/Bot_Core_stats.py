@@ -110,7 +110,7 @@ class Bot_Core_stats:
                                            'v': round(pos___base_qty,self.qd_qty), 
                                            'r': pos___base_qty}
         self.status['pos___quote_qty']  = {'l':'Pos. Quote', 
-                                           'v': round(pos___quote_qty,self.qd_quote), 
+                                           'v': f'({pos___quote_qty:.2f} {self.quote_asset})', 
                                            'r': pos___quote_qty}
         self.status['pos___orders_qty'] = {'l':'Pos. Ordenes', 
                                            'v': pos___orders_qty, 
