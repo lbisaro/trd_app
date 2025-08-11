@@ -67,7 +67,7 @@
 </div>
 <div class="container" >
     <div class="row pb-4">
-        <div >Estrategia:  
+        <div ><span class="text-secondary">Estrategia</span>:  
         <span class="col fw-bold">{{estrategia}}</span> 
         <i class="bi bi-info-circle text-warning" data-bs-toggle="modal" data-bs-target="#descripcion_modal"></i>
         
@@ -86,7 +86,7 @@
     {% endif %}
     <div class="row pt-2" style="font-size: 0.8em;">
         <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
-            <div class="w-50 py-1">Intervalo:<br><b>{{intervalo}}</b></div>
+            <div class="w-50 py-1"><span class="text-secondary">Intervalo:</span><br><b>{{intervalo}}</b></div>
             {% for k,prm in parametros.items %}
                 {% if prm.pub %}
                     <div class="w-50 py-1"><span class="text-secondary">{{prm.d}}:</span><br>{{prm.str}}</div>
@@ -125,9 +125,9 @@
                         {% for k,item in status.items %}
                             {% if item.r != 0%}
                                 {% if item.l %}
-                                    <div class="w-50 py-1">{{item.l}}:<br><span {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
+                                    <div class="w-50 py-1"><span class="text-secondary">{{item.l}}:</span><br><span {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
                                 {% else %}
-                                    <div class="w-50 py-1">{{k}}:<br><span>{{item}}</span></div>
+                                    <div class="w-50 py-1"><span class="text-secondary">{{k}}:</span><br><span>{{item}}</span></div>
                                 
                                 {% endif %}
                             {% endif %}
