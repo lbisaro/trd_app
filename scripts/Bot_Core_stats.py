@@ -30,7 +30,7 @@ class Bot_Core_stats:
 
         wallet_base = round(self.wallet_base,self.qd_qty)
         wallet_base_in_quote = round(self.wallet_base*self.price,self.qd_quote+3)
-        v = f'{wallet_base} {self.base_asset} ({wallet_base_in_quote} {self.quote_asset})'
+        v = f'{wallet_base} {self.base_asset} ({wallet_base_in_quote:.2f} {self.quote_asset})'
         self.status['wallet_base'] = {'l': 'Comprado',
                                       'v': v,
                                       'r':wallet_base}
