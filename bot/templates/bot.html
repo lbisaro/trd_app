@@ -89,7 +89,7 @@
             <div class="w-50 py-1">Intervalo:<br><b>{{intervalo}}</b></div>
             {% for k,prm in parametros.items %}
                 {% if prm.pub %}
-                    <div class="w-50 py-1">{{prm.d}}:<br><b>{{prm.str}}</b></div>
+                    <div class="w-50 py-1"><span class="text-secondary">{{prm.d}}:</span><br>{{prm.str}}</div>
                 {% endif %}
             {% endfor %}
         </div>
@@ -97,10 +97,10 @@
 
     <div class="row pb-2" style="font-size: 0.8em;">
         <div class="d-flex flex-row flex-wrap rounded border border-1 pb-1 mb-1">
-            <div class="w-50 py-1">Capital:<br><span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{quote_actual|stringformat:".2f"}} {{quote_asset}} / {{quote_qty|stringformat:".2f"}}</span></div>
-            <div class="w-50 py-1">PNL:<br><span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{pnl_perc|stringformat:".2f"}}% ({{pnl|stringformat:".2f"}} {{quote_asset}})</span></div>
-            <div class="w-50 py-1">Stop Loss General:<br>{{stop_loss|stringformat:".2f"}} %</div>
-            <div class="w-50 py-1">Maximo DrowDawn:<br>{{max_drawdown_reg|stringformat:".2f" }}/{{max_drawdown|stringformat:".2f" }} %</div>
+            <div class="w-50 py-1"><span class="text-secondary">Capital:</span><br><span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{quote_actual|stringformat:".2f"}} {{quote_asset}} / {{quote_qty|stringformat:".2f"}}</span></div>
+            <div class="w-50 py-1"><span class="text-secondary">PNL:</span><br><span class="{% if pnl < 0 %}text-danger{% else %}text-success{% endif %}">{{pnl_perc|stringformat:".2f"}}% ({{pnl|stringformat:".2f"}} {{quote_asset}})</span></div>
+            <div class="w-50 py-1"><span class="text-secondary">Stop Loss General:</span><br>{{stop_loss|stringformat:".2f"}} %</div>
+            <div class="w-50 py-1"><span class="text-secondary">Maximo DrowDawn:</span><br>{{max_drawdown_reg|stringformat:".2f" }}/{{max_drawdown|stringformat:".2f" }} %</div>
         </div>
     </div>
     
