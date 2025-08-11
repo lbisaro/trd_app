@@ -44,10 +44,13 @@ class Bot_Core_stats:
         wallet_tot = round(self.wallet_quote+wallet_base_in_quote,self.qd_quote+3)
 
         v = f'{wallet_tot:.2f} {self.quote_asset}'
+        cls = 'text-danger' if wallet_tot < self.quote_qty else 'text-success'
         self.status['wallet_tot'] = {'l': 'Capital actual',
                                      'v': v,
                                      'r':wallet_tot,
-                                     's': True}
+                                     's': True,
+                                     'cls': cls,
+                                     }
 
         #self.make_trades()
         pos___base_qty = 0
