@@ -174,6 +174,39 @@ class LWC {
         return LightweightCharts.createSeriesMarkers(serie, markers);
     }
 
+    
+    addSignalsSeries(data, pane = 0) {
+        const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
+            lineWidth: 1,
+            priceLineVisible: false,
+            crosshairMarkerVisible: false,
+            lastValueVisible: false,
+            color: 'transparent',
+        }, pane);
+        serie.setData(data);
+
+        var markers = []
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].side == 0) {
+                markers.push({
+                    time: data[i].time,
+                    position: 'belowBar',
+                    color: '#fd7e1488',
+                    shape: 'signalUp',
+                });
+            }
+            else {
+                markers.push({
+                    time: data[i].time,
+                    position: 'aboveBar',
+                    color: '#fd7e1488',
+                    shape: 'signalDown',
+                });
+            }
+        }
+        return LightweightCharts.createSeriesMarkers(serie, markers);
+    }
+
     addOrdersSeries(data, pane = 0) {
         const color = data[0].side == 0 ? '#0ecb81' : '#f6465d';
         const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
