@@ -124,7 +124,7 @@
                     <div class="d-flex flex-row flex-wrap rounded pb-1 mb-1">
                         {% for k,item in status.items %}
                             {% if item.r != 0 %}
-                                <div class="w-50 py-1"><span class="text-secondary">{{item.l}}:</span><br><span {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
+                                <div class="w-25 py-1"><span class="text-secondary">{{item.l}}:</span><br><span {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
                             {% endif %}
                         {% endfor %}
                     </div>
