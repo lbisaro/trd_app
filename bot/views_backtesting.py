@@ -47,8 +47,6 @@ def run(request):
         gen_bot = GenericBotClass()
         run_bot = gen_bot.get_instance(bot_class_name)
         
-
-
         prmPost = eval(request.POST['parametros'])
         for dict in prmPost:
             for k,v in dict.items():

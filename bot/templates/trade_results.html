@@ -1,405 +1,71 @@
-<!-- Styles -->
-<style>
-    #chardiv-tab-pane {
-        width: 100%;
-        height: 600px;
-        max-width: 100%;
-    }
-</style>
 
-<!-- Resources -->
-<script src="https://cdn.amcharts.com/lib/5/index.js"></script>
-<script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
-<script src="https://cdn.amcharts.com/lib/5/stock.js"></script>
-<script src="https://cdn.amcharts.com/lib/5/themes/Dark.js"></script>
 
 <!-- Chart code -->
+
 <script>
+    var chart;
+    var lwc;   
 
-var root
-    am5.ready(function () {
-        root = am5.Root.new("chardiv-tab-pane");
-    });
-
-    function chartDraw(data, events, symbol, timeUnit) {
-
-        root.dispose();
-        root = am5.Root.new("chardiv-tab-pane");
-        root.setThemes([
-            am5themes_Dark.new(root)
-        ]);
-
-
-        root.numberFormatter.set("numberFormat", "#,###.#########");
-        // Create a stock chart
-        // -------------------------------------------------------------------------------
-        // https://www.amcharts.com/docs/v5/charts/stock-chart/#Instantiating_the_chart
-        var stockChart = root.container.children.push(am5stock.StockChart.new(root, {
-
-            stockPositiveColor: am5.color(0x318866),
-            stockNegativeColor: am5.color(0x9a5760),
-            volumePositiveColor: am5.color(0x7ec6de),
-            volumeNegativeColor: am5.color(0x7ec6de),
-
+    function chartDraw(data, signals, trades, orders_hst, symbol, qd_price) {
+        const priceData = data.map(d => ({
+            time: formatTime(d[0]) ,
+            value: d[1]
         }));
 
-        // Create a main stock panel (chart)
-        // -------------------------------------------------------------------------------
-        // https://www.amcharts.com/docs/v5/charts/stock-chart/#Adding_panels
-        var mainPanel = stockChart.panels.push(am5stock.StockPanel.new(root, {
-            wheelY: "zoomX",
-            panX: true,
-            panY: true
+        const pnlData = data.map(d => ({
+            time: formatTime(d[0]) ,
+            value: d[2]
         }));
 
-
-
-
-        // Create value axis
-        // -------------------------------------------------------------------------------
-        // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
-        var valueAxis = mainPanel.yAxes.push(am5xy.ValueAxis.new(root, {
-            renderer: am5xy.AxisRendererY.new(root, {
-                pan: "zoom"
-            }),
-            extraMin: 0.1, // adds some space for for main series
-            tooltip: am5.Tooltip.new(root, {}),
-            numberFormat: "#,###.00",
-            extraTooltipPrecision: 2
+        const signalData = signals.map(d => ({
+            time: formatTime(d[0]) ,
+            value: d[1],
+            side: d[2],
         }));
 
-        // Create date Axis
-        var dateAxis = mainPanel.xAxes.push(am5xy.GaplessDateAxis.new(root, {
-            baseInterval: {
-                timeUnit: timeUnit,
-                count: 1
-            },
-            renderer: am5xy.AxisRendererX.new(root, {}),
-            tooltip: am5.Tooltip.new(root, {})
+        const tradesData = trades.map(d => ({
+            time: formatTime(d[0]) ,
+            value: d[1],
+            side: d[2],
         }));
-
-
-
-        // Create series OHLC ----------------------------------------------------------------------
-        var valueSeries = mainPanel.series.push(
-            am5xy.CandlestickSeries.new(root, {
-                name: symbol,
-                xAxis: dateAxis,
-                yAxis: valueAxis,
-                clustered: false,
-                openValueYField: "o",
-                highValueYField: "h",
-                lowValueYField: "l",
-                valueYField: "c",
-                valueXField: "dt",
-                calculateAggregates: true,
-                //legendValueText: "o: [bold]{openValueY}[/] h: [bold]{highValueY}[/] l: [bold]{lowValueY}[/] c: [bold]{valueY}[/]",
-                legendValueText: "{valueY}[/]",
-                legendRangeValueText: ""
-            })
-        );
-
-        // Set main value series
-        // -------------------------------------------------------------------------------
-        // https://www.amcharts.com/docs/v5/charts/stock-chart/#Setting_main_series
-        stockChart.set("stockSeries", valueSeries);
-
-        // Add a stock legend
-        // -------------------------------------------------------------------------------
-        // https://www.amcharts.com/docs/v5/charts/stock-chart/stock-legend/
-        var valueLegend = mainPanel.plotContainer.children.push(am5stock.StockLegend.new(root, {
-            stockChart: stockChart,
-            draggable: true,
-        }));
-
-        // Create Volume axis
-        // -------------------------------------------------------------------------------
-        // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
-        var volumeAxisRenderer = am5xy.AxisRendererY.new(root, {
-            inside: true
+        
+        const ordersData = [];
+        Object.entries(orders_hst).forEach(([key, serie]) => {
+            const serieData = serie.map(d => ({
+                time: formatTime(d[0]),
+                value: d[1],
+                side: d[2],
+            }));
+            ordersData.push(serieData);
         });
 
-        volumeAxisRenderer.labels.template.set("forceHidden", true);
-        volumeAxisRenderer.grid.template.set("forceHidden", true);
+        setTimeout( function () { //Timeout necesario para que se cree el div
 
-        var volumeValueAxis = mainPanel.yAxes.push(am5xy.ValueAxis.new(root, {
-            numberFormat: "#.#a",
-            height: am5.percent(20),
-            y: am5.percent(100),
-            centerY: am5.percent(100),
-            renderer: volumeAxisRenderer
-        }));
-
-        // Add series
-        // https://www.amcharts.com/docs/v5/charts/xy-chart/series/
-        var volumeSeries = mainPanel.series.push(am5xy.ColumnSeries.new(root, {
-            name: "Volume",
-            clustered: false,
-            valueXField: "dt",
-            valueYField: "v",
-            xAxis: dateAxis,
-            yAxis: volumeValueAxis,
-            legendValueText: "{valueY.formatNumber('#,###.0a')}[/]"
-        }));
-
-        volumeSeries.columns.template.setAll({
-            strokeOpacity: 0,
-            fillOpacity: 0.5
-        });
-
-        // color columns by stock rules
-        volumeSeries.columns.template.adapters.add("fill", function (fill, target) {
-            var dataItem = target.dataItem;
-            if (dataItem) {
-                return stockChart.getVolumeColor(dataItem);
-            }
-            return fill;
-        })
-
-
-        // Set main series
-        // -------------------------------------------------------------------------------
-        // https://www.amcharts.com/docs/v5/charts/stock-chart/#Setting_main_series
-        stockChart.set("volumeSeries", volumeSeries);
-        
-
-
-        //Bullets
-        buySerie        = addBullet("by",   "Buy",  0x0ecb81,'r')
-        sell_s_Serie    = addBullet("sls",  "Sell",  0xf6465d,'r')
-        sell_sl_Serie   = addBullet("slsl", "Sell SL",  0xf6465d,'d')
-        sell_tp_Serie   = addBullet("sltp", "Sell TP",  0xf6465d,'u')
-        sigBSerie       = addBullet("sB",   "Sig Buy",  0xfeb272,'u') 
-        sigSSerie       = addBullet("sS",   "Sig Serll",  0xfeb272,'d') 
-
-        stockChart.set("Buy", buySerie);
-        //valueLegend.data.setAll([valueSeries, volumeSeries ]); //buySerie,sell_s_Serie,sell_sl_Serie,sell_tp_Serie,sigBSerie,sigSSerie,
-       
-
-        
-
-
-
-        // Add scrollbar
-        // -------------------------------------------------------------------------------
-        // https://www.amcharts.com/docs/v5/charts/xy-chart/scrollbars/
-        var scrollbar = mainPanel.set("scrollbarX", am5xy.XYChartScrollbar.new(root, {
-            orientation: "horizontal",
-            height: 50
-        }));
-        stockChart.toolsContainer.children.push(scrollbar);
-
-        //Cursores
-        // Add cursor(s)
-        // -------------------------------------------------------------------------------
-        // https://www.amcharts.com/docs/v5/charts/xy-chart/cursor/
-        mainPanel.set("cursor", am5xy.XYCursor.new(root, {
-            yAxis: valueAxis,
-            xAxis: dateAxis,
-        }));
-
-        valueSeries.data.setAll(data);
-        volumeSeries.data.setAll(data);
-
-        // StopLoss y TakeProfit
-        var slSeries = mainPanel.series.push(am5xy.LineSeries.new(root, {
-            name: "Stop Loss",
-            xAxis: dateAxis,
-            yAxis: valueAxis,
-            connect: false,
-            stroke: am5.color(0x9a5760),
-            valueYField: "SL",
-            valueXField: "dt",
-            valueField: "SL",
-        }));
-        if (events.length>0)
-            slSeries.data.setAll(events);
-        else
-            slSeries.data.setAll(data);
-
-        var tpSeries = mainPanel.series.push(am5xy.LineSeries.new(root, {
-            name: "Take Profit",
-            xAxis: dateAxis,
-            yAxis: valueAxis,
-            connect: false,
-            stroke: am5.color(0x9a5760), 
-            valueYField: "TP",
-            valueXField: "dt",
-            valueField: "TP",
-        }));
-        
-        if (events.length>0)
-            tpSeries.data.setAll(events);
-        else
-            tpSeries.data.setAll(data);
-
-        
-        var bySeries = mainPanel.series.push(am5xy.LineSeries.new(root, {
-            name: "Buy",
-            xAxis: dateAxis,
-            yAxis: valueAxis,
-            connect: false,
-            stroke: am5.color(0x318866),
-            valueYField: "BY",
-            valueXField: "dt",
-            valueField: "BY",
-        }));
-        if (events.length>0)
-            bySeries.data.setAll(events);
-        else
-            bySeries.data.setAll(data);
-
-        addWalletPanel()
-        
-        /// Functions
-
-        function triangle(color,dir) {
-
-            if (dir == 'r')
-                toDraw = function (display) {
-                    display.moveTo( 0, 0);
-                    display.lineTo(-7,-4);
-                    display.lineTo(-7, 4);
-                    display.lineTo( 0, 0);
-                }
-            else if (dir == 'd')
-                toDraw = function (display) {
-                    display.moveTo( 0, 0);
-                    display.lineTo( 4,-7);
-                    display.lineTo(-4,-7);
-                    display.lineTo( 0, 0);
-                }            
-            else if (dir == 'l')
-                toDraw = function (display) {
-                    display.moveTo( 0, 0);
-                    display.lineTo( 7,-4);
-                    display.lineTo( 7, 4);
-                    display.lineTo( 0, 0);
-                }            
-            else if (dir == 'u')
-                toDraw = function (display) {
-                    display.moveTo( 0, 0);
-                    display.lineTo(-4, 7);
-                    display.lineTo( 4, 7);
-                    display.lineTo( 0, 0);
-                }
-            return am5.Bullet.new(root, {
-                locationX: 0.5,
-                sprite: am5.Graphics.new(root, {
-                    fill: am5.color(color),
-                    stroke: am5.color(0x222222),
-                    draw: toDraw
-                })
-            });   
-        }
-
-        function addBullet(key,name,color,dir)
-        {
-            var newSerie = mainPanel.series.push(am5xy.LineSeries.new(root, {
-                name: name,
-                calculateAggregates: true,
-                xAxis: dateAxis,
-                yAxis: valueAxis,
-                fill: am5.color(0x0ecb81),
-                valueYField: key,
-                valueXField: "dt",
+            //Creando el chart
+            if (priceData.length>0){
+                lwc = new LWC('bt-chart',400);
                 
-            }));
+                lwc.addPriceSeries(priceData,0 ,0 , qd_price, '');
+                lwc.addPnlSeries(pnlData, 1, 100);
 
-
-            // Add bullets
-            newSerie.bullets.push(function () {
-                return triangle(color,dir)
-            });
-            if (events.length > 0)
-                newSerie.data.setAll(events);
-            else
-                newSerie.data.setAll(data);
-            
-            return newSerie;
-        }
-
-
-        function addWalletPanel() {
-            var subPanel = stockChart.panels.push(am5stock.StockPanel.new(root, {
-                wheelY: "zoomX",
-                panX: true,
-                panY: true,
-                height: am5.percent(35),
-            }));
-
-            var subValueLegend = subPanel.plotContainer.children.push(am5stock.StockLegend.new(root, {
-                stockChart: stockChart,
-                draggable: true,
-
-            }));
-
-            // Create axes
-            // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
-            var subValueAxis = subPanel.yAxes.push(am5xy.ValueAxis.new(root, {
-                renderer: am5xy.AxisRendererY.new(root, {
-                    inside: false,
-                }),
-                numberFormat: "#,###.00",
-            }));
-
-            subValueAxis.get("renderer").labels.template.setAll({
-            });
-
-
-
-            // Create series Sub Panel ----------------------------------------------------------------------
-            // https://www.amcharts.com/docs/v5/charts/xy-chart/series/
-
-            var holdSeries = subPanel.series.push(am5xy.LineSeries.new(root, {
-                name: "Hold",
-                xAxis: dateAxis,
-                yAxis: subValueAxis,
-                stroke: am5.color(0x888888),
-                valueYField: "uH",
-                valueXField: "dt",
-                valueField: "uH",
-                legendValueText: "{value}[/]",
-            }));
-
-            var walletSeries = subPanel.series.push(am5xy.LineSeries.new(root, {
-                name: "Capital",
-                xAxis: dateAxis,
-                yAxis: subValueAxis,
-                stroke: am5.color(0x6edff6),
-                valueYField: "uW",
-                valueXField: "dt",
-                valueField: "uW",
-                legendValueText: "{value}[/]",
-            }));
-
-
-
-            //Cursor
-            subPanel.set("cursor", am5xy.XYCursor.new(root, {
-                yAxis: subValueAxis,
-                xAxis: dateAxis,
-            }));
-
-            holdSeries.data.setAll(data);
-            walletSeries.data.setAll(data);
-
-            
-            stockChart.set("holdSeries", holdSeries);
-            stockChart.set("walletSeries", walletSeries);
-            if (data.hH)
-                subValueLegend.data.setAll([holdSeries, walletSeries]);
-            else
-                subValueLegend.data.setAll([walletSeries]);
-        }
-
+                lwc.addSignalsSeries(signalData)
+                
+                lwc.addTradesSeries(tradesData )
+                
+                for (const serie of ordersData) {
+                    lwc.addOrdersSeries(serie )
+                }
+                chart = lwc.getChart();
+                lwc.fullView();
+            }
+        },250);
     };
 
     
 
     function infoDraw(bt)
     {
-        var div = $('#resumen-tab-pane');
+        var div = $('#run');
         div.find('#general').html('<h6 class="text-info">General</h6>');
         div.find('#operaciones').html('<h6 class="text-info">Operaciones</h6>');
         div.find('#indicadores').html('<h6 class="text-info">Metricas</h6>');
@@ -423,10 +89,9 @@ var root
             var cls = (trade[7]>0?'green':'red');
             var tr = '<tr class="'+cls+'">';
             var flag = (trade[5]>0?bt.order_flag[trade[5]]:'')
-            var type = ''
-            if (bt.events.length>0)
-                type = (trade[9]>0?bt.order_type[trade[9]]:'')
-
+            var type = 'TO_DEF'
+            //if (bt.events.length>0)
+            //    type = (trade[9]>0?bt.order_type[trade[9]]:'')
             tr += '<td>'+trade[0]+'</td>';
             tr += '<td>'+trade[3]+'</td>';
             tr += '<td>'+to_dec(trade[6],2)+'</td>';
@@ -447,19 +112,9 @@ var root
 
 <div class="row">
     <h5>Resultado <span id="add_resultado_title" class="text-info"></span></h5>
-    <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item" role="resumen">
-          <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">Resumen</button>
-        </li>
-        <li class="nav-item" role="chardiv">
-          <button class="nav-link" id="chardiv-tab" data-bs-toggle="tab" data-bs-target="#chardiv-tab-pane" type="button" role="tab" aria-controls="chardiv-tab-pane" aria-selected="false">Grafico</button>
-        </li>
-        <li class="nav-item" role="trades">
-            <button class="nav-link" id="trades-tab" data-bs-toggle="tab" data-bs-target="#trades-tab-pane" type="button" role="tab" aria-controls="trades-tab-pane" aria-selected="false">Operaciones</button>
-          </li>
-      </ul>
-      <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade show active" id="resumen-tab-pane" role="tabpanel" aria-labelledby="resumen-tab" tabindex="0" >
+    
+    <div class="container">
+        <div class="row" id="resumen-tab-pane">
             <div class="row pt-4">
                 <div class="col-4" id="general" style="font-size: 0.8em;" ></div>
                 <div class="col-3" id="operaciones" style="font-size: 0.8em;" ></div>
@@ -467,8 +122,12 @@ var root
             </div>
             
         </div>
-        <div class="tab-pane fade" id="chardiv-tab-pane" role="tabpanel" aria-labelledby="chardiv-tab" tabindex="1"></div>
-        <div class="tab-pane fade" id="trades-tab-pane" role="tabpanel" aria-labelledby="trades-tab" tabindex="3">
+        <div class="row pt-4" id="chardiv-tab-pane">
+            <h6 class="text-info text-center">Grafica</h6>
+            <div id="bt-chart"></div>
+        </div>
+        <div class="row pt-4" id="trades-tab-pane" >
+            <h6 class="text-info text-center">Trades</h6>
             <table class="table-dg table-trade-info">
                 <thead>
                     <tr>

@@ -1,5 +1,5 @@
 import pandas as pd
-import pandas as pd
+import numpy as np
 import datetime as dt
 import pickle
 
@@ -20,9 +20,7 @@ class Bot_Core_backtest:
         self.graph_open_orders = True
         self.graph_signals = True
 
-        self.sl_price_data = []
-        self.tp_price_data = []
-        self.buy_price_data = []
+        self.open_orders_data = {}
         
         #Trades y Orders para gestion de resultados
         self._orders = {}
@@ -53,10 +51,10 @@ class Bot_Core_backtest:
         #Calculando el timeframe de las velas
         self.timeframe_length = self.klines['datetime'].values[1] - self.klines['datetime'].values[0]
 
-        #Limitando el backtest a un maximo de velas para periodos inferiores a 1 hora
-        if int(self.timeframe_length) <= 3600000000000:  
-            self.klines = self.klines[0:10000]
-
+        #Limitando el backtest a un maximo de velas para periodos inferiores a 15 minutos (1 hora / 4)
+        if int(self.timeframe_length) <= 3600000000000/4:  
+            self.klines = self.klines[-40000:]
+        print('Total de registros a analizar:',len(self.klines))
         #Carga la vela anterior al inicio del ciclo
         #self.row = self.klines[self.klines['datetime'] == pd.to_datetime(from_date)-self.timeframe_length ].iloc[0]
         first_datetime = self.klines['datetime'].min()
@@ -81,43 +79,16 @@ class Bot_Core_backtest:
         #Se ejecuta la funcion next para cada registro del dataframe
         proc_start = dt.datetime.now()
         self.klines['usd_strat'] = self.klines.apply(self._next, axis=1)
-        proc_end = dt.datetime.now()
-        proc_diff = proc_end-proc_start
-        print('Duracion 1: ',f"Proceso demoro {proc_diff.total_seconds():.4f} segundos.")
-        proc_start = proc_end
+
         #Calculando HOLD para comparar contra la operacion
         # El hold es la compra del capital a invertir al precio open al inicio + el saldo que queda en USD
         price_to_hold = self.klines['open'].values[0]
         quote_to_hold = round( self.quote_qty, self.qd_quote )
         qty_to_hold = round( ( quote_to_hold / price_to_hold ) , self.qd_qty ) 
         self.klines['usd_hold'] = round( self.klines['open'] * qty_to_hold , self.qd_quote )
-        self.klines['unix_dt'] = (self.klines['datetime'] - dt.datetime(1970, 1, 1)).dt.total_seconds() * 1000 +  10800000
-
+        
         #Procesando eventos de Señanes de compra/venta y ordenes
-        if False and self.interval_id < '2d01':
-            agg_funcs = {
-                    "unix_dt": "first",
-                    "open": "first",
-                    "high": "max",
-                    "low": "min",
-                    "close": "last",
-                    "volume": "sum",
-                    "usd_hold": "last",
-                    "usd_strat": "last",
-                }   
-            new_df = self.klines[['datetime','unix_dt','open','high','low','close','volume','usd_hold','usd_strat']].resample('24H', on="datetime").agg(agg_funcs).reset_index()
-        else:
-            new_df = self.klines[['datetime','unix_dt','open','high','low','close','volume','usd_hold','usd_strat']]
-        #new_df = self.klines[['datetime','unix_dt','open','high','low','close','volume','usd_hold','usd_strat']]
-
-        rename_columns = {'unix_dt': 'dt', 
-                          'open': 'o', 
-                          'high': 'h', 
-                          'low': 'l', 
-                          'close': 'c', 
-                          'volume': 'v', 
-                          'usd_strat': 'uW'}
-        ohlc = new_df[['unix_dt','open','high','low','close','volume','usd_strat']].rename(columns=rename_columns).to_dict(orient='records')
+        ohlc = self.klines[['datetime','close','usd_strat']].values.tolist()
         
         self.make_trades()
         if rsp_mode=='ind':
@@ -144,15 +115,13 @@ class Bot_Core_backtest:
                 'qd_qty': self.qd_qty, 
                 'qd_quote': self.qd_quote, 
                 'data': [], 
-                'events': [],
+                'signals': [], 
+                'trade_orders': [],
+                'orders_hst': [],
                 'trades': [], 
                 }
             
-            #Trades (Lista de trades y Events)
-            by = []
-            sls = []
-            slsl = []
-            sltp = []
+            #Trades (Lista de trades y ordersData)
             for i,trade in self.df_trades.iterrows():
                 
                 trd = [
@@ -169,37 +138,31 @@ class Bot_Core_backtest:
                     trade['orders'],
                     ]
                 res['trades'].append(trd)
-
-            
-            for i in self._trades:
-                order = self._trades[i]
-                unix_dt = order.datetime.timestamp() * 1000 +  10800000
-                
-                if order.side==Order.SIDE_BUY:
-                    by.append({'dt':unix_dt,'by':order.price})
-                if order.side==Order.SIDE_SELL and order.flag == Order.FLAG_SIGNAL:
-                    sls.append({'dt':unix_dt,'sls':order.price})
-                if order.side==Order.SIDE_SELL and order.flag == Order.FLAG_STOPLOSS:
-                    slsl.append({'dt':unix_dt,'slsl':order.price})
-                if order.side==Order.SIDE_SELL and order.flag == Order.FLAG_TAKEPROFIT:
-                    sltp.append({'dt':unix_dt,'sltp':order.price})
-            events = by+sls+slsl+sltp
-            
+           
+            signals = []
             if self.graph_signals:
-                sB = self.klines[self.klines['signal']=='COMPRA'][['unix_dt','low']].rename(columns={'unix_dt':'dt','low':'sB'}).to_dict(orient='records')
-                sS = self.klines[self.klines['signal']=='VENTA'][['unix_dt','high']].rename(columns={'unix_dt':'dt','high':'sS'}).to_dict(orient='records')
-                events += sB+sS
-            if self.graph_open_orders:
-                events += self.sl_price_data+self.tp_price_data+self.buy_price_data            
+                df_signals = self.klines[(self.klines['signal']=='COMPRA')|(self.klines['signal']=='VENTA')]
+                df_signals['side'] = np.where(df_signals['signal']=='COMPRA',0,1)
+                df_signals['value'] = np.where(df_signals['side']==0,df_signals['low'],df_signals['high'])
+                signals = df_signals[['datetime','value','side']].values.tolist()
+            
+            trade_orders = []
+            df_trade_orders = pd.DataFrame(columns=["datetime", "value", "side"])
+            for order_id in self._trades:
+                order = self._trades[order_id]
+                df_trade_orders.loc[len(df_trade_orders)] = [order.datetime,order.price,order.side]
+                trade_orders = df_trade_orders.values.tolist()
 
-            events = sorted(events, key=lambda x: float(x["dt"]))
+            orders_hst = []
+            if self.graph_open_orders:
+                orders_hst = self.open_orders_data     
+            
             res['data'] = ohlc
-            res['events'] = events
+            res['signals'] = signals
+            res['orders_hst'] = orders_hst
+            res['trade_orders'] = trade_orders
             
             res['brief'] = self.get_brief()
-            proc_end = dt.datetime.now()
-            proc_diff = proc_end-proc_start
-            print('Duracion 2: ',f"Proceso demoro {proc_diff.total_seconds():.4f} segundos.")
 
             #Unificando operaciones con data de klines
             self.klines['datetime'] = pd.to_datetime(self.klines['datetime'])
@@ -210,6 +173,9 @@ class Bot_Core_backtest:
             with open(file_dump, 'wb') as f:
                 pickle.dump(df_full, f)
 
+            proc_end = dt.datetime.now()
+            proc_diff = proc_end-proc_start
+            print('Completo',f"El proceso demoro {proc_diff.total_seconds():.4f} segundos.")
             return res
     
     def _next(self,row):
@@ -225,14 +191,12 @@ class Bot_Core_backtest:
             for i in self._orders: #Ordenes abiertas
                 order = self._orders[i]
                 if ( order.type == Order.TYPE_LIMIT ) :
-                    unix_dt = self.datetime.timestamp() * 1000 +  10800000
-                    if order.side == Order.SIDE_SELL and order.flag == Order.FLAG_STOPLOSS:
-                        self.sl_price_data.append({'dt': unix_dt,'SL':order.limit_price})
-                    if order.side == Order.SIDE_SELL and order.flag == Order.FLAG_TAKEPROFIT:
-                        self.tp_price_data.append({'dt': unix_dt,'TP':order.limit_price})
-                    if order.side == Order.SIDE_BUY:
-                        self.buy_price_data.append({'dt': unix_dt,'BY':order.limit_price})
-
+                    if i not in self.open_orders_data:
+                        self.open_orders_data[i] = []
+                    self.open_orders_data[i].append([self.datetime,
+                                                     order.limit_price,
+                                                     order.side,
+                                                    ])
         self.executed_order = self.backtest_check_orders()
 
         if row.name == self.klines.iloc[-1].name: #Se esta ejecutando la ultima vela
@@ -426,13 +390,11 @@ class Bot_Core_backtest:
 
     def resample_klines(self,klines,interval_id):
         resample_minutes = fn.get_intervals(interval_id,'minutes')
-        print('resample_klines() - minutes: ',resample_minutes)
         rsmpl_klines = self.resample_df(klines,resample_minutes)
         return rsmpl_klines
 
     def resample_sub_klines(self,klines,interval_id):
         resample_minutes = fn.get_intervals(interval_id,'sub_klines_minutes')
-        print('resample_sub_klines() - sub_klines_minutes: ',resample_minutes)
         rsmpl_klines = self.resample_df(klines,resample_minutes)
         return rsmpl_klines
 

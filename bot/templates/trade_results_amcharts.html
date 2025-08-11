@@ -16,18 +16,19 @@
 <!-- Chart code -->
 <script>
 
-    var root
+var root
     am5.ready(function () {
         root = am5.Root.new("chardiv-tab-pane");
     });
 
     function chartDraw(data, events, symbol, timeUnit) {
-
+        console.log(data)
         root.dispose();
         root = am5.Root.new("chardiv-tab-pane");
         root.setThemes([
             am5themes_Dark.new(root)
         ]);
+
 
         root.numberFormatter.set("numberFormat", "#,###.#########");
         // Create a stock chart
@@ -172,7 +173,7 @@
         sigSSerie       = addBullet("sS",   "Sig Serll",  0xfeb272,'d') 
 
         stockChart.set("Buy", buySerie);
-        valueLegend.data.setAll([valueSeries, volumeSeries ]); //buySerie,sell_s_Serie,sell_sl_Serie,sell_tp_Serie,sigBSerie,sigSSerie,
+        //valueLegend.data.setAll([valueSeries, volumeSeries ]); //buySerie,sell_s_Serie,sell_sl_Serie,sell_tp_Serie,sigBSerie,sigSSerie,
        
 
         
@@ -211,7 +212,10 @@
             valueXField: "dt",
             valueField: "SL",
         }));
-        slSeries.data.setAll(data);
+        if (events.length>0)
+            slSeries.data.setAll(events);
+        else
+            slSeries.data.setAll(data);
 
         var tpSeries = mainPanel.series.push(am5xy.LineSeries.new(root, {
             name: "Take Profit",
@@ -223,7 +227,11 @@
             valueXField: "dt",
             valueField: "TP",
         }));
-        tpSeries.data.setAll(data);
+        
+        if (events.length>0)
+            tpSeries.data.setAll(events);
+        else
+            tpSeries.data.setAll(data);
 
         
         var bySeries = mainPanel.series.push(am5xy.LineSeries.new(root, {
@@ -236,7 +244,10 @@
             valueXField: "dt",
             valueField: "BY",
         }));
-        bySeries.data.setAll(data);
+        if (events.length>0)
+            bySeries.data.setAll(events);
+        else
+            bySeries.data.setAll(data);
 
         addWalletPanel()
         
@@ -341,7 +352,7 @@
             // https://www.amcharts.com/docs/v5/charts/xy-chart/series/
 
             var holdSeries = subPanel.series.push(am5xy.LineSeries.new(root, {
-                name: "USD Hold",
+                name: "Hold",
                 xAxis: dateAxis,
                 yAxis: subValueAxis,
                 stroke: am5.color(0x888888),
@@ -352,7 +363,7 @@
             }));
 
             var walletSeries = subPanel.series.push(am5xy.LineSeries.new(root, {
-                name: "USD Capital",
+                name: "Capital",
                 xAxis: dateAxis,
                 yAxis: subValueAxis,
                 stroke: am5.color(0x6edff6),
@@ -376,9 +387,11 @@
             
             stockChart.set("holdSeries", holdSeries);
             stockChart.set("walletSeries", walletSeries);
-            subValueLegend.data.setAll([holdSeries, walletSeries]);
+            if (data.hH)
+                subValueLegend.data.setAll([holdSeries, walletSeries]);
+            else
+                subValueLegend.data.setAll([walletSeries]);
         }
-
 
     };
 
@@ -409,15 +422,21 @@
         for (const trade of bt.trades) {
             var cls = (trade[7]>0?'green':'red');
             var tr = '<tr class="'+cls+'">';
+            var flag = (trade[5]>0?bt.order_flag[trade[5]]:'')
+            var type = ''
+            if (bt.events.length>0)
+                type = (trade[9]>0?bt.order_type[trade[9]]:'')
+
             tr += '<td>'+trade[0]+'</td>';
             tr += '<td>'+trade[3]+'</td>';
             tr += '<td>'+to_dec(trade[6],2)+'</td>';
-            tr += '<td>'+(trade[5]>0?bt.order_flag[trade[5]]:'')+'</td>';
+            tr += '<td>'+flag+' '+type+'</td>';
             tr += '<td class="text-end">'+to_dec(trade[2],qd_qty)+'</td>';
             tr += '<td class="text-end">'+to_dec(trade[1],qd_price)+'</td>';
             tr += '<td class="text-end">'+to_dec(trade[4],qd_price)+'</td>';
             tr += '<td class="text-end">'+to_dec(trade[7],2)+'</td>';
             tr += '<td class="text-end">'+to_dec(trade[8],2)+'</td>';
+            tr += '<td class="text-end">'+trade[10]+'</td>';
             tr += '</tr>';
             tbody.append(tr);
         } 
@@ -462,6 +481,7 @@
                         <th class="text-end">Venta</th>
                         <th class="text-end">Resultado USD</th>
                         <th class="text-end">Resultado %</th>
+                        <th class="text-end">Ordenes</th>
                     </tr>
                 </thead>
                 <tbody>

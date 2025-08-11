@@ -4,11 +4,24 @@
 
 {% load static %}
 
+{% block head %}
+<script
+    type="text/javascript"
+    src="{% static 'scripts/lightweight-adaptado.js' %}?v0">
+    </script>
+<script
+    type="text/javascript"
+    src="{% static 'scripts/my-lightweight.js' %}?v0">
+    </script>
+
+{% endblock %}
+
 {% block css %}
 {% endblock %}
 
 {% block content %}
 
+    
 <div class="container  pb-4" id="config">
     <div class="row">
         <div class="col-3">
@@ -70,21 +83,15 @@
 {% endblock %}
 
 {% block script %}
-
-
-
-
 <script>
-
     $(document).ready(function () {
         {% for k,prm in parametros.items %}
 
             addParametro('{{prm.c}}', '{{prm.d}}', '{{prm.v}}', '{{prm.t}}','{{prm.l}}');
         {% endfor %} 
-        $('#periodo').val('BTCUSDT 1h top30 desde el 2024-05-01 al 2025-05-31');
+        $('#periodo').val('BTCUSDT 4h Completo desde el 2021-01-01 al 2023-07-31');
+       
     })
-
-
     function addParametro(parametro,descripcion,value,type,limit)
     {
         html = '<div class="col-6">';
@@ -134,7 +141,6 @@
         html += '</div></div>';
         var qty = $('#parametros').append(html);
     }
-
     function ejecutar() {
         makeWait()
         var url = '{% url "backtesting_run" %}';
@@ -181,27 +187,20 @@
                 else if (rsp.ok)
                 {
                     $('#add_resultado_title').html('BOT {{bot_class_name}}');
-                    data = rsp.bt.data
+                    data = rsp.bt.data;
+                    signals = rsp.bt.signals;
+                    trades = rsp.bt.trade_orders;
+                    orders_hst = rsp.bt.orders_hst;
+                    qd_price = rsp.bt.qd_price;
                     
-                    timeUnit = 'minute';
-                    if (rsp.parametros.interval_id.substring(1, 2) == 'd')
-                        timeUnit = 'day';
-                    else if (rsp.parametros.interval_id.substring(1, 2) == 'h')
-                        timeUnit = 'hour';
-                    
-                    if (rsp.bt.events)
-                        evnts = rsp.bt.events;
-                    else
-                        evnts = [];
-                    chartDraw(data, evnts, rsp.parametros.symbol, timeUnit )
                     infoDraw(rsp.bt);
+                    chartDraw(data, signals, trades, orders_hst, rsp.parametros.symbol, qd_price )
                                        
                     showRun()
                 }
             });    
         }
     }
-
     function getParametros()
     {
         var parametros = '['; 
@@ -228,7 +227,6 @@
         return parametros;
 
     }
-
     function makeWait()
     {
         $('#btn_wait').show();
@@ -244,9 +242,8 @@
 
         $('#config').show();
         $('#run').hide();
-        if (root)
-            root.dispose();
-        $('#chardiv-tab-pane').html('');
+        $('#bt-chart').html('');
+        
     }
     function showRun()
     {
@@ -257,10 +254,5 @@
         $('#config').hide();
         $('#run').show();
     }
-    
-
-
-
 </script>
-
 {% endblock %}
