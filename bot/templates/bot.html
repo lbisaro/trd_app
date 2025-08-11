@@ -107,10 +107,10 @@
     <div class="row">
         <ul class="nav nav-tabs" id="myTab" role="tablist" style="font-size: 0.9em;">
             <li class="nav-item" role="resumen">
-              <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">Operacion en curso</button>
+              <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">Posicion</button>
             </li>
             <li class="nav-item" role="trades">
-                <button class="nav-link" id="trades-tab" data-bs-toggle="tab" data-bs-target="#trades-tab-pane" type="button" role="tab" aria-controls="trades-tab-pane" aria-selected="false">Operaciones cerradas</button>
+                <button class="nav-link" id="trades-tab" data-bs-toggle="tab" data-bs-target="#trades-tab-pane" type="button" role="tab" aria-controls="trades-tab-pane" aria-selected="false">Trades</button>
             </li>
             <li class="nav-item" role="log">
                 <button class="nav-link" id="log-tab" data-bs-toggle="tab" data-bs-target="#log-tab-pane" type="button" role="tab" aria-controls="log-tab-pane" aria-selected="false">Log</button>
@@ -124,7 +124,7 @@
                     <div class="d-flex flex-row flex-wrap rounded pb-1 mb-1">
                         {% for k,item in status.items %}
                             {% if item.r != 0 %}
-                                <div class="w-25 py-1"><span class="text-secondary">{{item.l}}:</span><br><span {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
+                                <div class="w-50 py-1"><span class="text-secondary">{{item.l}}:</span><br><span {% if item.cls %}class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
                             {% endif %}
                         {% endfor %}
                     </div>
