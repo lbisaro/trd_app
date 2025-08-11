@@ -113,8 +113,6 @@ def bot(request, bot_id):
         df_trades['str_dt'] = df_trades['datetime'].dt.strftime('%Y-%m-%d %H:%M')
         trades_data = df_trades[df_trades['completed']>0][['str_dt', 'price', 'side']].copy()
         trades_data = trades_data.values.tolist()
-        
-        print(df_trades[df_trades['completed']>0][['str_dt', 'price', 'side']])
 
     return render(request, 'bot.html',{
         'symbol': botClass.symbol,
