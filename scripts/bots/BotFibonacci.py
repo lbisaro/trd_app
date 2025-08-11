@@ -158,37 +158,10 @@ class BotFibonacci(Bot_Core):
         self.print_orders = False
         self.graph_signals = False
         self.graph_open_orders = True
-
-    def get_status(self):
-        status_datetime = dt.datetime.now()
-        status = super().get_status()
-        
-        if 'trend' in self.row:
-            if self.row['trend'] >= 2:
-                cls = 'text-success'
-                trend = 'Alza+'
-            elif self.row['trend'] == 1:
-                cls = 'text-success'
-                trend = 'Alza'
-            elif self.row['trend'] == -1:
-                cls = 'text-danger'
-                trend = 'Baja'
-            elif self.row['trend'] <= -2:
-                cls = 'text-danger'
-                trend = 'Baja+'
-            else: 
-                cls = ''
-                trend = 'Neutral'
-            status['trend'] = {'l': 'Tendencia',
-                               'v': trend+' '+status_datetime.strftime('%d-%m-%Y %H:%M'), 
-                               'r': self.row['trend'], 
-                               'cls': cls}
-
-            status['pivots'] = None
-        return status    
     
     def next(self):
         price = self.price
+
         update_stop_loss = False
         self.position = False
         if self.wallet_base*self.price >= 2:
