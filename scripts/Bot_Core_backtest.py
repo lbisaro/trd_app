@@ -75,7 +75,6 @@ class Bot_Core_backtest:
                 }
             return res
         
-        
         #Se ejecuta la funcion next para cada registro del dataframe
         proc_start = dt.datetime.now()
         self.klines['usd_strat'] = self.klines.apply(self._next, axis=1)
@@ -87,9 +86,16 @@ class Bot_Core_backtest:
         qty_to_hold = round( ( quote_to_hold / price_to_hold ) , self.qd_qty ) 
         self.klines['usd_hold'] = round( self.klines['open'] * qty_to_hold , self.qd_quote )
         
-        #Procesando eventos de Señanes de compra/venta y ordenes
-        ohlc = self.klines[['datetime','close','usd_strat']].values.tolist()
+        #Datos de ohlc e indicadores
         
+        #Indicadores
+        columns = ['datetime','close','usd_strat']
+        if self.indicadores:
+            for ind in self.indicadores:
+                columns.append(ind['col'])
+        ohlc = self.klines[columns].values.tolist()
+        
+        #Procesando eventos de Señanes de compra/venta y ordenes
         self.make_trades()
         if rsp_mode=='ind':
             return self.get_resultados()
@@ -119,6 +125,7 @@ class Bot_Core_backtest:
                 'trade_orders': [],
                 'orders_hst': [],
                 'trades': [], 
+                'indicadores': self.indicadores, 
                 }
             
             #Trades (Lista de trades y ordersData)
@@ -172,6 +179,7 @@ class Bot_Core_backtest:
             file_dump = f'backtest/results/bt_bot_{self.__class__.__name__}_{self.interval_id}.DataFrame'
             with open(file_dump, 'wb') as f:
                 pickle.dump(df_full, f)
+
 
             proc_end = dt.datetime.now()
             proc_diff = proc_end-proc_start

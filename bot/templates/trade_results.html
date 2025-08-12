@@ -6,7 +6,7 @@
     var chart;
     var lwc;   
 
-    function chartDraw(data, signals, trades, orders_hst, symbol, qd_price) {
+    function chartDraw(data, signals, trades, orders_hst, indicadores, symbol, qd_price) {
         const priceData = data.map(d => ({
             time: formatTime(d[0]) ,
             value: d[1]
@@ -55,6 +55,17 @@
                 for (const serie of ordersData) {
                     lwc.addOrdersSeries(serie )
                 }
+                
+                if (indicadores.length > 0){
+                    Object.entries(indicadores).forEach(([key, ind]) => {
+                        col = parseInt(key)+3; //Ubica la columna del indicador
+                        const indData = data.map(d => ({
+                            time: formatTime(d[0]),
+                            value: d[col],
+                        }));
+                        lwc.addIndicatorsSeries(indData,ind.color,ind.name)
+                    });
+                }
                 chart = lwc.getChart();
                 lwc.fullView();
             }
@@ -89,9 +100,7 @@
             var cls = (trade[7]>0?'green':'red');
             var tr = '<tr class="'+cls+'">';
             var flag = (trade[5]>0?bt.order_flag[trade[5]]:'')
-            var type = 'TO_DEF'
-            //if (bt.events.length>0)
-            //    type = (trade[9]>0?bt.order_type[trade[9]]:'')
+            var type = ''
             tr += '<td>'+trade[0]+'</td>';
             tr += '<td>'+trade[3]+'</td>';
             tr += '<td>'+to_dec(trade[6],2)+'</td>';

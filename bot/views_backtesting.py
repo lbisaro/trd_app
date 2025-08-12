@@ -68,7 +68,6 @@ def run(request):
         to_date = request.POST['to_date']
 
         mirror = request.POST['mirror']
-
         
         atributos = run_bot.__dict__
         json_rsp['parametros'] = {}

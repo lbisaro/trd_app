@@ -89,7 +89,8 @@
 
             addParametro('{{prm.c}}', '{{prm.d}}', '{{prm.v}}', '{{prm.t}}','{{prm.l}}');
         {% endfor %} 
-        $('#periodo').val('BTCUSDT 4h Completo desde el 2021-01-01 al 2023-07-31');
+        //$('#periodo').val('BTCUSDT 4h Completo desde el 2021-01-01 al 2023-07-31');
+        $('#periodo').val('BTCUSDT 1h top30 desde el 2024-05-01 al 2025-05-31');
        
     })
     function addParametro(parametro,descripcion,value,type,limit)
@@ -192,9 +193,10 @@
                     trades = rsp.bt.trade_orders;
                     orders_hst = rsp.bt.orders_hst;
                     qd_price = rsp.bt.qd_price;
-                    
+                    indicadores = rsp.bt.indicadores;
+                   
                     infoDraw(rsp.bt);
-                    chartDraw(data, signals, trades, orders_hst, rsp.parametros.symbol, qd_price )
+                    chartDraw(data, signals, trades, orders_hst, indicadores, rsp.parametros.symbol, qd_price )
                                        
                     showRun()
                 }

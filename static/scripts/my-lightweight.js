@@ -142,7 +142,20 @@ class LWC {
         return pnlSeries;
     }
 
-    addTradesSeries(data, pane = 0) {
+    addIndicatorsSeries(indData, color='gray', title = '', pane=0) {
+        const indSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
+            lastValueVisible: false,
+            lineWidth: 1,
+            title: title,
+            color: color,
+            crosshairMarkerVisible: false,
+            priceLineVisible: false,
+        }, pane);
+        indSeries.setData(indData);
+        return indSeries;
+    }
+
+    addTradesSeries(sData, pane = 0) {
         const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
             lineWidth: 1,
             priceLineVisible: false,
@@ -150,13 +163,13 @@ class LWC {
             lastValueVisible: false,
             color: 'transparent',
         }, pane);
-        serie.setData(data);
+        serie.setData(sData);
 
         var markers = []
-        for (let i = 0; i < data.length; i++) {
-            if (data[i].side == 0) {
+        for (let i = 0; i < sData.length; i++) {
+            if (sData[i].side == 0) {
                 markers.push({
-                    time: data[i].time,
+                    time: sData[i].time,
                     position: 'inBar',
                     color: '#0ecb81',
                     shape: 'arrowUp',
@@ -164,7 +177,7 @@ class LWC {
             }
             else {
                 markers.push({
-                    time: data[i].time,
+                    time: sData[i].time,
                     position: 'inBar',
                     color: '#f6465d',
                     shape: 'arrowDown',
@@ -175,7 +188,7 @@ class LWC {
     }
 
     
-    addSignalsSeries(data, pane = 0) {
+    addSignalsSeries(sData, pane = 0) {
         const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
             lineWidth: 1,
             priceLineVisible: false,
@@ -183,13 +196,13 @@ class LWC {
             lastValueVisible: false,
             color: 'transparent',
         }, pane);
-        serie.setData(data);
+        serie.setData(sData);
 
         var markers = []
-        for (let i = 0; i < data.length; i++) {
-            if (data[i].side == 0) {
+        for (let i = 0; i < sData.length; i++) {
+            if (sData[i].side == 0) {
                 markers.push({
-                    time: data[i].time,
+                    time: sData[i].time,
                     position: 'belowBar',
                     color: '#fd7e1488',
                     shape: 'signalUp',
@@ -197,7 +210,7 @@ class LWC {
             }
             else {
                 markers.push({
-                    time: data[i].time,
+                    time: sData[i].time,
                     position: 'aboveBar',
                     color: '#fd7e1488',
                     shape: 'signalDown',
@@ -207,8 +220,8 @@ class LWC {
         return LightweightCharts.createSeriesMarkers(serie, markers);
     }
 
-    addOrdersSeries(data, pane = 0) {
-        const color = data[0].side == 0 ? '#0ecb81' : '#f6465d';
+    addOrdersSeries(sData, pane = 0) {
+        const color = sData[0].side == 0 ? '#0ecb81' : '#f6465d';
         const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
             lineWidth: 1,
             color: color,
@@ -218,7 +231,7 @@ class LWC {
             lastValueVisible: false,
         }, pane);
 
-        serie.setData(data);
+        serie.setData(sData);
         return serie;
     }
 } 
