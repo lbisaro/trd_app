@@ -10,7 +10,6 @@ class BotFibonacci(Bot_Core):
 
     short_name = 'Fibo'
     symbol = ''
-    quote_perc = 0.0
     interes = 's'
     rsmpl = 0
     trail = 0
@@ -18,7 +17,7 @@ class BotFibonacci(Bot_Core):
 
     indicadores = [
             {'col': 'ZigZag', 'name': 'ZigZag', 'color': 'gray', 'row': 1,  'mode':'lines',},             
-            {'col': 'long_fbe_0', 'name': 'Fibonacci Signal', 'color': 'gray', 'row': 1,  'mode':'markers','symbol':'circle-dot',},             
+            {'col': 'long_fbe_0', 'name': 'Fibonacci Signal', 'color': "#c1282894", 'row': 1,  'mode':'lines',},             
             ]
     
     fb_levels = [0.0,        
@@ -36,7 +35,6 @@ class BotFibonacci(Bot_Core):
 
     def __init__(self):
         self.symbol = ''
-        self.quote_perc = 0.0
         self.stop_loss = 0.0
         self.take_profit = 0.0
         self.interes = 's'  
@@ -55,15 +53,7 @@ class BotFibonacci(Bot_Core):
                         't' :'symbol',
                         'pub': True,
                         'sn':'Sym',},
-                 'quote_perc': {
-                        'c' :'quote_perc',
-                        'd' :'Operacion sobre capital',
-                        'v' :'95',
-                        'l' :'[10,100]',
-                        't' :'perc',
-                        'pub': True,
-                        'sn':'Quote', },
-                 'interes': {
+                  'interes': {
                         'c' :'interes',
                         'd' :'Tipo de interes',
                         'v' :'s',
@@ -100,8 +90,6 @@ class BotFibonacci(Bot_Core):
         err = []
         if len(self.symbol) < 1:
             err.append("Se debe especificar el Par")
-        if self.quote_perc <= 0 or self.quote_perc > 100:
-            err.append("El Porcentaje de capital por operacion debe ser un valor entre 0.01 y 100")
         if self.rsmpl < 1:
             err.append("Se debe especificar el Resample >= 1")
         if self.trail < 1:
@@ -194,9 +182,9 @@ class BotFibonacci(Bot_Core):
             if not self.position:
                 if self.interes == 's': #Interes Simple
                     quote_qty = self.quote_qty if self.wallet_quote >= self.quote_qty else self.wallet_quote
-                    quote_to_sell = round_down(quote_qty*(self.quote_perc/100) , self.qd_quote )
+                    quote_to_sell = round_down(quote_qty , self.qd_quote )
                 elif self.interes == 'c': #Interes Compuesto
-                    quote_to_sell = round_down(self.wallet_quote*(self.quote_perc/100) , self.qd_quote ) 
+                    quote_to_sell = round_down(self.wallet_quote, self.qd_quote ) 
                 
                 quote_to_sell = round_down(quote_to_sell , self.qd_quote ) 
                 base_to_buy = round_down((quote_to_sell/price) , self.qd_qty) 
