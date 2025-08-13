@@ -100,7 +100,10 @@ class LWC {
         this.chart.priceScale('right').applyOptions({mode: 0,});
     }
 
-    addPriceSeries(priceData, pane = 0, height = 100, precision = 2, title = '') {
+    addPriceSeries(sData, pane = 0, height = 100, precision = 2, title = '') {
+        sData = this.filterNullData(sData);
+        if (sData.length ==0)
+            return null;
         const priceSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
             priceFormat: {
                 type: 'custom',
@@ -113,13 +116,16 @@ class LWC {
             crosshairMarkerVisible: false,
             priceLineVisible: false,
         }, pane);
-        priceSeries.setData(priceData);
+        priceSeries.setData(sData);
         if (pane > 0)
             this.chart.panes()[[pane]].setHeight(height);
         return priceSeries;
     }
 
-    addPnlSeries(pnlData, pane = 0, height = 100, precision = 2) {
+    addPnlSeries(sData, pane = 0, height = 100, precision = 2) {
+        sData = this.filterNullData(sData);
+        if (sData.length ==0)
+            return null;
         const pnlSeries = this.chart.addSeries(LightweightCharts.BaselineSeries, {
             priceFormat: {
                 type: 'custom',
@@ -136,13 +142,16 @@ class LWC {
             priceLineVisible: false,
             crosshairMarkerVisible: false,
         }, pane);
-        pnlSeries.setData(pnlData);
+        pnlSeries.setData(sData);
         if (pane > 0)
             this.chart.panes()[[pane]].setHeight(height);
         return pnlSeries;
     }
 
-    addIndicatorsSeries(indData, color='gray', title = '', pane=0) {
+    addIndicatorsSeries(sData, color='gray', title = '', pane=0) {
+        sData = this.filterNullData(sData);
+        if (sData.length ==0)
+            return null;
         const indSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
             lastValueVisible: false,
             lineWidth: 1,
@@ -151,11 +160,14 @@ class LWC {
             crosshairMarkerVisible: false,
             priceLineVisible: false,
         }, pane);
-        indSeries.setData(indData);
+        indSeries.setData(sData);
         return indSeries;
     }
 
     addTradesSeries(sData, pane = 0) {
+        sData = this.filterNullData(sData);
+        if (sData.length ==0)
+            return null;
         const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
             lineWidth: 1,
             priceLineVisible: false,
@@ -189,6 +201,9 @@ class LWC {
 
     
     addSignalsSeries(sData, pane = 0) {
+        sData = this.filterNullData(sData);
+        if (sData.length ==0)
+            return null;
         const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
             lineWidth: 1,
             priceLineVisible: false,
@@ -221,6 +236,9 @@ class LWC {
     }
 
     addOrdersSeries(sData, pane = 0) {
+        sData = this.filterNullData(sData);
+        if (sData.length ==0)
+            return null;
         const color = sData[0].side == 0 ? '#0ecb81' : '#f6465d';
         const serie = this.chart.addSeries(LightweightCharts.LineSeries, {
             lineWidth: 1,
@@ -233,5 +251,17 @@ class LWC {
 
         serie.setData(sData);
         return serie;
+    }
+
+    filterNullData(sData) {
+
+        const correctedData = sData.map(item => {
+            if (item.value === null) {
+                item.color = 'transparent';
+                item.value = NaN;
+            }
+            return item;
+        });
+        return correctedData; //sData.filter(item => item.value !== null);
     }
 } 
