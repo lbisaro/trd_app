@@ -32,9 +32,6 @@
 {% endblock %}
 
 {% block content %}
-{% if error %}
-<h3 class="text-danger">{{error}}</h3>
-{% endif %}
 {% if DATA_FILE %}
     <div class="container">
         <h4 class="text-info">Estado del archivo de datos</h4>
@@ -74,6 +71,9 @@
 {% else %}
     <div class="container text-center">
         <h6>No existe registro de datos</h6>
+        {% if error %}
+        <h3 class="text-danger">{{error}}</h3>
+        {% endif %}
     </div>
 {% endif %}
 
