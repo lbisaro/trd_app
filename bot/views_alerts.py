@@ -77,7 +77,7 @@ def list(request):
         })
     except Exception as e:
         return render(request, 'alerts_list.html',{
-            'DATA_FILE': f'No fue posible hallar el archivo {DATA_FILE}' ,
+            'error': f'No fue posible hallar el archivo con el log de alertas' ,
         })
 
 @login_required
