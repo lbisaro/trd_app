@@ -19,6 +19,18 @@
 </style>
 {% endblock %}
 
+{% block action_bar %}
+<div class="dropdown">
+  <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Scanners
+  </button>
+  <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+    <li><a class="dropdown-item" href="{% url 'alerts_scanner' type='a' %}">Anomalías de Momentum</a></li>
+    <li><a class="dropdown-item" href="{% url 'alerts_scanner' type='b' %}">Rango de precios</a></li>
+  </ul>
+</div>
+{% endblock %}
+
 {% block content %}
 {% if DATA_FILE %}
     <div class="container">

@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% block title %}Scanner de Anomalías de Momentum{% endblock %}
+{% block nav_title %}Scanner de Anomalías de Momentum{% endblock %}
+
+{% load static %}
+{% load tz %}
+
+{% block action_bar %}
+    <!--
+    <a class="btn btn-primary btn-sm" href="{% url 'backtesting' %}">Action Bar1</a>
+    -->
+{% endblock %}
+
+{% block css %}
+<style>
+    /* CSS */
+
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="container pb-4"> 
+        <div class="row">
+            <div class="col-3">
+                Conexion: <span id="connect" class="text-secondary"><i class="bi bi-patch-check-fill"></i></span>
+            </div>
+            <div class="col-9">
+                Status: <span id="status" class="text-warning">Conectando...</span>
+
+            </div>
+
+        </div>
+    </div>
+    <div class="container">
+        <dir class="row" style="padding:0;">
+            <div class="col">
+                <h6 class="text-info">Top 10 en Alza</h6>
+                <table class="table-dg table-trade-info">
+                    <thead>
+                        <tr>
+                            <th>Símbolo</th>
+                            <th>Último Precio</th>
+                            <th>Cambio (5m)</th>
+                            <th>Score Anomalía (Z)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="risers-table"></tbody>
+                </table>
+            </div>
+            <div class="col">
+                <h6 class="text-info">Top 10 en Baja</h6>
+                <table class="table-dg table-trade-info">
+                    <thead>
+                        <tr>
+                            <th>Símbolo</th>
+                            <th>Último Precio</th>
+                            <th>Cambio (5m)</th>
+                            <th>Score Anomalía (Z)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fallers-table"></tbody>
+                </table>
+            </div>
+        </dir>
+    </div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+    // --- CONFIGURACIÓN ---
+    const WEBSOCKET_URL = 'wss://fstream.binance.com/ws/!ticker@arr';
+    const SAMPLE_INTERVAL = 10 * 1000; // 10 segundos entre muestras
+    const HISTORY_MINUTES = 60; // Historial para calcular la volatilidad normal
+    const MAX_HISTORY_SAMPLES = (HISTORY_MINUTES * 60) / (SAMPLE_INTERVAL / 1000); // 360 muestras
+    const MOMENTUM_WINDOW = 5 * 60 * 1000; // Ventana de 5 minutos para el cambio de corto plazo
+    const MIN_SAMPLES_FOR_STATS = 20; // Mínimo de muestras para calcular Z-Score
+
+    // --- VARIABLES GLOBALES ---
+    let socket = null;
+    const statusDiv = $('#status');
+    const connectDiv = $('#connect');
+    const risersTableBody = document.getElementById('risers-table');
+    const fallersTableBody = document.getElementById('fallers-table');
+    const coinData = {}; // Objeto principal para almacenar datos y estadísticas de cada moneda
+
+    // --- FUNCIONES DE CÁLCULO ESTADÍSTICO ---
+    const calculateMean = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
+    
+    function calculateStdDev(arr) {
+        const mean = calculateMean(arr);
+        const squareDiffs = arr.map(value => Math.pow(value - mean, 2));
+        const avgSquareDiff = calculateMean(squareDiffs);
+        return Math.sqrt(avgSquareDiff);
+    }
+
+    // --- LÓGICA PRINCIPAL ---
+    function connect() {
+        if (socket) socket.close();
+        socket = new WebSocket(WEBSOCKET_URL);
+        updateStatus('Conectando...', 'status-warning');
+        updateConnect('text-warning');
+        socket.onopen = () => {
+            console.log('Conexión WebSocket establecida.');
+            updateStatus('Recopilando informacion', 'text-success');
+            updateConnect('text-success');
+        };
+
+        socket.onmessage = (event) => {
+            const tickers = JSON.parse(event.data);
+            processTickers(tickers);
+
+        };
+        socket.onerror = () => {
+            updateStatus('Error en la conexión', 'text-danger');
+            updateConnect('text-danger');
+        };
+        socket.onclose = () => {
+            updateStatus('Desconectado. Reconectando...', 'text-warning');
+            updateConnect('text-warning');
+            setTimeout(connect, 5000);
+        };
+    }
+
+    function processTickers(tickers) {
+        const now = Date.now();
+        tickers.forEach(ticker => {
+            const symbol = ticker.s;
+            if (!symbol.endsWith('USDT')) return;
+
+            const price = parseFloat(ticker.c);
+
+            if (!coinData[symbol]) {
+                coinData[symbol] = {
+                    prices: [],
+                    lastSampleTime: 0,
+                    zScore: 0,
+                    momentumChange: 0,
+                    lastPrice: 0
+                };
+            }
+
+            const coin = coinData[symbol];
+            coin.lastPrice = price; // Siempre actualizamos el último precio
+
+            if (now - coin.lastSampleTime < SAMPLE_INTERVAL) {
+                return; // No es hora de tomar otra muestra
+            }
+            
+            coin.lastSampleTime = now;
+            coin.prices.push({ t: now, p: price });
+            if (coin.prices.length > MAX_HISTORY_SAMPLES) {
+                coin.prices.shift(); // Mantenemos el tamaño del historial
+            }
+            
+            // Si no tenemos suficientes datos, no calculamos nada aún
+            if (coin.prices.length < MIN_SAMPLES_FOR_STATS) {
+                updateStatus(`Completando muestreo inicial ${coin.prices.length}/${MIN_SAMPLES_FOR_STATS}`,'text-warning')
+                return;
+            }
+                    
+                    
+            // Solo actualiza el estado si la conexión del WebSocket está realmente abierta.
+            // Formateamos la fecha y hora para una fácil lectura.
+            var d = new Date();
+            strHora = d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+            updateStatus(`Conectado | ${strHora}`,'status-connected')
+            updateConnect('text-success');
+            
+            // Calcular estadísticas
+            const changes = [];
+            for (let i = 1; i < coin.prices.length; i++) {
+                const p1 = coin.prices[i-1].p;
+                const p2 = coin.prices[i].p;
+                changes.push((p2 / p1) - 1);
+            }
+
+            const meanChange = calculateMean(changes);
+            const stdDevChange = calculateStdDev(changes);
+            
+            // Calcular momentum de 5 minutos
+            const fiveMinAgo = now - MOMENTUM_WINDOW;
+            const firstPriceRecord = coin.prices.find(p => p.t >= fiveMinAgo);
+            if (firstPriceRecord) {
+                    coin.momentumChange = ((price / firstPriceRecord.p) - 1) * 100;
+            }
+
+            // Calcular Z-Score
+            if (stdDevChange > 0) {
+                const lastChange = (price / coin.prices[coin.prices.length - 1].p) - 1;
+                coin.zScore = (lastChange - meanChange) / stdDevChange;
+            } else {
+                coin.zScore = 0;
+            }
+        });
+    }
+
+    function updateUI() {
+
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            // Nos aseguramos que el estilo visual sea el correcto
+            if (!connectDiv.hasClass('text-success')) {
+                updateConnect('text-success');
+            }
+        }
+        const allCoins = Object.entries(coinData)
+            .filter(([symbol, data]) => data.zScore !== 0) // Solo mostrar monedas con datos
+            .map(([symbol, data]) => ({
+                symbol, ...data
+            }));
+
+        allCoins.sort((a, b) => b.zScore - a.zScore); // Ordenar por Z-Score descendente
+
+        const risers = allCoins.slice(0, 10);
+        const fallers = allCoins.slice(-10).reverse();
+
+        // Actualizar tabla de alzas
+        risersTableBody.innerHTML = risers.map(coin => `
+            <tr>
+                <td>${coin.symbol}</td>
+                <td>${coin.lastPrice.toFixed(getPrecision(coin.lastPrice))}</td>
+                <td class="text-success">${coin.momentumChange.toFixed(2)}%</td>
+                <td class="text-success">${coin.zScore.toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        // Actualizar tabla de bajas
+        fallersTableBody.innerHTML = fallers.map(coin => `
+            <tr>
+                <td>${coin.symbol}</td>
+                <td>${coin.lastPrice.toFixed(getPrecision(coin.lastPrice))}</td>
+                <td class="text-danger">${coin.momentumChange.toFixed(2)}%</td>
+                <td class="text-danger">${coin.zScore.toFixed(2)}</td>
+            </tr>
+        `).join('');
+    }
+
+    // --- FUNCIONES AUXILIARES ---
+    function updateStatus(message, className) {
+        statusDiv.html(message);
+        statusDiv.attr('class',className);
+    }
+
+    function updateConnect(className) {
+        connectDiv.attr('class',className);
+    }
+
+    function getPrecision(price) {
+        if (price >= 1000) return 2;
+        if (price >= 10) return 3;
+        if (price >= 0.1) return 4;
+        return 5;
+    }
+
+    // --- INICIO DE LA APLICACIÓN ---
+    connect();
+    setInterval(updateUI, 1000); // Actualiza la interfaz de usuario cada segundo
+
+</script>
+{% endblock %}

@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+{% block title %}Scanner de Rango de precios{% endblock %}
+{% block nav_title %}Scanner de Rango de precios{% endblock %}
+
+{% load static %}
+{% load tz %}
+
+{% block action_bar %}
+    <!--
+    <a class="btn btn-primary btn-sm" href="{% url 'backtesting' %}">Action Bar1</a>
+    -->
+{% endblock %}
+
+{% block css %}
+<style>
+    /* CSS */
+
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="container pb-4"> 
+        <div class="row">
+            <div class="col-3">
+                Conexion: <span id="connect" class="text-secondary"><i class="bi bi-patch-check-fill"></i></span>
+            </div>
+            <div class="col-9">
+                Status: <span id="status" class="text-warning">Conectando...</span>
+
+            </div>
+
+        </div>
+    </div>
+    <div class="container">
+        <dir class="row" style="padding:0;">
+            <div class="col">
+                <h6 class="text-info">Top 10 en Alza</h6>
+                <table class="table-dg table-trade-info">
+                    <thead>
+                        <tr>
+                            <th>Símbolo</th>
+                            <th>Último Precio</th>
+                            <th>Distancia MA (%)</th>
+                            <th>Rango Precios (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="risers-table"></tbody>
+                </table>
+            </div>
+            <div class="col">
+                <h6 class="text-info">Top 10 en Baja</h6>
+                <table class="table-dg table-trade-info">
+                    <thead>
+                        <tr>
+                            <th>Símbolo</th>
+                            <th>Último Precio</th>
+                            <th>Distancia MA (%)</th>
+                            <th>Rango Precios (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fallers-table"></tbody>
+                </table>
+            </div>
+        </dir>
+    </div>
+    
+{% endblock %}
+
+{% block script %}
+<script>
+    // --- CONFIGURACIÓN ---
+    const WEBSOCKET_URL = 'wss://fstream.binance.com/ws/!ticker@arr';
+
+    /*
+    message
+
+    [
+        {
+        "e": "24hrTicker",  // Event type
+        "E": 123456789,     // Event time
+        "s": "BTCUSDT",     // Symbol
+        "p": "0.0015",      // Price change
+        "P": "250.00",      // Price change percent
+        "w": "0.0018",      // Weighted average price
+        "c": "0.0025",      // Last price
+        "Q": "10",          // Last quantity
+        "o": "0.0010",      // Open price
+        "h": "0.0025",      // High price
+        "l": "0.0010",      // Low price
+        "v": "10000",       // Total traded base asset volume
+        "q": "18",          // Total traded quote asset volume
+        "O": 0,             // Statistics open time
+        "C": 86400000,      // Statistics close time
+        "F": 0,             // First trade ID
+        "L": 18150,         // Last trade Id
+        "n": 18151          // Total number of trades
+        }
+    ]
+    */
+
+    const SAMPLE_INTERVAL = 10 * 1000; // 10 segundos entre muestras
+    const HISTORY_MINUTES = 60; // Historial para calcular la volatilidad normal
+    const MAX_HISTORY_SAMPLES = (HISTORY_MINUTES * 60) / (SAMPLE_INTERVAL / 1000); // 360 muestras
+    const MIN_SAMPLES_FOR_STATS = 5; // Mínimo de muestras para calculos
+
+    // --- VARIABLES GLOBALES ---
+    let socket = null;
+    const statusDiv = $('#status');
+    const connectDiv = $('#connect');
+    const risersTableBody = document.getElementById('risers-table');
+    const fallersTableBody = document.getElementById('fallers-table');
+    const coinData = {}; // Objeto principal para almacenar datos y estadísticas de cada moneda
+
+    let maxPriceLength = 0;
+
+    // --- LÓGICA PRINCIPAL ---
+    function connect() {
+        if (socket) socket.close();
+        socket = new WebSocket(WEBSOCKET_URL);
+        updateStatus('Conectando...', 'status-warning');
+        updateConnect('text-warning');
+        socket.onopen = () => {
+            updateStatus('Recopilando informacion', 'text-success');
+            updateConnect('text-success');
+        };
+
+        socket.onmessage = (event) => {
+            const tickers = JSON.parse(event.data);
+            processTickers(tickers);
+
+        };
+        socket.onerror = () => {
+            updateStatus('Error en la conexión', 'text-danger');
+            updateConnect('text-danger');
+        };
+        socket.onclose = () => {
+            updateStatus('Desconectado. Reconectando...', 'text-warning');
+            updateConnect('text-warning');
+            setTimeout(connect, 5000);
+        };
+    }
+
+    function processTickers(tickers) {
+        const now = Date.now();
+        
+        tickers.forEach(ticker => {
+            const symbol = ticker.s;
+            if (!symbol.endsWith('USDT')) return;
+
+            const price = parseFloat(ticker.c);
+
+            if (!coinData[symbol]) {
+                coinData[symbol] = {
+                    prices: [],
+                    lastSampleTime: 0,
+                    distMA: 0,
+                    priceRange: 0,
+                    lastPrice: 0
+                };
+            }
+
+            const coin = coinData[symbol];
+            coin.lastPrice = price; // Siempre actualizamos el último precio
+
+            if (now - coin.lastSampleTime < SAMPLE_INTERVAL) {
+                return; // No es hora de tomar otra muestra
+            }
+            
+            coin.lastSampleTime = now;
+            coin.prices.push({ t: now, p: price });
+            if (coin.prices.length > MAX_HISTORY_SAMPLES) {
+                coin.prices.shift(); // Mantenemos el tamaño del historial
+            }
+            
+            //Calculando Media, Desvio Standard, y Distancia a la media
+            // Extraer solo los precios en un nuevo array
+            const prices = coin.prices.map((item) => item.p);
+            
+            // Calcular la media (promedio)
+            const sum = prices.reduce((acc, price) => acc + price, 0);
+            const mean = sum / prices.length;
+            
+            // Calcular la desviación estándar
+            const squaredDifferences = prices.map((price) => Math.pow(price - mean, 2));
+            const variance = squaredDifferences.reduce((acc, val) => acc + val, 0) / prices.length;
+            const standardDeviation = Math.sqrt(variance);
+            
+            const priceRange =  (standardDeviation/coin.lastPrice)*100;
+            const distMA = ((coin.lastPrice/mean)-1)*100
+
+            coin.priceRange = priceRange;
+            coin.distMA = distMA;
+
+            
+            maxPriceLength = (coin.prices.length>maxPriceLength ? coin.prices.length : maxPriceLength)
+            
+            
+            
+        });
+
+        // Si no tenemos suficientes datos, no calculamos nada aún
+        if (maxPriceLength < MIN_SAMPLES_FOR_STATS) {
+            updateStatus(`Completando muestreo inicial ${maxPriceLength}/${MIN_SAMPLES_FOR_STATS}`,'text-warning')
+            return;
+        }
+        else{
+            // Solo actualiza el estado si la conexión del WebSocket está realmente abierta.
+            // Formateamos la fecha y hora para una fácil lectura.
+            var d = new Date();
+            strHora = d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+            updateStatus(`Conectado | Total de muestras: ${maxPriceLength}`,'status-connected')
+            updateConnect('text-success');
+
+        }
+
+    }
+
+    function updateUI() {
+
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            // Nos aseguramos que el estilo visual sea el correcto
+            if (!connectDiv.hasClass('text-success')) {
+                updateConnect('text-success');
+            }
+        }
+
+        if (maxPriceLength < MIN_SAMPLES_FOR_STATS)
+            return;
+        const allCoins = Object.entries(coinData)
+            .filter(([symbol, data]) => data.distMA !== 0) // Solo mostrar monedas con datos
+            .map(([symbol, data]) => ({
+                symbol, ...data
+            }));
+
+        allCoins.sort((a, b) => b.distMA - a.distMA); // Ordenar por Z-Score descendente
+
+        const risers = allCoins
+        .filter(coin => coin.distMA > 0) // distMA positivo
+        .sort((a, b) => b.priceRange - a.priceRange) // Orden descendente por priceRange
+        .slice(0, 10); // Solo los primeros 10
+
+        const fallers = allCoins
+        .filter(coin => coin.distMA < 0) // distMA negativo
+        .sort((a, b) => b.priceRange - a.priceRange) // Orden descendente por priceRange
+        .slice(0, 10); // Solo los primeros 10
+
+        // Actualizar tabla de alzas
+        risersTableBody.innerHTML = risers.map(coin => `
+            <tr>
+                <td>${coin.symbol}</td>
+                <td>${coin.lastPrice.toFixed(getPrecision(coin.lastPrice))}</td>
+                <td class="text-success">${coin.distMA.toFixed(2)}</td>
+                <td class="text-success">${coin.priceRange.toFixed(2)}%</td>
+            </tr>
+        `).join('');
+
+        // Actualizar tabla de bajas
+        fallersTableBody.innerHTML = fallers.map(coin => `
+            <tr>
+                <td>${coin.symbol}</td>
+                <td>${coin.lastPrice.toFixed(getPrecision(coin.lastPrice))}</td>
+                <td class="text-danger">${coin.distMA.toFixed(2)}</td>
+                <td class="text-danger">${coin.priceRange.toFixed(2)}%</td>
+            </tr>
+        `).join('');
+    }
+
+    // --- FUNCIONES AUXILIARES ---
+    function updateStatus(message, className) {
+        statusDiv.html(message);
+        statusDiv.attr('class',className);
+    }
+
+    function updateConnect(className) {
+        connectDiv.attr('class',className);
+    }
+
+    function getPrecision(price) {
+        if (price >= 1000) return 2;
+        if (price >= 10) return 3;
+        if (price >= 0.1) return 4;
+        return 5;
+    }
+
+    // --- INICIO DE LA APLICACIÓN ---
+    connect();
+    setInterval(updateUI, 1000); // Actualiza la interfaz de usuario cada segundo
+
+</script>
+{% endblock %}

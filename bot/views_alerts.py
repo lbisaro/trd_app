@@ -25,59 +25,70 @@ from binance.exceptions import BinanceAPIException, BinanceOrderException
 @login_required
 def list(request):
 
-    data = load_data_file(DATA_FILE)
-    qty_symbols = len(data['symbols'])
-    updated = data['updated']
-    proc_duration = data['proc_duration']
-    analized_symbols = data['analized_symbols']
-    log_alerts = data['log_alerts']
-    # Ordenar por 'start' descendente y reconstruir el diccionario
-    log_alerts = dict(
-        sorted(
-            log_alerts.items(),
-            key=lambda item: item[1]['start'],
-            reverse=True
+    try:
+        data = load_data_file(DATA_FILE)
+        log_alerts = data['log_alerts']
+        qty_symbols = len(data['symbols'])
+        updated = data['updated']
+        proc_duration = data['proc_duration']
+        analized_symbols = data['analized_symbols']
+        log_alerts = data['log_alerts']
+
+            
+        # Ordenar por 'start' descendente y reconstruir el diccionario
+        log_alerts = dict(
+            sorted(
+                log_alerts.items(),
+                key=lambda item: item[1]['start'],
+                reverse=True
+            )
         )
-    )
 
-    exchInfo = Exchange(type='info', exchange='bnc', prms=None)
+        exchInfo = Exchange(type='info', exchange='bnc', prms=None)
 
-    # Obtener prices actuales
-    actual_prices = {}
-    tickers = exchInfo.client.futures_symbol_ticker()
-    for ticker in tickers:
-        symbol = ticker['symbol']
-        actual_prices[symbol] = float(ticker['price'])
-    
-    k_to_delete = []
-    for k in log_alerts:
-        log_alerts[k] = alert_add_data(log_alerts[k],actual_prices[log_alerts[k]['symbol']])
-        if 'status_class' in log_alerts[k] and log_alerts[k]['status_class'] != 'status_ok':
-            k_to_delete.append(k)
-    ##Eliminando Alertas que estan fuera de rango
-    #for k in k_to_delete:
-    #    del(log_alerts[k])
+        # Obtener prices actuales
+        actual_prices = {}
+        tickers = exchInfo.client.futures_symbol_ticker()
+        for ticker in tickers:
+            symbol = ticker['symbol']
+            actual_prices[symbol] = float(ticker['price'])
+        
+        k_to_delete = []
+        for k in log_alerts:
+            log_alerts[k] = alert_add_data(log_alerts[k],actual_prices[log_alerts[k]['symbol']])
+            if 'status_class' in log_alerts[k] and log_alerts[k]['status_class'] != 'status_ok':
+                k_to_delete.append(k)
+        ##Eliminando Alertas que estan fuera de rango
+        #for k in k_to_delete:
+        #    del(log_alerts[k])
 
-    if 'c_1m' in data['symbols']['BTCUSDT']:
-        qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
-    else:
-        qty_c_1m = 0
-
-    return render(request, 'alerts_list.html',{
-        'DATA_FILE': DATA_FILE ,
-        'qty_symbols': qty_symbols ,
-        'analized_symbols': analized_symbols ,
-        'qty_c_1m': qty_c_1m ,
-        'updated': updated ,
-        'proc_duration': proc_duration ,
-        'log_alerts': log_alerts ,
-    })
-
+        if 'c_1m' in data['symbols']['BTCUSDT']:
+            qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
+        else:
+            qty_c_1m = 0
+        return render(request, 'alerts_list.html',{
+            'DATA_FILE': DATA_FILE ,
+            'qty_symbols': qty_symbols ,
+            'analized_symbols': analized_symbols ,
+            'qty_c_1m': qty_c_1m ,
+            'updated': updated ,
+            'proc_duration': proc_duration ,
+            'log_alerts': log_alerts ,
+        })
+    except Exception as e:
+        return render(request, 'alerts_list.html',{
+            'DATA_FILE': f'No fue posible hallar el archivo {DATA_FILE}' ,
+        })
 
 @login_required
 def analyze(request, key):
-    data = load_data_file(DATA_FILE)
-    log_alerts = data['log_alerts']
+    
+    try:
+        data = load_data_file(DATA_FILE)
+        log_alerts = data['log_alerts']
+    except Exception as e:
+        log_alerts = []
+
     if key in log_alerts:
         alert = log_alerts[key]
         alert['name'] = alert['symbol']+' '+alert['timeframe']+' '+alert['origin']
@@ -113,6 +124,16 @@ def analyze(request, key):
 
     else:
         return render(request, 'alerts_analyze.html',{}) 
+
+@login_required
+def scanner(request,type):
+    
+    html_file = 'alerts_scan_a.html'
+
+    if type=='b':
+        html_file = 'alerts_scan_b.html'
+    
+    return render(request, html_file,{}) 
 
 @login_required
 def execute(request):
