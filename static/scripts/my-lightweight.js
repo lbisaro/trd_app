@@ -6,7 +6,19 @@ function formatTime(time) {
     return (Date.parse(time)/1000) - (3 * 3600);
 }
 
+function timeToStr(timestamp) {
+    const fecha = new Date(timestamp * 1000);
+    return fecha.toUTCString();
+}
+
+
+
+
 class LWC {
+    startClick = null;
+    meassureData = null;
+    meassureSerie = null;
+
     constructor(containerId, height = 400) {
         this.containerId = containerId;
         this.height = height;
@@ -86,6 +98,79 @@ class LWC {
         });
 
         this.minView();
+
+        this.chart.subscribeClick(param => {
+            if (!param.point) {return;}
+
+            const paneIndex = param.paneIndex;
+            const pane = this.chart.panes()[paneIndex];
+            const serieRef = pane.getSeries()[0];
+
+            const y_coordinate = param.point.y;
+            const priceValue = serieRef.coordinateToPrice(y_coordinate);
+            if (priceValue === null) {return;}
+
+            const clickedPoint = { time: param.time, 
+                                   value: priceValue, 
+                                   timeStr: timeToStr(param.time), 
+                                   y_coordinate: y_coordinate,   
+                                   paneIndex: paneIndex,   
+                                };
+
+            if (!this.startClick) {
+
+                if (this.meassureSerie) {
+                    this.chart.removeSeries(this.meassureSerie);
+                    this.meassureSerie = null;
+                    this.meassureData = null;
+                }
+                this.startClick = clickedPoint;
+            } else {
+                const endClick = clickedPoint;
+
+                const valor1 = this.startClick.value;
+                const valor2 = endClick.value;
+
+                const porcentaje = ((valor2 / valor1) - 1 ) * 100;
+                const porcentaje2 = ((endClick.y_coordinate / this.startClick.y_coordinate) - 1 ) * 100;
+                                            
+                const meassureColor = (porcentaje > 0 ? '#0ecb81' : '#f6465d');
+                
+                if (this.startClick.value && endClick.value && this.startClick.time && endClick.time) {
+                    if (this.startClick.paneIndex == endClick.paneIndex) {
+                        this.meassureData = [this.startClick,endClick];
+                         this.meassureSerie = this.chart.addSeries(LightweightCharts.LineSeries, {
+                            lineWidth: 1,
+                            color: meassureColor,
+                            lastValueVisible: false,
+                            crosshairMarkerVisible: false,
+                            priceLineVisible: false,
+                        }, paneIndex);
+                        this.meassureSerie.setData(this.meassureData);
+                        const meassureMarkers = [
+                            {
+                                time: this.startClick.time,
+                                position: 'inBar',
+                                color: meassureColor,
+                                shape: 'circle',
+                                text: '',
+                            },
+                                            {
+                                time: endClick.time,
+                                position: 'inBar',
+                                color: meassureColor,
+                                shape: 'circle',
+                                text: `${porcentaje.toFixed(2)}%`,
+                            },
+                        ];
+                        LightweightCharts.createSeriesMarkers(this.meassureSerie, meassureMarkers);
+                    }
+                }
+                        
+                this.startClick = null;
+
+            }
+        });
 
         return this.chart;
     }
