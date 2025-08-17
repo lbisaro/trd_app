@@ -82,8 +82,6 @@ class LWC {
     getChart() {
         var addContainer = $('#tv-attr-logo').parent();
 
-        addContainer.prepend('<div id="add-legends" style="position: absolute;z-index: 10; top: 0; left: 0; padding: 0px; border: 0px;background-color: transparent; "></div>');
-
         addContainer.append('<button id="reset-button" style="' + this.btnStyle + ' right: 30px;" title="Resetear vista"><i class="bi bi-bootstrap-reboot"></i></button>');
         const resetButton = document.getElementById('reset-button');
 
