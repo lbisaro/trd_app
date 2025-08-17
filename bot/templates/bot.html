@@ -289,16 +289,14 @@ $(document).ready( function () {
     //Creando el chart
     if (mainData.length>0){
         const lwc = new LWC('chart',400);
-        for (const serie of ordersData) {
-            lwc.addOrdersSeries(serie )
-        }        
         lwc.addPriceSeries(priceData,0 ,0 , qd_price, '');
         lwc.addTradesSeries(tradesData )
         lwc.addPnlSeries(pnlData, 1, 100);
+        for (const serie of ordersData) {
+            lwc.addOrdersSeries(serie )
+        }        
         chart = lwc.getChart();
     }
-
-
 })
 function get_resultados() {
     url = '{% url "get_resultados" bot_id %}';
