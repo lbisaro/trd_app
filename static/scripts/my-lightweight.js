@@ -102,7 +102,7 @@ class LWC {
             
             if (!this.startClick && this.endClick ) {
                 if (this.meassureSerie) {
-                    chart.removeSeries(this.meassureSerie);
+                    this.chart.removeSeries(this.meassureSerie);
                     this.meassureSerie = null;
                     this.meassureData = null;
                     this.meassureMarkers = null;
