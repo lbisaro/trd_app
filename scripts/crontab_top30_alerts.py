@@ -103,14 +103,14 @@ class top30_alerts:
 
     def analize(self):
 
-        #Fix dt in top30_history
-        hst_length = len(self.top30_history['0m15'])
-        hst_last_dt = datetime.now()
-        self.top30_history['dt'] = []
-        for i in range(1,hst_length+1):
-            minutes = hst_length-i+1
-            dt = hst_last_dt-timedelta(minutes=minutes*15 )
-            self.top30_history['dt'].append(dt)
+        #### #Fix dt in top30_history
+        #### hst_length = len(self.top30_history['0m15'])
+        #### hst_last_dt = datetime.now()
+        #### self.top30_history['dt'] = []
+        #### for i in range(1,hst_length+1):
+        ####     minutes = hst_length-i+1
+        ####     dt = hst_last_dt-timedelta(minutes=minutes*15 )
+        ####     self.top30_history['dt'].append(dt)
 
         print('Analizando')
         last_update = datetime.now().strftime(date_format)
