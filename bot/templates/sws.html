@@ -73,16 +73,22 @@
     <table id="wallet_info" class="table-dg table-trade-info">
         <thead>
             <tr>
+                <td colspan="5">
+                <div class="form-check form-switch form-check-reverse">
+                    <input class="form-check-input" type="checkbox" role="switch" id="wallet-view" onchange="toogle_wallet_view();">
+                    <label class="form-check-label" for="wallet-view">Ver assets</label>
+                </div>
+                </td>
+            </tr>
+            <tr>
                 <th colspan="2">Categoria</th>
-                <th class="text-center" colspan="3">USD</th>
-                <th class="text-center" colspan="3">Asset</th>
+                <th class="text-center" colspan="3">
+                    <span id="wallet-view-mode"></span>
+                </th>
             </tr>
             <tr>
                 <th></th>
                 <th>Asset</th>
-                <th class="text-end" style="width: 14%;">Total</th>
-                <th class="text-end" style="width: 14%;">Libre</th>
-                <th class="text-end" style="width: 14%;">Bloqueado</th>
                 <th class="text-end" style="width: 14%;">Total</th>
                 <th class="text-end" style="width: 14%;">Libre</th>
                 <th class="text-end" style="width: 14%;">Bloqueado</th>
@@ -107,15 +113,18 @@
                     <tr class="detail_{{tag_key}}">
                         <td></td>
                         <td>{{ asset_symbol }}</td>
-                        <td class="text-end" >{% if asset_details.total_usd != 0 %} {{ asset_details.total_usd }}{% endif %}</td>
-                        <td class="text-end" >{% if asset_details.free_usd != 0 %} {{ asset_details.free_usd }}{% endif %}</td>
-                        <td class="text-end" >{% if asset_details.locked_usd != 0 %} {{ asset_details.locked_usd }}{% endif %}</td>
-                        <td class="text-end" >{% if asset_details.total != 0 %} {{ asset_details.total }}{% endif %}</td>
-                        <td class="text-end" >{% if asset_details.free != 0 %} {{ asset_details.free }}{% endif %}</td>
-                        <td class="text-end" >{% if asset_details.locked != 0 %} {{ asset_details.locked }}{% endif %}</td>
-                        <!--
-                        <td>${{ asset_details.price|floatformat:4 }}</td>
-                        -->
+                        <td class="text-end" >
+                            <span class="usd-view">{% if asset_details.total_usd != 0 %} {{ asset_details.total_usd }}{% endif %}</span>
+                            <span class="asset-view">{% if asset_details.total != 0 %} {{ asset_details.total }}{% endif %}</span>
+                        </td>
+                        <td class="text-end" >
+                            <span class="usd-view">{% if asset_details.free_usd != 0 %} {{ asset_details.free_usd }}{% endif %}</span>
+                            <span class="asset-view">{% if asset_details.free != 0 %} {{ asset_details.free }}{% endif %}</span>
+                        </td>
+                        <td class="text-end" >
+                            <span class="usd-view">{% if asset_details.locked_usd != 0 %} {{ asset_details.locked_usd }}{% endif %}</span>
+                            <span class="asset-view">{% if asset_details.locked != 0 %} {{ asset_details.locked }}{% endif %}</span>
+                        </td>
                     </tr>
                     {% endif %}
                 {% endfor %}
@@ -133,13 +142,11 @@
 {% block script %}
 {{ pnl_data|json_script:"pnl-data" }}
 <script>
-function sw_view(id)
-{
+function sw_view(id) {
     window.location = '{% url "sw_view" 0 %}'.replace('0',id);
 }
 
-function toogle_details(tag_key)
-{
+function toogle_details(tag_key) {
     var i = $('#btn_'+tag_key+' i');
     if (i.attr('class') == 'bi bi-arrow-bar-up')
     {
@@ -153,9 +160,25 @@ function toogle_details(tag_key)
     }
 }
 
+function toogle_wallet_view() {
+    var assets_mode = $('#wallet-view').is(':checked');
+    var show_class = 'usd-view';
+    var hide_class = 'asset-view';
+    var wallet_view = 'USDT';
+    if (assets_mode) {
+        show_class = 'asset-view';
+        hide_class = 'usd-view';        
+        wallet_view = 'Assets';
+    }
+    $('.'+show_class).show();
+    $('.'+hide_class).hide();
+    $('#wallet-view-mode').html(wallet_view);
+}
+
 $(document).ready(function () {
 
     toogle_details('OTHERS');
+    toogle_wallet_view();
 
     //Preparando los datos
     const mainData = JSON.parse(document.getElementById('pnl-data').textContent);
