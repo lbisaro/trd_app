@@ -1,6 +1,6 @@
 import os
 import pickle
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from collections import deque
 
@@ -31,7 +31,7 @@ class top30_alerts:
         self.breadth = 50
         self.alerts_log = []
         self.history = {}
-        self.top30_history = {'0m15':[],'1h01':[],'1h04':[],}
+        self.top30_history = {'dt':[],'0m15':[],'1h01':[],'1h04':[],}
         self.breadth_file = breadth_file
         self.exchange = Exchange(type='info',exchange='bnc',prms=None)
         self.tlg = app_log()
@@ -102,6 +102,16 @@ class top30_alerts:
                  
 
     def analize(self):
+
+        #Fix dt in top30_history
+        hst_length = len(self.top30_history['0m15'])
+        hst_last_dt = datetime.now()
+        self.top30_history['dt'] = []
+        for i in range(1,hst_length+1):
+            minutes = hst_length-i+1
+            dt = hst_last_dt-timedelta(minutes=minutes*15 )
+            self.top30_history['dt'].append(dt)
+
         print('Analizando')
         last_update = datetime.now().strftime(date_format)
         tf_data = {}
@@ -161,6 +171,8 @@ class top30_alerts:
                     self.tlg.alert(str_alert)
                 self.alerts_log.append(f'{last_update} - {str_alert}')
         
+        self.top30_history['dt'].append(datetime.now())
+
         self.breadth = 50
         if self.interval_id in tf_data and 'breadth' in tf_data[self.interval_id]:
             self.breadth = tf_data[self.interval_id]['breadth']

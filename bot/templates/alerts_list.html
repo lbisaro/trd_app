@@ -7,7 +7,6 @@
 {% block css %}
 <style>
     .box {
-        /*width: 22%;   1/3 del ancho */
         padding: 0.5rem;
         margin: 0.5rem;
         box-sizing: border-box;
@@ -32,9 +31,36 @@
 {% endblock %}
 
 {% block content %}
-{% if DATA_FILE %}
-    <div class="container">
-        <h4 class="text-info">Estado del archivo de datos</h4>
+
+<div class="container">
+    <h6 class="info text-info">Top30 Cripto {{timeframe_base}}/{{timeframe_agregado}}</h6>
+
+    <div class="row">
+        <div class="col-4">
+            Status:  <b class="{{breadth_class}}">{{str_breadth}}</b>
+        </div>
+        <div class="col-4">
+            Breadth General ({{timeframe_agregado}}): <b>{{breadth}}</b>
+        </div>
+        <div class="col-4">
+            Ultima actualizacion: <b>{{last_update}}</b>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap">
+        {% for clave, item in tf_data.items %}
+            <div class="box" style="min-width: 20em;margin: 0.5em 0.5em 0.5em 0;">
+                Breadth {{ item.interval }} <small class="float-end text-secondary">{{ item.total_ok }} Pares</small>
+                <div class=" text-center {{item.class}}">{{ item.breadth }}</div> 
+            </div>    
+        {% endfor %}
+    </div>
+   
+</div>
+
+
+{% if ALERTS_DATA_FILE %}
+    <div class="container pt-4">
+        <h6 class="text-info">Estado del archivo de datos de alertas</h6>
         <div>Symbols: {{qty_symbols}}</div>
         <div>Analizados: {{analized_symbols}}</div>
         <div>Precios 1m: {{qty_c_1m}} minutos</div>
@@ -67,14 +93,6 @@
         </div>
     </div>
     {% endif %}
-
-{% else %}
-    <div class="container text-center">
-        <h6>No existe registro de datos</h6>
-        {% if error %}
-        <h6 class="text-danger">{{error}}</h6>
-        {% endif %}
-    </div>
 {% endif %}
 
 

@@ -15,6 +15,7 @@ from scripts.crontab_futures_alerts import DATA_FILE, KLINES_TO_GET_ALERTS, INTE
 from scripts.Exchange import Exchange
 from scripts.functions import get_intervals
 from scripts.indicators import technical_summary, contar_decimales, resample, supertrend, zigzag
+from scripts.crontab_top30_alerts import breadth_file, top30_alerts
 import pandas_ta as ta 
 from bot.models import *
 from bot.model_sw import *
@@ -25,6 +26,58 @@ from binance.exceptions import BinanceAPIException, BinanceOrderException
 @login_required
 def list(request):
 
+    #Top30 Alerts
+    breadth = 50
+    alerts_log = []
+    last_update = ''
+    timeframe_base = ''
+    timeframe_agregado = ''
+    status = {}
+    tf_data = {}
+    top30_history = {}
+
+    interval_ids = top30_alerts.interval_ids
+    for interval_id in interval_ids:
+        tf_data[interval_id] = {}
+        
+    if os.path.exists(breadth_file):
+        with open(breadth_file, "rb") as archivo:
+            status = pickle.load(archivo)
+            breadth = status['breadth']
+            alerts_log = status['log'][::-1][:15]
+            last_update = status['last_update']
+            timeframe_base = status['timeframe_base']
+            timeframe_agregado = status['timeframe_agregado']
+            tf_data = status['tf_data']
+            top30_history = status['top30_history']
+
+    df_top30_history = pd.DataFrame(top30_history)
+    print(df_top30_history.tail(10))
+    breadth_class = 'text-secondary'
+    if breadth == 100:
+        str_breadth = 'En alerta de Venta'
+        breadth_class = 'text-danger'
+    elif breadth == 0:
+        breadth_class = 'text-success'
+        str_breadth = 'En alerta de Compra'
+    elif breadth > 75:
+        str_breadth = 'Venta parcial del mercado'
+    elif breadth < 25:
+        str_breadth = 'Compra parcial del mercado'
+    else:
+        str_breadth = 'Neutral'
+    
+    for interval_id in interval_ids:
+        value = tf_data[interval_id]['breadth']
+        tf_data[interval_id]['interval'] = get_intervals(interval_id,'binance')
+        if value > 65:
+            tf_data[interval_id]['class'] = 'text-danger'
+        elif value < 35:
+            tf_data[interval_id]['class'] = 'text-success'
+        else:
+            tf_data[interval_id]['class'] = 'text-secondary'
+
+    #Alerts
     try:
         data = load_data_file(DATA_FILE)
         log_alerts = data['log_alerts']
@@ -67,7 +120,17 @@ def list(request):
         else:
             qty_c_1m = 0
         return render(request, 'alerts_list.html',{
-            'DATA_FILE': DATA_FILE ,
+            #Top30
+            'breadth': breadth, 
+            'alerts_log': alerts_log, 
+            'str_breadth': str_breadth,
+            'breadth_class': breadth_class,
+            'tf_data': tf_data,
+            'last_update': last_update,
+            'timeframe_base': timeframe_base,
+            'timeframe_agregado': timeframe_agregado,
+            #Alerts
+            'ALERTS_DATA_FILE': DATA_FILE ,
             'qty_symbols': qty_symbols ,
             'analized_symbols': analized_symbols ,
             'qty_c_1m': qty_c_1m ,

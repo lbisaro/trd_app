@@ -19,62 +19,7 @@ from scripts.functions import get_intervals
 
 @login_required
 def home(request):
-    breadth = 50
-    alerts_log = []
-    last_update = ''
-    timeframe_base = ''
-    timeframe_agregado = ''
-    status = {}
-    tf_data = {}
-
-    interval_ids = top30_alerts.interval_ids
-    print('Live:','default',top30_alerts.get_live_breadth())
-    for interval_id in interval_ids:
-        tf_data[interval_id] = {}
-        print('Live:',interval_id,top30_alerts.get_live_breadth(interval_id))
-
-
-    
-    if os.path.exists(breadth_file):
-        with open(breadth_file, "rb") as archivo:
-            status = pickle.load(archivo)
-            breadth = status['breadth']
-            alerts_log = status['log'][::-1][:15]
-            last_update = status['last_update']
-            timeframe_base = status['timeframe_base']
-            timeframe_agregado = status['timeframe_agregado']
-            tf_data = status['tf_data']
-    
-    for interval_id in interval_ids:
-        tf_data[interval_id]['interval'] = get_intervals(interval_id,'binance')
-
-    breadth_class = 'text-secondary'
-    if breadth == 100:
-        str_breadth = 'En alerta de Venta'
-        breadth_class = 'text-danger'
-    elif breadth == 0:
-        breadth_class = 'text-success'
-        str_breadth = 'En alerta de Compra'
-    elif breadth > 75:
-        str_breadth = 'Venta parcial del mercado'
-    elif breadth < 25:
-        str_breadth = 'Compra parcial del mercado'
-    else:
-        str_breadth = 'Neutral'
-    
-    for interval_id in interval_ids:
-        tf_data[interval_id]['interval'] = get_intervals(interval_id,'binance')
-
-    return render(request, 'home.html', context = {
-        'breadth': breadth, 
-        'alerts_log': alerts_log, 
-        'str_breadth': str_breadth,
-        'breadth_class': breadth_class,
-        'tf_data': tf_data,
-        'last_update': last_update,
-        'timeframe_base': timeframe_base,
-        'timeframe_agregado': timeframe_agregado,
-        })
+    return render(request, 'home.html', context = {})
 
 def signup(request):
     json_rsp = {}
