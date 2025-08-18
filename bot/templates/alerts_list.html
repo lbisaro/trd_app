@@ -4,6 +4,18 @@
 
 {% load static %}
 
+{% block head %}
+<script
+    type="text/javascript"
+    src="{% static 'scripts/lightweight-adaptado.js' %}?v0">
+    </script>
+<script
+    type="text/javascript"
+    src="{% static 'scripts/my-lightweight.js' %}?v0">
+    </script>
+
+{% endblock %}
+
 {% block css %}
 <style>
     .box {
@@ -54,6 +66,8 @@
             </div>    
         {% endfor %}
     </div>
+    <h6 class="text-info">historico</h6>
+    <div id="top30_chart"></div>
    
 </div>
 
@@ -100,12 +114,51 @@
 
 
 {% block script %}
+{{ top30_history|json_script:"top30-history" }}
 <script>
 
-    function alert_view(key) {
-        let url = '/bot/alerts/analyze/'+key+'/'; 
-        window.location.href = url;
+function alert_view(key) {
+    let url = '/bot/alerts/analyze/'+key+'/'; 
+    window.location.href = url;
+}
+
+$(document).ready(function () {
+
+    //Preparando los datos
+    const mainData = JSON.parse(document.getElementById('top30-history').textContent);
+    const _0m15Data = mainData.map(d => ({
+        time: formatTime(d[0]),
+        value: d[1],
+    }));
+    const _1h01Data = mainData.map(d => ({
+        time: formatTime(d[0]),
+        value: d[2]
+    }));
+    const _1h04Data = mainData.map(d => ({
+        time: formatTime(d[0]),
+        value: d[3]
+    }));
+
+    //Creando el chart
+    if (mainData.length>0){
+        const lwc = new LWC('top30_chart',300);
+        const startTime = _0m15Data[0];
+        const endTime = _0m15Data[_0m15Data.length-1]
+
+        lwc.addTop30Series(_0m15Data,'15m',color='#eb3f00');
+        lwc.addTop30Series(_1h01Data,'1h',color='#EB7800');
+        lwc.addTop30Series(_1h04Data,'4h',color='#ebdf00');
+        lwc.addRefLineSeries(100, '#f6465daa');
+        lwc.addRefLineSeries(50, '#888888');
+        lwc.addRefLineSeries(0, '#0ecb81aa');
+        chart = lwc.getChart();
+
+
     }
+
+});
+
+
 
 </script>
 

@@ -53,7 +53,8 @@ def list(request):
             top30_history = status['top30_history']
 
     df_top30_history = pd.DataFrame(top30_history)
-    print(df_top30_history.tail(10))
+    top30_history = df_top30_history[['dt','0m15','1h01','1h04']].values.tolist()
+
     breadth_class = 'text-secondary'
     if breadth == 100:
         str_breadth = 'En alerta de Venta'
@@ -87,6 +88,7 @@ def list(request):
         context['last_update']= last_update
         context['timeframe_base']= timeframe_base
         context['timeframe_agregado']= timeframe_agregado
+        context['top30_history']= top30_history
             
     #Alerts
     try:

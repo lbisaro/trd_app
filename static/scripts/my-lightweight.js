@@ -279,6 +279,58 @@ class LWC {
         return pnlSeries;
     }
 
+
+    addTop30Series(sData, title = '', color='', pane = 0 ) {
+        sData = this.filterNullData(sData);
+        if (sData.length ==0)
+            return null;
+        const top30Series = this.chart.addSeries(LightweightCharts.LineSeries, {
+            priceFormat: {
+                type: 'custom',
+                formatter: (price) => `${price.toFixed(2)}`,
+            },
+            color: color,
+            title:title,
+            lineWidth: 1,
+            priceLineVisible: false,
+            crosshairMarkerVisible: false,
+        }, pane);
+        top30Series.setData(sData);
+        return top30Series;
+    }
+
+    addRefLineSeries(value, color='', paneIndex = 0 ) {
+        const pane = this.chart.panes()[paneIndex];
+        const series = pane.getSeries();   
+        
+        if (series.length==0) return;
+
+        var minTime = null;
+        var maxTime = null;
+        for (var i=0; i<series.length; i++) {
+            const times = series[i].data().map(d => d.time);
+            const max = Math.max(...times);
+            const min = Math.min(...times);
+
+            if (!minTime || min<minTime)
+                minTime = min;
+            if (!maxTime || max<maxTime)
+                maxTime = max;
+        }
+        const sData = [{time: minTime, value: value}, {time: maxTime, value: value},];
+        
+        const rlSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
+                color: color,
+                lineWidth: 1,
+                lineStyle: 3, //Solid: 0 | Dotted: 1 | Dashed: 2 | LargeDashed: 3 | SparseDotted: 4
+                priceLineVisible: false,
+                crosshairMarkerVisible: false,
+                lastValueVisible: false,
+            }, paneIndex);
+        rlSeries.setData(sData);
+        return rlSeries;
+    }
+
     addIndicatorsSeries(sData, color='gray', title = '', pane=0) {
         sData = this.filterNullData(sData);
         if (sData.length ==0)
