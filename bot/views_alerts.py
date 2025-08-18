@@ -25,6 +25,7 @@ from binance.exceptions import BinanceAPIException, BinanceOrderException
 
 @login_required
 def list(request):
+    context = {}
 
     #Top30 Alerts
     breadth = 50
@@ -77,6 +78,16 @@ def list(request):
         else:
             tf_data[interval_id]['class'] = 'text-secondary'
 
+        #Top30
+        context['breadth']= breadth 
+        context['alerts_log']= alerts_log 
+        context['str_breadth']= str_breadth
+        context['breadth_class']= breadth_class
+        context['tf_data']= tf_data
+        context['last_update']= last_update
+        context['timeframe_base']= timeframe_base
+        context['timeframe_agregado']= timeframe_agregado
+            
     #Alerts
     try:
         data = load_data_file(DATA_FILE)
@@ -119,29 +130,19 @@ def list(request):
             qty_c_1m = len(data['symbols']['BTCUSDT']['c_1m'])
         else:
             qty_c_1m = 0
-        return render(request, 'alerts_list.html',{
-            #Top30
-            'breadth': breadth, 
-            'alerts_log': alerts_log, 
-            'str_breadth': str_breadth,
-            'breadth_class': breadth_class,
-            'tf_data': tf_data,
-            'last_update': last_update,
-            'timeframe_base': timeframe_base,
-            'timeframe_agregado': timeframe_agregado,
-            #Alerts
-            'ALERTS_DATA_FILE': DATA_FILE ,
-            'qty_symbols': qty_symbols ,
-            'analized_symbols': analized_symbols ,
-            'qty_c_1m': qty_c_1m ,
-            'updated': updated ,
-            'proc_duration': proc_duration ,
-            'log_alerts': log_alerts ,
-        })
+       
+        context['ALERTS_DATA_FILE']=  DATA_FILE 
+        context['qty_symbols']=  qty_symbols 
+        context['analized_symbols']=  analized_symbols 
+        context['qty_c_1m']=  qty_c_1m 
+        context['updated']=  updated 
+        context['proc_duration']=  proc_duration 
+        context['log_alerts']=  log_alerts 
+
     except Exception as e:
-        return render(request, 'alerts_list.html',{
-            'error': f'No fue posible hallar el archivo con el log de alertas' ,
-        })
+        context['error'] = f'No fue posible hallar el archivo con el log de alertas' 
+
+    return render(request, 'alerts_list.html',context)
 
 @login_required
 def analyze(request, key):
