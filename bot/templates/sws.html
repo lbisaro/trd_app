@@ -7,11 +7,11 @@
 {% block head %}
 <script
     type="text/javascript"
-    src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js">
+    src="{% static 'scripts/lightweight-charts.lbisaro.js' %}?v0">
     </script>
 <script
     type="text/javascript"
-    src="{% static 'scripts/my-lightweight.js' %}">
+    src="{% static 'scripts/lightweight-charts.add.js' %}?v0">
     </script>
 {% endblock %}
 

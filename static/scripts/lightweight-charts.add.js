@@ -79,21 +79,25 @@ class LWC {
         });
     }
 
+    addButton (innerHTML,onclick) {
+
+        const container = document.querySelector('#' + this.containerId+' #actionBar');
+        console.log('#' + this.containerId+' #actionBar');
+        console.log(container);
+        const button = document.createElement("button");
+        button.style = 'padding: 0px 4px; border: 0px; background-color: transparent;';
+        button.innerHTML = innerHTML;
+        button.addEventListener('click', () => {
+            eval(onclick);
+            });
+        console.log(button);
+        container.appendChild(button);
+    }
+
     getChart() {
-        var addContainer = $('#tv-attr-logo').parent();
-
-        addContainer.append('<button id="reset-button" style="' + this.btnStyle + ' right: 30px;" title="Resetear vista"><i class="bi bi-bootstrap-reboot"></i></button>');
-        const resetButton = document.getElementById('reset-button');
-
-    
-        addContainer.append('<button id="full-button"  style="' + this.btnStyle + '  right: 5px;" title="Ver desde el inicio"><i class="bi bi-arrows-expand-vertical"></i></button>');
-        const fullButton = document.getElementById('full-button');
-        fullButton.addEventListener('click', () => {
-            this.fullView();
-        });
-        resetButton.addEventListener('click', () => {
-            this.minView();
-        });
+        
+        this.addButton('<i class="bi bi-arrows-expand-vertical"></i>','this.fullView();');
+        this.addButton('<i class="bi bi-bootstrap-reboot"></i>','this.minView();');
 
         this.minView();
 

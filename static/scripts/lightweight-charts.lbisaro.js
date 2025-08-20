@@ -6425,6 +6425,7 @@
             this.Bp() && (this.Vp(),
             this.ps = this.Ip(),
             this.ps && (this.Tp = this.Ap(),
+            /*
             this.kp = document.createElement("style"),
             this.kp.innerText = "a#tv-attr-logo{--fill:#131722;--stroke:#fff;position:absolute;left:10px;bottom:10px;height:19px;width:35px;margin:0;padding:0;border:0;z-index:3;}a#tv-attr-logo[data-dark]{--fill:#D1D4DC;--stroke:#131722;}",
             this.yp = document.createElement("a"),
@@ -6435,7 +6436,15 @@
             this.yp.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="35" height="19" fill="none"><g fill-rule="evenodd" clip-path="url(#a)" clip-rule="evenodd"><path fill="var(--stroke)" d="M2 0H0v10h6v9h21.4l.5-1.3 6-15 1-2.7H23.7l-.5 1.3-.2.6a5 5 0 0 0-7-.9V0H2Zm20 17h4l5.2-13 .8-2h-7l-1 2.5-.2.5-1.5 3.8-.3.7V17Zm-.8-10a3 3 0 0 0 .7-2.7A3 3 0 1 0 16.8 7h4.4ZM14 7V2H2v6h6v9h4V7h2Z"/><path fill="var(--fill)" d="M14 2H2v6h6v9h6V2Zm12 15h-7l6-15h7l-6 15Zm-7-9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></g><defs><clipPath id="a"><path fill="var(--stroke)" d="M0 0h35v19H0z"/></clipPath></defs></svg>',
             this.yp.toggleAttribute("data-dark", "dark" === this.Tp),
             this.Rp.appendChild(this.kp),
-            this.Rp.appendChild(this.yp)))
+            this.Rp.appendChild(this.yp),
+            */
+            this.addDiv = document.createElement("div"),
+            this.addDiv.id = 'actionBar',
+            this.addDiv.style = '--fill:#131722;--stroke:#fff;position:absolute;left:10px;top:10px;height:19px;width:100%;margin:0;padding:0;border:0;z-index:3;',
+            this.Rp.appendChild(this.addDiv)
+
+            ))
+            
         }
     }
     function xs(t, i) {
