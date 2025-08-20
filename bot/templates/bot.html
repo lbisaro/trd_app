@@ -296,6 +296,9 @@ $(document).ready( function () {
             lwc.addOrdersSeries(serie )
         }        
         chart = lwc.getChart();
+        
+        lwc.addPaneTitle(symbol,'#f8b935',0);
+        lwc.addPaneTitle('PNL','',1);
     }
 })
 function get_resultados() {
