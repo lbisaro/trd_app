@@ -33,8 +33,8 @@
     </div>
     <div class="container">
         <div class="row">
-            
-            <h6 class="text-info text-center">Top 10</h6>
+
+            <h6 class="text-info text-center">Top 20</h6>
             <table class="table-dg table-trade-info">
                 <thead>
                     <tr>
@@ -44,7 +44,7 @@
                         <th class="text-end">Rango Precios (%)</th>
                     </tr>
                 </thead>
-                <tbody id="top10-table"></tbody>
+                <tbody id="top-rank-table"></tbody>
             </table>
 
         </div>
@@ -89,13 +89,13 @@
     const SAMPLE_INTERVAL = 10 * 1000; // 10 segundos entre muestras
     const HISTORY_MINUTES = 60; // Historial para calcular la volatilidad normal
     const MAX_HISTORY_SAMPLES = (HISTORY_MINUTES * 60) / (SAMPLE_INTERVAL / 1000); // 360 muestras
-    const MIN_SAMPLES_FOR_STATS = 2; // Mínimo de muestras para calculos
+    const MIN_SAMPLES_FOR_STATS = 5; // Mínimo de muestras para calculos
 
     // --- VARIABLES GLOBALES ---
     let socket = null;
     const statusDiv = $('#status');
     const connectDiv = $('#connect');
-    const top10TableBody = document.getElementById('top10-table');
+    const topRankTableBody = document.getElementById('top-rank-table');
     const coinData = {}; // Objeto principal para almacenar datos y estadísticas de cada moneda
 
     let maxPriceLength = 0;
@@ -221,10 +221,10 @@
             }));
 
         allCoins.sort((a, b) => b.priceRange - a.priceRange); // Ordenar descendente
-        top10Coins = allCoins.slice(0, 10); // Solo los primeros 10
+        topRankCoins = allCoins.slice(0, 10); // Solo los primeros 10
         
         // Actualizar tabla
-        top10TableBody.innerHTML = top10Coins.map(coin => `
+        topRankTableBody.innerHTML = topRankCoins.map(coin => `
             <tr>
                 <td>${coin.symbol}</td>
                 <td class="text-end ${coin.distMA>0?'text-success':'text-danger'}">${coin.distMA.toFixed(2)}</td>
