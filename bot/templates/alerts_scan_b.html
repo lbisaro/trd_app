@@ -32,35 +32,23 @@
         </div>
     </div>
     <div class="container">
-        <dir class="row" style="padding:0;">
-            <div class="col">
-                <h6 class="text-info">Top 10 en Alza</h6>
-                <table class="table-dg table-trade-info">
-                    <thead>
-                        <tr>
-                            <th>Símbolo</th>
-                            <th>Último Precio</th>
-                            <th>Distancia MA (%)</th>
-                            <th>Rango Precios (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="risers-table"></tbody>
-                </table>
-            </div>
-            <div class="col">
-                <h6 class="text-info">Top 10 en Baja</h6>
-                <table class="table-dg table-trade-info">
-                    <thead>
-                        <tr>
-                            <th>Símbolo</th>
-                            <th>Último Precio</th>
-                            <th>Distancia MA (%)</th>
-                            <th>Rango Precios (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fallers-table"></tbody>
-                </table>
-            </div>
+        <div class="row">
+            
+            <h6 class="text-info text-center">Top 10</h6>
+            <table class="table-dg table-trade-info">
+                <thead>
+                    <tr>
+                        <th>Símbolo</th>
+                        <th class="text-end">Distancia MA (%)</th>
+                        <th class="text-end">Dev.Est (%)</th>
+                        <th class="text-end">Rango Precios (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="top10-table"></tbody>
+            </table>
+
+        </div>
+            
         </dir>
     </div>
     
@@ -101,14 +89,13 @@
     const SAMPLE_INTERVAL = 10 * 1000; // 10 segundos entre muestras
     const HISTORY_MINUTES = 60; // Historial para calcular la volatilidad normal
     const MAX_HISTORY_SAMPLES = (HISTORY_MINUTES * 60) / (SAMPLE_INTERVAL / 1000); // 360 muestras
-    const MIN_SAMPLES_FOR_STATS = 5; // Mínimo de muestras para calculos
+    const MIN_SAMPLES_FOR_STATS = 2; // Mínimo de muestras para calculos
 
     // --- VARIABLES GLOBALES ---
     let socket = null;
     const statusDiv = $('#status');
     const connectDiv = $('#connect');
-    const risersTableBody = document.getElementById('risers-table');
-    const fallersTableBody = document.getElementById('fallers-table');
+    const top10TableBody = document.getElementById('top10-table');
     const coinData = {}; // Objeto principal para almacenar datos y estadísticas de cada moneda
 
     let maxPriceLength = 0;
@@ -155,6 +142,7 @@
                     lastSampleTime: 0,
                     distMA: 0,
                     priceRange: 0,
+                    stdDev: 0,
                     lastPrice: 0
                 };
             }
@@ -179,22 +167,22 @@
             // Calcular la media (promedio)
             const sum = prices.reduce((acc, price) => acc + price, 0);
             const mean = sum / prices.length;
+            const maxPrice = Math.max(...prices);
+            const minPrice = Math.min(...prices);
             
             // Calcular la desviación estándar
             const squaredDifferences = prices.map((price) => Math.pow(price - mean, 2));
             const variance = squaredDifferences.reduce((acc, val) => acc + val, 0) / prices.length;
-            const standardDeviation = Math.sqrt(variance);
             
-            const priceRange =  (standardDeviation/coin.lastPrice)*100;
+            const standardDeviation = (Math.sqrt(variance)/coin.lastPrice)*100;
+            const priceRange =  ((maxPrice/minPrice)-1)*100;
             const distMA = ((coin.lastPrice/mean)-1)*100
 
+            coin.stdDev = standardDeviation
             coin.priceRange = priceRange;
             coin.distMA = distMA;
-
             
             maxPriceLength = (coin.prices.length>maxPriceLength ? coin.prices.length : maxPriceLength)
-            
-            
             
         });
 
@@ -232,37 +220,19 @@
                 symbol, ...data
             }));
 
-        allCoins.sort((a, b) => b.distMA - a.distMA); // Ordenar por Z-Score descendente
-
-        const risers = allCoins
-        .filter(coin => coin.distMA > 0) // distMA positivo
-        .sort((a, b) => b.priceRange - a.priceRange) // Orden descendente por priceRange
-        .slice(0, 10); // Solo los primeros 10
-
-        const fallers = allCoins
-        .filter(coin => coin.distMA < 0) // distMA negativo
-        .sort((a, b) => b.priceRange - a.priceRange) // Orden descendente por priceRange
-        .slice(0, 10); // Solo los primeros 10
-
-        // Actualizar tabla de alzas
-        risersTableBody.innerHTML = risers.map(coin => `
+        allCoins.sort((a, b) => b.priceRange - a.priceRange); // Ordenar descendente
+        top10Coins = allCoins.slice(0, 10); // Solo los primeros 10
+        
+        // Actualizar tabla
+        top10TableBody.innerHTML = top10Coins.map(coin => `
             <tr>
                 <td>${coin.symbol}</td>
-                <td>${coin.lastPrice.toFixed(getPrecision(coin.lastPrice))}</td>
-                <td class="text-success">${coin.distMA.toFixed(2)}</td>
-                <td class="text-success">${coin.priceRange.toFixed(2)}%</td>
+                <td class="text-end ${coin.distMA>0?'text-success':'text-danger'}">${coin.distMA.toFixed(2)}</td>
+                <td class="text-end ${coin.distMA>0?'text-success':'text-danger'}">${coin.stdDev.toFixed(2)}</td>
+                <td class="text-end ${coin.distMA>0?'text-success':'text-danger'}">${coin.priceRange.toFixed(2)}</td>
             </tr>
         `).join('');
 
-        // Actualizar tabla de bajas
-        fallersTableBody.innerHTML = fallers.map(coin => `
-            <tr>
-                <td>${coin.symbol}</td>
-                <td>${coin.lastPrice.toFixed(getPrecision(coin.lastPrice))}</td>
-                <td class="text-danger">${coin.distMA.toFixed(2)}</td>
-                <td class="text-danger">${coin.priceRange.toFixed(2)}%</td>
-            </tr>
-        `).join('');
     }
 
     // --- FUNCIONES AUXILIARES ---
@@ -277,14 +247,17 @@
 
     function getPrecision(price) {
         if (price >= 1000) return 2;
-        if (price >= 10) return 3;
-        if (price >= 0.1) return 4;
-        return 5;
+        else if (price >= 10) return 3;
+        else if (price >= 0.1) return 4;
+        else if (price >= 0.01) return 5;
+        else if (price >= 0.001) return 6;
+        else if (price >= 0.0001) return 7;
+        return 8;
     }
 
     // --- INICIO DE LA APLICACIÓN ---
     connect();
-    setInterval(updateUI, 1000); // Actualiza la interfaz de usuario cada segundo
+    setInterval(updateUI, 2000); // Actualiza la interfaz de usuario cada segundo
 
 </script>
 {% endblock %}
