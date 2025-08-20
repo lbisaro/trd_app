@@ -80,18 +80,34 @@ class LWC {
     }
 
     addButton (innerHTML,onclick) {
-
         const container = document.querySelector('#' + this.containerId+' #actionBar');
-        console.log('#' + this.containerId+' #actionBar');
-        console.log(container);
         const button = document.createElement("button");
         button.style = 'padding: 0px 4px; border: 0px; background-color: transparent;';
         button.innerHTML = innerHTML;
         button.addEventListener('click', () => {
             eval(onclick);
             });
-        console.log(button);
         container.appendChild(button);
+    }
+
+    addPaneTitle(title='',color='', paneIndex=0) {
+        setTimeout(function () {
+
+            const panes = this.chart.panes();
+            console.log(panes);
+            const pane = panes[paneIndex];
+            console.log('paneIndex',paneIndex);
+            console.log('pane',pane);
+            
+            var container = pane.getHTMLElement();
+            
+            console.log('container',container)
+            var div = document.createElement('div');
+            div.style = `padding: 0px 4px; ${color?'color: '+color+';':''} text-align: center; background-color: transparent; position:absolute;left:0px;top:0px;height:19px;width:100%;margin:0;border:0;z-index:3;`;
+            div.textContent = title;
+            container.cells[1].appendChild(div);
+        },250);
+        
     }
 
     getChart() {
