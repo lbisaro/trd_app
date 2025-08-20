@@ -11181,7 +11181,6 @@
                 }(i, s, t.zr);
             case "square":
                 return void function(t, i, s) {
-                    console.log(t)
                     const n = qe("square", s)
                     , e = (n - 1) * i.hb / 2
                     , r = i._t - e
