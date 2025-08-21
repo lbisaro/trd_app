@@ -290,11 +290,11 @@ $(document).ready( function () {
     if (mainData.length>0){
         const lwc = new LWC('chart',400);
         lwc.addPriceSeries(priceData,0 ,0 , qd_price, '');
-        lwc.addTradesSeries(tradesData )
-        lwc.addPnlSeries(pnlData, 1, 100);
         for (const serie of ordersData) {
             lwc.addOrdersSeries(serie )
         }        
+        lwc.addTradesSeries(tradesData )
+        lwc.addPnlSeries(pnlData, 1, 100);
         chart = lwc.getChart();
         
         lwc.addPaneTitle(symbol,'#f8b935',0);
