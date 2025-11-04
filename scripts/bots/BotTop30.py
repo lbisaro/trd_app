@@ -16,6 +16,7 @@ class BotTop30(Bot_Core):
     quote_perc = 0.0
     interes = ''
     rsmpl = 0
+    trail = 2
     
     indicadores = []
 
@@ -26,10 +27,11 @@ class BotTop30(Bot_Core):
         self.take_profit = 0.0
         self.interes = 's'  
         self.rsmpl = 0
+        self.trail = 2
 
     descripcion = 'Bot Core v2 \n'\
                   'Ejecuta compras parciales al recibir una señal de Compra por el indicador Top30, '\
-                  'Cierra la operación por Señal de venta.'
+                  'Cierra la operación por Señal de venta, con Stop-Loss o Trail-Stop.'\
     
     parametros = {'symbol':  {  
                         'c' :'symbol',
@@ -61,6 +63,14 @@ class BotTop30(Bot_Core):
                         't' :'perc',
                         'pub': True,
                         'sn':'Dst', },
+                 'trail': {
+                        'c' :'trail',
+                        'd' :'Trail Stop Loss',
+                        'v' : '2',
+                        'l' :'(0,100]',
+                        't' :'perc',
+                        'pub': True,
+                        'sn':'TRL', },
                 }
 
     def valid(self):
@@ -96,7 +106,7 @@ class BotTop30(Bot_Core):
         self.print_orders = False
         self.graph_open_orders = True
         self.graph_signals = True
-
+    
     def next(self):
 
         self.position = False
@@ -130,10 +140,25 @@ class BotTop30(Bot_Core):
                             self.update_order_by_tag(tag="BUY_LIMIT",limit_price=limit_price,qty=qty)
                     else:
                         self.buy_limit(qty=qty,limit_price=limit_price,flag=Order.FLAG_STOPLOSS,tag='BUY_LIMIT')
-            
-        elif self.row['signal'] == 'VENTA' and self.wallet_base>0:
-            self.close(flag=Order.FLAG_TAKEPROFIT)
-        
+
+
+        if self.trail <= 0:  
+            if self.row['signal'] == 'VENTA' and self.position:
+                self.close(flag=Order.FLAG_TAKEPROFIT)            
+        else:
+            #Gestion de trail Stop
+            if self.position:
+                if self.row['signal'] == 'VENTA':
+                    max_price = self.price
+                    trl_stop_price = max_price * (1-(self.trail/100))
+                    buyed_qty = self.wallet_base
+                    trl_order = self.get_order_by_tag(tag='STOP_LOSS')
+                    if trl_order:
+                        if trl_order.limit_price < trl_stop_price:
+                            self.update_order_by_tag('STOP_LOSS',limit_price=round_down(trl_stop_price,self.qd_price))  
+                    else:
+                        self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,trl_stop_price,tag="STOP_LOSS")
+                     
     def on_order_execute(self, order):
         if order.side == Order.SIDE_SELL:
             self.cancel_orders()
