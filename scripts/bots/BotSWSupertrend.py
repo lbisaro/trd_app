@@ -126,6 +126,8 @@ class BotSWSupertrend(Bot_Core):
         self.klines['hl2'] = (self.klines['high']+self.klines['low'])/2
         self.klines['ma'] = self.klines['hl2'].rolling(window=21).mean()
 
+        self.klines = self.klines.fillna(value='')
+        
         self.print_orders = False
         self.graph_open_orders = False
         self.graph_signals = False
