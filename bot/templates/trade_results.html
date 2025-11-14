@@ -61,7 +61,7 @@
                         col = parseInt(key)+3; //Ubica la columna del indicador
                         const indData = data.map(d => ({
                             time: formatTime(d[0]),
-                            value: d[col],
+                            value: (d[col]==''?null:d[col]),
                         }));
                         lwc.addIndicatorsSeries(indData,ind.color,ind.name)
                     });
