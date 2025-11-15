@@ -6,10 +6,11 @@ from scripts.Bot_Core import Bot_Core
 from scripts.functions import round_down
 from scripts.Bot_Core_utils import *
 from scripts.crontab_top30_alerts import top30_alerts as top30Live 
+from scripts.top30_update_backtest_klines import top30_file
 
 class BotTop30(Bot_Core):
 
-    top30_file = './backtest/klines/1h01/top30_TOP30_1h01_2024-05-01_2025-05-31.DataFrame'
+    top30_file = ''
     valid_timeframe = '1h01'
     short_name = 'Top30'
     symbol = ''
@@ -17,8 +18,12 @@ class BotTop30(Bot_Core):
     interes = ''
     rsmpl = 0
     trail = 2
+    tp_ok = 1
     
-    indicadores = []
+    indicadores = [
+            {'col': 'breadth', 'name': 'breadth', 'color': 'gray', 'row': 4,  'mode':'lines',},             
+            ]
+    
 
     def __init__(self):
         self.symbol = ''
@@ -28,6 +33,8 @@ class BotTop30(Bot_Core):
         self.interes = 's'  
         self.rsmpl = 0
         self.trail = 2
+        self.top30_file = top30_file
+        self.tp_ok = 1
 
     descripcion = 'Bot Core v2 \n'\
                   'Ejecuta compras parciales al recibir una señal de Compra por el indicador Top30, '\
@@ -67,10 +74,17 @@ class BotTop30(Bot_Core):
                         'c' :'trail',
                         'd' :'Trail Stop Loss',
                         'v' : '2',
-                        'l' :'(0,100]',
+                        'l' :'[0,100]',
                         't' :'perc',
                         'pub': True,
                         'sn':'TRL', },
+                 'tp_ok': {
+                        'c' :'tp_ok',
+                        'd' :'Solo Take Profit',
+                        'v' : 1,
+                        't' :'bin',
+                        'pub': True,
+                        'sn':'TP_Ok', },
                 }
 
     def valid(self):
@@ -99,10 +113,13 @@ class BotTop30(Bot_Core):
         elif self.is_live_run():
             live_breadth = top30Live.get_live_breadth()
             self.klines['breadth'] = live_breadth
+        
+        self.klines['breadth'] = self.klines['breadth'].fillna(value='')
 
         self.klines['signal'] = np.where(self.klines['breadth']==0,'COMPRA',self.klines['signal'])
         self.klines['signal'] = np.where(self.klines['breadth']==100 ,'VENTA',self.klines['signal'])
-            
+        
+
         self.print_orders = False
         self.graph_open_orders = True
         self.graph_signals = True
@@ -141,14 +158,22 @@ class BotTop30(Bot_Core):
                     else:
                         self.buy_limit(qty=qty,limit_price=limit_price,flag=Order.FLAG_STOPLOSS,tag='BUY_LIMIT')
 
+        if self.position and self.row['signal'] == 'VENTA':
+            sell_is_ok = False
+            pos_pnl = 0.0
+            if 'pos___pnl' in self.status:
+                pos_pnl = self.status['pos___pnl']['r']
+            if self.tp_ok>0:
+                sell_is_ok = True
+            elif self.trail > 0 and pos_pnl>self.trail:
+                sell_is_ok = True
 
-        if self.trail <= 0:  
-            if self.row['signal'] == 'VENTA' and self.position:
-                self.close(flag=Order.FLAG_TAKEPROFIT)            
-        else:
-            #Gestion de trail Stop
-            if self.position:
-                if self.row['signal'] == 'VENTA':
+            if sell_is_ok:
+                if self.trail <= 0: 
+                    #Venta sin trail Stop 
+                    self.close(flag=Order.FLAG_TAKEPROFIT)            
+                else:
+                    #Venta con Trail Stop
                     max_price = self.price
                     trl_stop_price = max_price * (1-(self.trail/100))
                     buyed_qty = self.wallet_base
@@ -158,7 +183,7 @@ class BotTop30(Bot_Core):
                             self.update_order_by_tag('STOP_LOSS',limit_price=round_down(trl_stop_price,self.qd_price))  
                     else:
                         self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,trl_stop_price,tag="STOP_LOSS")
-                     
+                
     def on_order_execute(self, order):
         if order.side == Order.SIDE_SELL:
             self.cancel_orders()
