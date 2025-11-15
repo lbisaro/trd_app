@@ -78,6 +78,13 @@ class BotTop30(Bot_Core):
                         't' :'perc',
                         'pub': True,
                         'sn':'TRL', },
+                 'tp_ok': {
+                        'c' :'tp_ok',
+                        'd' :'Solo Take Profit',
+                        'v' : 1,
+                        't' :'bin',
+                        'pub': True,
+                        'sn':'TP_Ok', },
                 }
 
     def valid(self):
