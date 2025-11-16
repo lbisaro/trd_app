@@ -63,7 +63,7 @@
                             time: formatTime(d[0]),
                             value: (d[col]==''?null:d[col]),
                         }));
-                        lwc.addIndicatorsSeries(indData,ind.color,ind.name)
+                        lwc.addIndicatorsSeries(indData,ind.color,ind.name,ind.row)
                     });
                 }
                 chart = lwc.getChart();
