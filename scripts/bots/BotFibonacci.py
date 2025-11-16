@@ -16,8 +16,8 @@ class BotFibonacci(Bot_Core):
     vp = 0
 
     indicadores = [
-            {'col': 'ZigZag', 'name': 'ZigZag', 'color': 'gray', 'row': 1,  'mode':'lines',},             
-            {'col': 'long_fbe_0', 'name': 'Fibonacci Signal', 'color': "#c1282894", 'row': 1,  'mode':'lines',},             
+            #{'col': 'ZigZag', 'name': 'ZigZag', 'color': 'gray', 'row': 1,  'mode':'lines',},             
+            {'col': 'long_fbe_0', 'name': 'Fibonacci Signal', 'color': "#dbac5992", 'row': 1,  'mode':'lines',},             
             ]
     
     fb_levels = [0.0,        
