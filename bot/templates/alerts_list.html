@@ -36,8 +36,10 @@
     Scanners
   </button>
   <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-    <li><a class="dropdown-item" href="{% url 'alerts_scanner' type='a' %}">Anomalías de Momentum</a></li>
-    <li><a class="dropdown-item" href="{% url 'alerts_scanner' type='b' %}">Rango de precios</a></li>
+    <li><a class="dropdown-item" href="{% url 'alerts_scanner' type='a' %}">Futuros - Anomalías de Momentum</a></li>
+    <li><a class="dropdown-item" href="{% url 'alerts_scanner' type='b' %}">Futuros - Rango de precios</a></li>
+    <li><a class="dropdown-item" href="{% url 'alerts_scanner' type='c' %}">Spot - Anomalías de Momentum</a></li>
+    <li><a class="dropdown-item" href="{% url 'alerts_scanner' type='d' %}">Spot - Rango de precios</a></li>
   </ul>
 </div>
 {% endblock %}

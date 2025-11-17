@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}Futuros - Scanner de Anomalías de Momentum{% endblock %}
-{% block nav_title %}Futuros - Scanner de Anomalías de Momentum{% endblock %}
+{% block title %}Spot - Scanner de Anomalías de Momentum{% endblock %}
+{% block nav_title %}Spot - Scanner de Anomalías de Momentum{% endblock %}
 
 {% load static %}
 {% load tz %}
@@ -69,8 +69,8 @@
 {% block script %}
 <script>
     // --- CONFIGURACIÓN ---
-    // URL de WebSocket de Binance para Tickers de FUTUROS (all Tickers Stream)
-    const WEBSOCKET_URL = 'wss://fstream.binance.com/ws/!ticker@arr';
+    // URL de WebSocket de Binance para Tickers de SPOT (all Tickers Stream)
+    const WEBSOCKET_URL = 'wss://stream.binance.com:9443/ws/!ticker@arr';
     const SAMPLE_INTERVAL = 10 * 1000; // 10 segundos entre muestras
     const HISTORY_MINUTES = 60; // Historial para calcular la volatilidad normal
     const MAX_HISTORY_SAMPLES = (HISTORY_MINUTES * 60) / (SAMPLE_INTERVAL / 1000); // 360 muestras

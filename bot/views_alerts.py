@@ -194,11 +194,8 @@ def analyze(request, key):
 @login_required
 def scanner(request,type):
     
-    html_file = 'alerts_scan_a.html'
-
-    if type=='b':
-        html_file = 'alerts_scan_b.html'
-    
+    html_file = f'alerts_scan_{type}.html'
+   
     return render(request, html_file,{}) 
 
 @login_required

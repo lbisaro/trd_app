@@ -80,6 +80,7 @@ def bot(request, bot_id):
     main_data = []
     orders_data = []
     trades_data = []
+    open_pos = False
 
     #Obteniendo datos de PNL y Price registrado por el Bot
     pnl_log = bot.get_pnl()
@@ -107,7 +108,6 @@ def bot(request, bot_id):
                 orders_data.append(hst_orders[hst_orders['order_id']==order_id].values.tolist())
 
         #Ordenes 
-        open_pos = False
         db_trades = bot.get_orders()
         df_trades = pd.DataFrame.from_records(db_trades.values())
         df_trades['str_dt'] = df_trades['datetime'].dt.strftime('%Y-%m-%d %H:%M')

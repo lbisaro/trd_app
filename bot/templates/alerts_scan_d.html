@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}Futuros - Scanner de Rango de precios{% endblock %}
-{% block nav_title %}Futuros - Scanner de Rango de precios{% endblock %}
+{% block title %}Spot - Scanner de Rango de precios{% endblock %}
+{% block nav_title %}Spot - Scanner de Rango de precios{% endblock %}
 
 {% load static %}
 {% load tz %}
@@ -56,8 +56,8 @@
 {% block script %}
 <script>
     // --- CONFIGURACIÓN ---
-    // URL de WebSocket de Binance para Tickers de FUTUROS (all Tickers Stream)
-    const WEBSOCKET_URL = 'wss://fstream.binance.com/ws/!ticker@arr';
+    // URL de WebSocket de Binance para Tickers de SPOT (all Tickers Stream)
+    const WEBSOCKET_URL = 'wss://stream.binance.com:9443/ws/!ticker@arr';   
 
     /*
     message
