@@ -108,11 +108,13 @@ def bot(request, bot_id):
                 orders_data.append(hst_orders[hst_orders['order_id']==order_id].values.tolist())
 
         #Ordenes 
+        trades_data = None
         db_trades = bot.get_orders()
-        df_trades = pd.DataFrame.from_records(db_trades.values())
-        df_trades['str_dt'] = df_trades['datetime'].dt.strftime('%Y-%m-%d %H:%M')
-        trades_data = df_trades[df_trades['completed']>0][['str_dt', 'price', 'side']].copy()
-        trades_data = trades_data.values.tolist()
+        if len(db_trades)>0:
+            df_trades = pd.DataFrame.from_records(db_trades.values())
+            df_trades['str_dt'] = df_trades['datetime'].dt.strftime('%Y-%m-%d %H:%M')
+            trades_data = df_trades[df_trades['completed']>0][['str_dt', 'price', 'side']].copy()
+            trades_data = trades_data.values.tolist()
 
     return render(request, 'bot.html',{
         'symbol': botClass.symbol,
