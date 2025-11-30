@@ -95,9 +95,10 @@ def bot(request, bot_id):
             #Resample
             pnl_log.set_index('datetime', inplace=True)
             pnl_log = pnl_log.resample('D').last()
-            pnl_log = pnl_log.asfreq('D')
+            pnl_log = pnl_log.asfreq('D').fillna('')
             pnl_log.reset_index(inplace=True)
             pnl_log['str_dt'] = pnl_log['datetime'].dt.strftime('%Y-%m-%d %H:%M')
+
 
             main_data = pnl_log[['str_dt', 'price', 'pnl']].copy()
             main_data = main_data.values.tolist()

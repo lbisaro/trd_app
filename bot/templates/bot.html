@@ -263,16 +263,16 @@ $(document).ready( function () {
     const mainData = JSON.parse(document.getElementById('main-data').textContent);
     const priceData = mainData.map(d => ({
         time: formatTime(d[0]),
-        value: d[1]
+        value: (d[1]==''?null:d[1]),
     }));
     const pnlData = mainData.map(d => ({
         time: formatTime(d[0]),
-        value: d[2],
+        value: (d[2]==''?null:d[2]),
     }));
     const tradesDataJSON = JSON.parse(document.getElementById('trades-data').textContent);
     const tradesData = tradesDataJSON.map(d => ({
         time: formatTime(d[0]),
-        value: d[1],
+        value: (d[1]==''?null:d[1]),
         side: d[2],
     }));
     const ordersDataJSON = JSON.parse(document.getElementById('orders-data').textContent);
@@ -280,7 +280,7 @@ $(document).ready( function () {
     for (const serie of ordersDataJSON) {
         const serieData = serie.map(d => ({
             time: formatTime(d[0]),
-            value: d[1],
+            value: (d[1]==''?null:d[1]),
             side: d[2],
         }));
         ordersData.push(serieData);
@@ -303,7 +303,6 @@ $(document).ready( function () {
 })
 function get_resultados() {
     url = '{% url "get_resultados" bot_id %}';
-    console.log(url);
         
     get_ajax(url).done( function (rsp) {
         if (rsp.error)
@@ -375,7 +374,6 @@ function show_exchange_order_info(id)
             html += get_div_data('Time',rsp.time)
             html += '</div>';
             $('#modal_order_info').html(html);
-            console.log(rsp);
         }
     });    
 }
