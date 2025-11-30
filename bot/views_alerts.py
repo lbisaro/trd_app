@@ -55,9 +55,8 @@ def list(request):
     df_top30_history = pd.DataFrame(top30_history)
     df_top30_history = df_top30_history[['dt','0m15','1h01','1h04']]
 
+    # Resample 
     df_top30_history.set_index('dt', inplace=True)
-
-    # Resample a 1 día ('D') y calcula el promedio
     df_top30_history = df_top30_history.resample('6H').last()
     df_top30_history.reset_index(inplace=True)
     
