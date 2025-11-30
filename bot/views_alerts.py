@@ -53,6 +53,16 @@ def list(request):
             top30_history = status['top30_history']
 
     df_top30_history = pd.DataFrame(top30_history)
+    df_top30_history = df_top30_history[['dt','0m15','1h01','1h04']]
+
+    df_top30_history.set_index('dt', inplace=True)
+
+    # Resample a 1 día ('D') y calcula el promedio
+    df_top30_history = df_top30_history.resample('4H').mean()
+    df_top30_history.reset_index(inplace=True)
+    
+    print(df_top30_history.tail())
+
     top30_history = df_top30_history[['dt','0m15','1h01','1h04']].values.tolist()
 
     breadth_class = 'text-secondary'
@@ -73,9 +83,9 @@ def list(request):
         value = tf_data[interval_id]['breadth']
         tf_data[interval_id]['interval'] = get_intervals(interval_id,'binance')
         if value > 65:
-            tf_data[interval_id]['class'] = 'text-danger'
-        elif value < 35:
             tf_data[interval_id]['class'] = 'text-success'
+        elif value < 35:
+            tf_data[interval_id]['class'] = 'text-danger'
         else:
             tf_data[interval_id]['class'] = 'text-secondary'
 
