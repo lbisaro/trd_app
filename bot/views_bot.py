@@ -93,9 +93,25 @@ def bot(request, bot_id):
             max_drawdown_reg = botClass.ind_maximo_drawdown(pnl_log,'pnl')
 
             #Resample
+
             pnl_log.set_index('datetime', inplace=True)
-            pnl_log = pnl_log.resample('D').last()
-            pnl_log = pnl_log.asfreq('D').fillna('')
+            
+            # Calcular hace 48 horas
+            cutoff_time = pnl_log.index.max() - pd.Timedelta(hours=48)
+            
+            # Separar en dos DataFrames
+            pnl_log_old = pnl_log[pnl_log.index <= cutoff_time]
+            pnl_log_recent = pnl_log[pnl_log.index > cutoff_time]
+            
+            # Resample solo los datos antiguos a 1 día
+            if len(pnl_log_old) > 0:
+                pnl_log_old = pnl_log_old.resample('D').last()
+                pnl_log_old = pnl_log_old.asfreq('D').fillna('')
+            
+            # Concatenar ambos DataFrames
+            pnl_log = pd.concat([pnl_log_old, pnl_log_recent])
+            pnl_log = pnl_log.sort_index()
+            
             pnl_log.reset_index(inplace=True)
             pnl_log['str_dt'] = pnl_log['datetime'].dt.strftime('%Y-%m-%d %H:%M')
 
