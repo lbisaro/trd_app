@@ -97,7 +97,7 @@ def bot(request, bot_id):
             pnl_log.set_index('datetime', inplace=True)
             
             # Calcular hace 48 horas
-            cutoff_time = pnl_log.index.max() - pd.Timedelta(hours=48)
+            cutoff_time = pnl_log.index.max() - pd.Timedelta(hours=24)
             
             # Separar en dos DataFrames
             pnl_log_old = pnl_log[pnl_log.index <= cutoff_time]
