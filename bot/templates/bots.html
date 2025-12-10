@@ -67,12 +67,7 @@
             </div>
             {% for k,item in b.status.items %}
                 {% if item.s and item.r != 0%}
-                    {% if item.l %}
-                        <div class="status_row"><span class="text-secondary">{{item.l}}:</span> <span {% if item.cls %} class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
-                    {% else %}
-                        <div class="status_row"><span class="text-secondary">{{k}}:</span> <span>{{item}}</span></div>
-                    
-                    {% endif %}
+                    <div class="status_row"><span class="text-secondary">{{item.l}}:</span> <span {% if item.cls %} class="{{item.cls}}"{% endif %}>{{item.v}}</span></div>
                 {% endif %}
             {% endfor %}
 
