@@ -247,7 +247,7 @@ class LWC {
         this.chart.priceScale('right').applyOptions({mode: 0,});
     }
 
-    addPriceSeries(sData, pane = 0, height = 100, precision = 2, title = '') {
+    addPriceSeries(sData, pane = 0, height = 100, precision = 2, title = '', priceScaleId='right') {
         sData = this.filterNullData(sData);
         if (sData.length ==0)
             return null;
@@ -258,6 +258,7 @@ class LWC {
             },
             lastValueVisible: true,
             lineWidth: 1,
+            priceScaleId: priceScaleId,
             title: title,
             color: '#f8b935',
             crosshairMarkerVisible: false,
@@ -269,7 +270,7 @@ class LWC {
         return priceSeries;
     }
 
-    addPnlSeries(sData, pane = 0, height = 100, precision = 2) {
+    addPnlSeries(sData, pane = 0, height = 100, precision = 2, title = '', priceScaleId='right') {
         sData = this.filterNullData(sData);
         if (sData.length ==0)
             return null;
@@ -278,6 +279,7 @@ class LWC {
                 type: 'custom',
                 formatter: (price) => `${price.toFixed(precision)}`,
             },
+            priceScaleId: priceScaleId,
             baseValue: { type: 'price', price: -0.1 },
             topLineColor: '#0ecb81',
             topFillColor1: 'rgba( 38, 166, 154, 0.28)',
@@ -285,6 +287,7 @@ class LWC {
             bottomLineColor: '#f6465d',
             bottomFillColor1: 'transparent',
             bottomFillColor2: 'rgba( 239, 83, 80, 0.28)',
+            title: title,
             lineWidth: 1,
             priceLineVisible: false,
             crosshairMarkerVisible: false,
