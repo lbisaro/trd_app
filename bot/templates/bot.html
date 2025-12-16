@@ -289,9 +289,20 @@ $(document).ready( function () {
     
     if (mainData.length>0){
         const lwc = new LWC('pnl_chart',200);
-        lwc.addPnlSeries(pnlData);
+        lwc.addPriceSeries(priceData,0 ,0 , qd_price, '', 'left');
+
+        lwc.addPnlSeries(pnlData, 0, 100, 2, '', 'right');
         chart = lwc.getChart();
-        lwc.addPaneTitle('PNL ('+quote_asset+')','#0dcaf0');
+        chart.applyOptions({
+            leftPriceScale: {
+                visible: true,
+            },
+            rightPriceScale: {
+                visible: true,
+            },
+        });
+        
+        lwc.addPaneTitle(symbol+' - PNL','#0dcaf0');
         
     }
 
