@@ -171,7 +171,6 @@
                     </div>
                 </div>
                 <div class="row pt-4">  
-                    <h6 class="text-info">Grafico</h6>
                     <div id="pnl_chart"></div>
                     <!--<div id="chart"></div>-->
                 </div>
@@ -292,7 +291,7 @@ $(document).ready( function () {
         const lwc = new LWC('pnl_chart',200);
         lwc.addPnlSeries(pnlData);
         chart = lwc.getChart();
-        lwc.addPaneTitle('PNL ('+quote_asset+')','#FFFFFF');
+        lwc.addPaneTitle('PNL ('+quote_asset+')','#0dcaf0');
         
     }
 
