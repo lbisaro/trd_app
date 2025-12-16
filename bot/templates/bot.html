@@ -172,7 +172,8 @@
                 </div>
                 <div class="row pt-4">  
                     <h6 class="text-info">Grafico</h6>
-                    <div id="chart"></div>
+                    <div id="pnl_chart"></div>
+                    <!--<div id="chart"></div>-->
                 </div>
             </div>
             
@@ -258,6 +259,7 @@ $(document).ready( function () {
 
     const qd_price =  {{qd_price}};
     const symbol = '{{symbol}}';
+    const quote_asset = '{{quote_asset}}';
     
     //Preparando los datos
     const mainData = JSON.parse(document.getElementById('main-data').textContent);
@@ -286,7 +288,16 @@ $(document).ready( function () {
         ordersData.push(serieData);
     }
     
-    //Creando el chart
+    if (mainData.length>0){
+        const lwc = new LWC('pnl_chart',200);
+        lwc.addPnlSeries(pnlData);
+        chart = lwc.getChart();
+        lwc.addPaneTitle('PNL ('+quote_asset+')','#FFFFFF');
+        
+    }
+
+    /*
+    //Creando el chart ANTIGUO
     if (mainData.length>0){
         const lwc = new LWC('chart',400);
         lwc.addPriceSeries(priceData,0 ,0 , qd_price, '');
@@ -300,6 +311,7 @@ $(document).ready( function () {
         lwc.addPaneTitle(symbol,'#f8b935',0);
         lwc.addPaneTitle('PNL','',1);
     }
+    */
 })
 function get_resultados() {
     url = '{% url "get_resultados" bot_id %}';
