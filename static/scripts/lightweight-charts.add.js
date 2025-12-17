@@ -19,6 +19,8 @@ class LWC {
     meassureMarkers = null;
     crosshairTime = null;
 
+    multipleScales = false;
+
     constructor(containerId, height = 400) {
         this.containerId = containerId;
         this.height = height;
@@ -115,6 +117,8 @@ class LWC {
 
         this.chart.subscribeClick(param => {
             if (!param.point) {return;}
+
+            if (this.multipleScales) {return;} //Desactivar medicion si hay multiples escalas
             
             if (!this.startClick && this.endClick ) {
                 if (this.meassureSerie) {
@@ -248,6 +252,8 @@ class LWC {
     }
 
     addPriceSeries(sData, pane = 0, height = 100, precision = 2, title = '', priceScaleId='right') {
+        if (priceScaleId!='right')
+            this.multipleScales = true;
         sData = this.filterNullData(sData);
         if (sData.length ==0)
             return null;
@@ -271,6 +277,8 @@ class LWC {
     }
 
     addPnlSeries(sData, pane = 0, height = 100, precision = 2, title = '', priceScaleId='right') {
+        if (priceScaleId!='right')
+            this.multipleScales = true;
         sData = this.filterNullData(sData);
         if (sData.length ==0)
             return null;
