@@ -171,6 +171,7 @@
                     </div>
                 </div>
                 <div class="row pt-4">  
+                    <div id="pos_chart"></div>
                     <div id="pnl_chart"></div>
                     <!--<div id="chart"></div>-->
                 </div>
@@ -278,13 +279,26 @@ $(document).ready( function () {
         side: d[2],
     }));
     const posDataJSON = JSON.parse(document.getElementById('pos-data').textContent);
-    const posData = posDataJSON.map(d => ({
+    const posPrice = posDataJSON[0].map(d => ({
+        time: formatTime(d[0]),
+        value: (d[1]==''?null:d[1]),
+    }));
+    const posHst = [];
+    for (const serie of posDataJSON[1]) {
+        const serieData = serie.map(d => ({
+            time: formatTime(d[0]),
+            value: (d[1]==''?null:d[1]),
+            side: d[2],
+        }));
+        posHst.push(serieData);
+    }
+    const posOrders = posDataJSON[2].map(d => ({
         time: formatTime(d[0]),
         value: (d[1]==''?null:d[1]),
         side: d[2],
     }));
 
-    console.log('Pos Data:', posData);
+
     const ordersDataJSON = JSON.parse(document.getElementById('orders-data').textContent);
     const ordersData = [];
     for (const serie of ordersDataJSON) {
@@ -310,8 +324,20 @@ $(document).ready( function () {
                 visible: true,
             },
         });
-        
         lwc.fullView();
+
+        if (posPrice.length>0){
+            const lwcPos = new LWC('pos_chart',400);
+            lwcPos.addPriceSeries(posPrice,0 ,0 , qd_price, '');
+            for (const serie of posHst) {
+                lwcPos.addOrdersSeries(serie )
+            }        
+            lwcPos.addTradesSeries(posOrders )
+            chartPos = lwcPos.getChart();
+            
+            lwcPos.addPaneTitle(symbol,'#f8b935',0);
+            lwcPos.addPaneTitle('Posicion abierta','',1);
+        }
         
         
     }
