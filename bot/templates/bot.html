@@ -113,10 +113,10 @@
     <div class="row">
         <ul class="nav nav-tabs" id="myTab" role="tablist" style="font-size: 0.9em;">
             <li class="nav-item" role="resumen">
-              <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">Posicion</button>
+              <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen-tab-pane" type="button" role="tab" aria-controls="resumen-tab-pane" aria-selected="true">Estado</button>
             </li>
             <li class="nav-item" role="trades">
-                <button class="nav-link" id="trades-tab" data-bs-toggle="tab" data-bs-target="#trades-tab-pane" type="button" role="tab" aria-controls="trades-tab-pane" aria-selected="false">Trades</button>
+                <button class="nav-link" id="trades-tab" data-bs-toggle="tab" data-bs-target="#trades-tab-pane" type="button" role="tab" aria-controls="trades-tab-pane" aria-selected="false">Ordenes</button>
             </li>
             <li class="nav-item" role="log">
                 <button class="nav-link" id="log-tab" data-bs-toggle="tab" data-bs-target="#log-tab-pane" type="button" role="tab" aria-controls="log-tab-pane" aria-selected="false">Log</button>
@@ -126,7 +126,6 @@
             <div class="tab-pane fade show active" id="resumen-tab-pane" role="tabpanel" aria-labelledby="resumen-tab" tabindex="0" >
                 {% if status %}
                 <div class="row pt-4" style="font-size: 0.8em;">
-                    <h6 class="text-info">Estado</h6>
                     <div class="d-flex flex-wrap">
                         {% for k,item in status.items %}
                             {% if item.r != 0 %}
@@ -136,8 +135,10 @@
                     </div>
                 </div>
                 {% endif %}
+
+                {% if orders %}
                 <div class="row pt-4" >  
-                    <h6 class="text-info">Ordenes</h6>
+                    <h6 class="text-info">Posicion abierta</h6>
                         <div class="col" id="open_orders" style="display: none;">        
                             <table class="table-dg table-trade-info" >
                                 <thead>
@@ -170,6 +171,8 @@
                         </table>
                     </div>
                 </div>
+
+                {% endif %}
                 <div class="row pt-4">  
                     <div id="pos_chart"></div>
                     <div id="pnl_chart"></div>
@@ -279,25 +282,37 @@ $(document).ready( function () {
         side: d[2],
     }));
     const posDataJSON = JSON.parse(document.getElementById('pos-data').textContent);
-    const posPrice = posDataJSON[0].map(d => ({
-        time: formatTime(d[0]),
-        value: (d[1]==''?null:d[1]),
-    }));
-    const posHst = [];
-    for (const serie of posDataJSON[1]) {
-        const serieData = serie.map(d => ({
+    if (posDataJSON.length>0) {
+        const posPrice = posDataJSON[0].map(d => ({
+            time: formatTime(d[0]),
+            value: (d[1]==''?null:d[1]),
+        }));
+        const posHst = [];
+        for (const serie of posDataJSON[1]) {
+            const serieData = serie.map(d => ({
+                time: formatTime(d[0]),
+                value: (d[1]==''?null:d[1]),
+                side: d[2],
+            }));
+            posHst.push(serieData);
+        }
+        const posOrders = posDataJSON[2].map(d => ({
             time: formatTime(d[0]),
             value: (d[1]==''?null:d[1]),
             side: d[2],
         }));
-        posHst.push(serieData);
-    }
-    const posOrders = posDataJSON[2].map(d => ({
-        time: formatTime(d[0]),
-        value: (d[1]==''?null:d[1]),
-        side: d[2],
-    }));
 
+    
+        const lwcPos = new LWC('pos_chart',300);
+        lwcPos.addPriceSeries(posPrice,0 ,0 , qd_price, '');
+        for (const serie of posHst) {
+            lwcPos.addOrdersSeries(serie )
+        }        
+        lwcPos.addTradesSeries(posOrders )
+        chartPos = lwcPos.getChart();
+        
+        lwcPos.fullView();
+    }
 
     const ordersDataJSON = JSON.parse(document.getElementById('orders-data').textContent);
     const ordersData = [];
@@ -311,19 +326,7 @@ $(document).ready( function () {
     }
     
     if (mainData.length>0){
-        if (posPrice.length>0){
-            const lwcPos = new LWC('pos_chart',300);
-            lwcPos.addPriceSeries(posPrice,0 ,0 , qd_price, '');
-            for (const serie of posHst) {
-                lwcPos.addOrdersSeries(serie )
-            }        
-            lwcPos.addTradesSeries(posOrders )
-            chartPos = lwcPos.getChart();
-            
-            lwcPos.addPaneTitle('Posicion abierta','#f8b935',0);
-            lwcPos.fullView();
-        }
-        
+
         const lwc = new LWC('pnl_chart',400);
         lwc.addPriceSeries(priceData,0 ,0 , qd_price, symbol, 'left');
 
@@ -337,6 +340,7 @@ $(document).ready( function () {
                 visible: true,
             },
         });
+        $('#pnl_chart').prepend('<h6 class="text-info">PNL</h6>');
         lwc.fullView();
 
     }
