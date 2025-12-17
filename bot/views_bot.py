@@ -130,6 +130,12 @@ def bot(request, bot_id):
             trades_data = df_trades[df_trades['completed']>0][['str_dt', 'price', 'side']].copy()
             trades_data = trades_data.values.tolist()
 
+        #Posicion Abierta
+        pos_data = None
+        pos_data = df_trades[df_trades['completed']<1][['str_dt', 'price', 'side']].copy()
+        pos_data = pos_data.values.tolist()
+        
+
     return render(request, 'bot.html',{
         'symbol': botClass.symbol,
         'title': str(bot),
@@ -159,6 +165,7 @@ def bot(request, bot_id):
         'quote_asset': quote_asset,
         'log': bot.get_log(),
         'main_data': main_data,
+        'pos_data': pos_data,
         'orders_data': orders_data,
         'trades_data': trades_data,
         'open_pos': open_pos,
