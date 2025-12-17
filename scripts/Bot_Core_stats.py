@@ -51,6 +51,25 @@ class Bot_Core_stats:
                                      's': True,
                                      'cls': cls,
                                      }
+        
+        if not 'open_pos_periods' in self.status:
+            open_pos_periods = 0
+            self.status['open_pos_periods'] = {
+                'l': 'Periodos con posicion abierta',
+                'v': f'{open_pos_periods}',
+                'r': open_pos_periods,
+            }
+         
+        if wallet_base*self.price < 2:
+            open_pos_periods = 0
+        else:
+            open_pos_periods = self.status['open_pos_periods']['r'] + 1
+
+        self.status['open_pos_periods'] = {
+            'l': 'Periodos con posicion abierta',
+            'v': f'{open_pos_periods}',
+            'r': open_pos_periods,
+        }
 
         #self.make_trades()
         pos___base_qty = 0
