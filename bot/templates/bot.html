@@ -311,6 +311,19 @@ $(document).ready( function () {
     }
     
     if (mainData.length>0){
+        if (posPrice.length>0){
+            const lwcPos = new LWC('pos_chart',300);
+            lwcPos.addPriceSeries(posPrice,0 ,0 , qd_price, '');
+            for (const serie of posHst) {
+                lwcPos.addOrdersSeries(serie )
+            }        
+            lwcPos.addTradesSeries(posOrders )
+            chartPos = lwcPos.getChart();
+            
+            lwcPos.addPaneTitle('Posicion abierta','#f8b935',0);
+            lwcPos.fullView();
+        }
+        
         const lwc = new LWC('pnl_chart',400);
         lwc.addPriceSeries(priceData,0 ,0 , qd_price, symbol, 'left');
 
@@ -326,20 +339,6 @@ $(document).ready( function () {
         });
         lwc.fullView();
 
-        if (posPrice.length>0){
-            const lwcPos = new LWC('pos_chart',400);
-            lwcPos.addPriceSeries(posPrice,0 ,0 , qd_price, '');
-            for (const serie of posHst) {
-                lwcPos.addOrdersSeries(serie )
-            }        
-            lwcPos.addTradesSeries(posOrders )
-            chartPos = lwcPos.getChart();
-            
-            lwcPos.addPaneTitle(symbol,'#f8b935',0);
-            lwcPos.addPaneTitle('Posicion abierta','',1);
-        }
-        
-        
     }
 
     /*
