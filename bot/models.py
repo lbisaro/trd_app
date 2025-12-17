@@ -808,11 +808,7 @@ class Bot(models.Model):
             botpnl.save()
         elif len(exist) > 1:
             last = exist.last()
-            if last.price-price == 0:
-                last.datetime = timezone.now()
-                last.price = price
-                last.save()
-            else:
+            if last.price-price != 0:
                 botpnl = BotOrderLog()
                 botpnl.order_id = order_id
                 botpnl.bot = self
