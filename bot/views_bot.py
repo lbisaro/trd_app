@@ -132,7 +132,7 @@ def bot(request, bot_id):
 
         #Posicion Abierta
         pos_data = None
-        pos_data = df_trades[df_trades['completed']<1][['str_dt', 'price', 'side']].copy()
+        pos_data = df_trades[df_trades['pos_order_id']<1][['str_dt', 'price', 'side']].copy()
         pos_data = pos_data.values.tolist()
         
 
