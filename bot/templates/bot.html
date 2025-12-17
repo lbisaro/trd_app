@@ -251,6 +251,7 @@
 {{ main_data|json_script:"main-data" }}
 {{ orders_data|json_script:"orders-data" }}
 {{ trades_data|json_script:"trades-data" }}
+{{ pos_data|json_script:"pos-data" }}
 <script>
 
 $(document).ready( function () {
@@ -276,6 +277,14 @@ $(document).ready( function () {
         value: (d[1]==''?null:d[1]),
         side: d[2],
     }));
+    const posDataJSON = JSON.parse(document.getElementById('pos-data').textContent);
+    const posData = posDataJSON.map(d => ({
+        time: formatTime(d[0]),
+        value: (d[1]==''?null:d[1]),
+        side: d[2],
+    }));
+
+    console.log('Pos Data:', posData);
     const ordersDataJSON = JSON.parse(document.getElementById('orders-data').textContent);
     const ordersData = [];
     for (const serie of ordersDataJSON) {
