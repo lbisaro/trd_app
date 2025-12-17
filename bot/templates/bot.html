@@ -289,13 +289,27 @@ $(document).ready( function () {
         }));
         const posHst = [];
         for (const serie of posDataJSON[1]) {
-            const serieData = serie.map(d => ({
-                time: formatTime(d[0]),
-                value: (d[1]==''?null:d[1]),
-                side: d[2],
-            }));
+
+            const serieData = [];
+            var lastValue = 0;
+            for (const d of serie) {
+                if (lastValue!=0) {
+                    serieData.push({
+                        time: formatTime(d[0])-1,
+                        value: (lastValue == '' ? null : lastValue),
+                        side: d[2],
+                    });
+                }
+                serieData.push({
+                    time: formatTime(d[0]),
+                    value: (d[1] == '' ? null : d[1]), 
+                    side: d[2],
+                });
+                lastValue = d[1]
+            }
             posHst.push(serieData);
         }
+        console.log(posHst)
         const posOrders = posDataJSON[2].map(d => ({
             time: formatTime(d[0]),
             value: (d[1]==''?null:d[1]),
