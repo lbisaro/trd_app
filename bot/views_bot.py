@@ -132,9 +132,29 @@ def bot(request, bot_id):
 
         #Posicion Abierta
         pos_data = None
-        pos_data = df_trades[df_trades['pos_order_id']<1][['str_dt', 'price', 'side']].copy()
-        pos_data = pos_data.values.tolist()
-        
+        if (len(df_trades[df_trades['pos_order_id']<1]['datetime'])>0):
+            start_pos_date = df_trades[df_trades['pos_order_id']<1]['datetime'].min() - pd.Timedelta(hours=24)
+            start_pos_date = start_pos_date.strftime('%Y-%m-%d %H:%M')
+
+            #Registros del precio durante la posicion abierta
+            pos_price = pnl_log[pnl_log['str_dt']>=start_pos_date][['str_dt', 'price']].copy()
+            
+            #Registro de ordenes abiertas durante la posicion abierta
+            pos_data_hst = hst_orders[hst_orders['str_dt']>=start_pos_date][['str_dt', 'price', 'side','order_id']].copy()
+            order_ids = pos_data_hst['order_id'].unique().tolist()
+            pos_data_hst = []
+            if len(order_ids)>0:
+                for order_id in order_ids:
+                    pos_data_hst.append(hst_orders[hst_orders['order_id']==order_id].values.tolist())
+
+            #Ordenes completadas durante la posicion abierta
+            pos_orders = df_trades[df_trades['pos_order_id']<1][['str_dt', 'price', 'side']].copy()
+
+            pos_data = []
+            pos_data.append(pos_price.values.tolist())
+            pos_data.append(pos_data_hst)   
+            pos_data.append(pos_orders.values.tolist())
+
 
     return render(request, 'bot.html',{
         'symbol': botClass.symbol,
