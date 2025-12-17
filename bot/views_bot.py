@@ -92,21 +92,20 @@ def bot(request, bot_id):
     max_drawdown_reg = 0
     if len(pnl_log) > 0:
         pnl_log['datetime'] = pnl_log['datetime'].dt.floor('T')
+        pnl_log['str_dt'] = pnl_log['datetime'].dt.strftime('%Y-%m-%d %H:%M')
                 
         #Historico de PNL
         if len(pnl_log)>0:
             max_drawdown_reg = botClass.ind_maximo_drawdown(pnl_log,'pnl')
 
             #Resample
-            pnl_log.set_index('datetime', inplace=True)
-            pnl_log = pnl_log.resample('D').last()
-            pnl_log = pnl_log.asfreq('D').fillna('')
-            pnl_log.reset_index(inplace=True)
+            main_data = pnl_log[['datetime', 'str_dt', 'price', 'pnl']].copy()
+            main_data.set_index('datetime', inplace=True)
+            main_data = main_data.resample('D').last()
+            main_data = main_data.asfreq('D').fillna('')
+            main_data.reset_index(inplace=True)
             
-            pnl_log['str_dt'] = pnl_log['datetime'].dt.strftime('%Y-%m-%d %H:%M')
-
-
-            main_data = pnl_log[['str_dt', 'price', 'pnl']].copy()
+            main_data = main_data[['str_dt', 'price', 'pnl']]
             main_data = main_data.values.tolist()
             
         #Historico de ordenes
@@ -132,8 +131,8 @@ def bot(request, bot_id):
 
         #Posicion Abierta
         pos_data = []
-        if (len(df_trades[df_trades['pos_order_id']<1]['datetime'])>0):
-            start_pos_date = df_trades[df_trades['pos_order_id']<1]['datetime'].min() - pd.Timedelta(hours=24)
+        if (len(df_trades[df_trades['completed']<1]['datetime'])>0):
+            start_pos_date = df_trades[df_trades['completed']<1]['datetime'].min() - pd.Timedelta(hours=24)
             start_pos_date = start_pos_date.strftime('%Y-%m-%d %H:%M')
 
             #Registros del precio durante la posicion abierta
