@@ -150,7 +150,7 @@ def bot(request, bot_id):
                     pos_data_hst.append(hst_orders[hst_orders['order_id']==order_id].values.tolist())
 
             #Ordenes completadas durante la posicion abierta
-            pos_orders = df_trades[df_trades['pos_order_id']<1][['str_dt', 'price', 'side']].copy()
+            pos_orders = df_trades[(df_trades['pos_order_id']<1)&(df_trades['completed']>0)][['str_dt', 'price', 'side']].copy()
 
             pos_data = []
             pos_data.append(pos_price.values.tolist())
