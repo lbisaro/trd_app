@@ -131,11 +131,13 @@ def bot(request, bot_id):
 
         #Posicion Abierta
         pos_data = []
-        delta_timeframe = pnl_log['datetime'][1]-pnl_log['datetime'][0]
-        if (len(df_trades[df_trades['completed']<1]['datetime'])>0):
-            start_pos_date = df_trades[df_trades['completed']<1]['datetime'].min() - (delta_timeframe*10)
+        
+        print(df_trades.columns)
+        if (len(df_trades[df_trades['pos_order_id']<1]['datetime'])>0):
+            delta_timeframe = pnl_log['datetime'][1]-pnl_log['datetime'][0]
+            start_pos_date = df_trades[df_trades['pos_order_id']<1]['datetime'].min()- (delta_timeframe*10)
             start_pos_date = start_pos_date.strftime('%Y-%m-%d %H:%M')
-
+            
             #Registros del precio durante la posicion abierta
             pos_price = pnl_log[pnl_log['str_dt']>=start_pos_date][['str_dt', 'price']].copy()
             
