@@ -131,7 +131,7 @@ def bot(request, bot_id):
             trades_data = trades_data.values.tolist()
 
         #Posicion Abierta
-        pos_data = None
+        pos_data = []
         if (len(df_trades[df_trades['pos_order_id']<1]['datetime'])>0):
             start_pos_date = df_trades[df_trades['pos_order_id']<1]['datetime'].min() - pd.Timedelta(hours=24)
             start_pos_date = start_pos_date.strftime('%Y-%m-%d %H:%M')
