@@ -157,6 +157,8 @@ def bot(request, bot_id):
             pos_data.append(pos_data_hst)   
             pos_data.append(pos_orders.values.tolist())
 
+        trades = bot.get_trades()
+        trades.reverse()
 
     return render(request, 'bot.html',{
         'symbol': botClass.symbol,
@@ -178,7 +180,7 @@ def bot(request, bot_id):
         'can_delete': bot.can_delete(),
         'can_activar': bot.can_activar(),
         'parametros': bot.parse_parametros(),
-        'trades': bot.get_trades(),
+        'trades': trades,
         'orders': bot.get_orders_en_curso(),
         'status': status,
         'pnl': pnl,
