@@ -39,6 +39,9 @@
     .box_activo {
         border-top: 3px solid #0dcaf0;
     }
+    .box_activo div{
+        border:1px solid #ffffff;
+    }
 
     .box_inactivo {
         border-top: 3px solid #6c757d;
@@ -59,8 +62,11 @@
 <h6 class="text-info text-center">Bots</h6>
 <div class="container">
     <div class="d-flex flex-wrap">
+
+        <!-- Bots ACTIVOS -->
         {% for b in bots %}
-        <div class="box {% if b.estrategia_activo > 0 and b.activo %}box_activo{% else %}box_inactivo{% endif %}" onclick="ver('{{b.bot_id}}')">
+        {% if b.estrategia_activo > 0 and b.activo > 0%}
+        <div class="box box_activo" onclick="ver('{{b.bot_id}}')">
             <div>{{b.estrategia}}</div>
             {% for k,item in b.status.items %}
                 {% if item.s and item.r != 0%}
@@ -69,6 +75,23 @@
             {% endfor %}
 
         </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    
+    <div class="d-flex flex-wrap">
+        <!-- Bots y Estrategias INACTIVOS -->
+        {% for b in bots %}
+        {% if b.estrategia_activo < 1 or b.activo < 1 %}
+        <div class="box box_inactivo" onclick="ver('{{b.bot_id}}')">
+            <div class="row">
+                <div class="col-9">{{b.estrategia}}</div>
+                <div class="col-3 status_row"><span {% if b.status.pnl.cls %} class="{{b.status.pnl.cls}}"{% endif %}>{{b.status.pnl.v}}</span></div>
+
+            </div>
+
+        </div>
+        {% endif %}
         {% endfor %}
     </div>
 </div>

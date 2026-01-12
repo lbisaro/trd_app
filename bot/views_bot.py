@@ -24,10 +24,15 @@ def bots(request):
     for b in bots:
         intervalo = fn.get_intervals(b.estrategia.interval_id,'binance')
         status = eval(b.status) if len(b.status) > 0 else []
-        if not b.activo:
-            wallet_tot = status['wallet_tot']
+        if not b.activo or not b.estrategia.activo:
+            pnl = ((status['wallet_tot']['r'] / b.quote_qty)-1)*100 if 'wallet_tot' in status else 0
             status = {}
-            status['wallet_tot'] = wallet_tot
+            status['pnl'] = {'r': pnl,
+                             'v': str(round(pnl,2))+'%',
+                             'l': 'PNL',
+                             's': True,
+                             'cls': 'text-success' if pnl >=0 else' text-danger',}
+            print(status)
 
         formattedBots.append({'bot_id':b.id, 
                              'estrategia':b.estrategia.nombre,
