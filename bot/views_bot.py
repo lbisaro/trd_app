@@ -65,7 +65,10 @@ def bots(request):
     
 @login_required
 def bot_pnl_estrategia(request, estrategia_clase):
-    pnl_diario = BotPnl.get_pnl_diario_estrategia(estrategia_clase)
+    if estrategia_clase == '__general__':
+        pnl_diario = BotPnl.get_pnl_diario_general()
+    else:
+        pnl_diario = BotPnl.get_pnl_diario_estrategia(estrategia_clase)
     if len(pnl_diario)>0:
         pnl_diario['date'] = pd.to_datetime(pnl_diario['date'])
         pnl_diario['str_dt'] = pnl_diario['date'].dt.strftime('%Y-%m-%d')
