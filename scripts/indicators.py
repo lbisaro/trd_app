@@ -320,15 +320,17 @@ def fibonacci_extension(fb_a, fb_b, fb_c, level):
     # a: Primer punto (inicio de la tendencia).
     # b: Segundo punto (final del primer movimiento).
     # c: Tercer punto (retroceso dentro de la tendencia).
-
-    base = abs(fb_b - fb_a)  
-    if fb_a < fb_b:  #Alcista
-        price = fb_c + base * level
-    elif fb_a > fb_b:  #Bajista
-        price = fb_c - base * level
-    else:
-        return None  
-    return price
+    try:
+        base = abs(fb_b - fb_a)  
+        if fb_a < fb_b:  #Alcista
+            price = fb_c + base * level
+        elif fb_a > fb_b:  #Bajista
+            price = fb_c - base * level
+        else:
+            return None  
+        return price
+    except:
+        return None
 
 def polyfit_trend(df, column='close',window=7,fwd=1, prefix='pf'):
     df[f'{prefix}_pred'] = df[column].rolling(window).apply(lambda x: predict_price(x,fwd))
