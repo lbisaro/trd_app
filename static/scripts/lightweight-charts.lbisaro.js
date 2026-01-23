@@ -54,7 +54,9 @@
     }
     function a(t) {
         if (null === t)
-            throw new Error("Value is null");
+            //lbisaro - Evitar el valor Null
+            //throw new Error("Value is null");
+            t = '';
         return t
     }
     function l(t) {
