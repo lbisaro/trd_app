@@ -923,7 +923,7 @@ class BotPnl(models.Model):
         verbose_name = "Bot PNL"
         verbose_name_plural='Bot PNL'
 
-    def get_pnl_diario_general_completo():
+    def get_pnl_diario_general():
         """
         Genera un DataFrame de pandas con el PNL total diario de todos los bots,
         tomando el último valor registrado de cada bot por día.
@@ -954,7 +954,7 @@ class BotPnl(models.Model):
         else:
             return pd.DataFrame()
 
-    def get_pnl_diario_general():
+    def get_pnl_diario_estrategia(estrategia_clase):
         """
         Genera un DataFrame con el PNL total diario considerando 
         SOLO bots activos y con estrategia activa.
@@ -962,8 +962,7 @@ class BotPnl(models.Model):
         # 1. Filtramos primero por las condiciones de relaciones (JOIN implícito)
         # Esto reduce drásticamente el dataset antes de agrupar.
         qs_filtered = BotPnl.objects.filter(
-            bot__activo=1, 
-            bot__estrategia__activo=1
+            bot__estrategia__clase = estrategia_clase
         )
 
         # 2. Identificamos el último registro por día y por bot sobre el set filtrado

@@ -32,7 +32,6 @@ def bots(request):
                              'l': 'PNL',
                              's': True,
                              'cls': 'text-success' if pnl >=0 else' text-danger',}
-            print(status)
 
         formattedBots.append({'bot_id':b.id, 
                              'estrategia':b.estrategia.nombre,
@@ -53,11 +52,32 @@ def bots(request):
     else:
         pnl_diario = []
 
+    clases_estrategia = Estrategia.objects.values_list('clase', flat=True).distinct()
+    print('clases_estrategia')
+    print(clases_estrategia)
+
     if request.method == 'GET':
         return render(request, 'bots.html',{
             'bots': formattedBots,
             'pnl_diario': pnl_diario,
+            'clases_estrategia': clases_estrategia,
         })
+    
+@login_required
+def bot_pnl_estrategia(request, estrategia_clase):
+    pnl_diario = BotPnl.get_pnl_diario_estrategia(estrategia_clase)
+    if len(pnl_diario)>0:
+        pnl_diario['date'] = pd.to_datetime(pnl_diario['date'])
+        pnl_diario['str_dt'] = pnl_diario['date'].dt.strftime('%Y-%m-%d')
+        pnl_diario = pnl_diario[['str_dt', 'pnl']].copy()
+        pnl_diario = pnl_diario.values.tolist()
+    else:
+        pnl_diario = []
+    
+    return JsonResponse({'ok': True,
+                         'pnl_diario': pnl_diario,
+                         })
+
 
 @login_required
 def bot(request, bot_id):

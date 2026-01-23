@@ -22,6 +22,7 @@ urlpatterns = [
     path('estrategia/delete/<int:estrategia_id>/',ve.estrategia_delete,name='estrategia_delete'),
 
     path('bots/',vb.bots,name='bots'),
+    path('bots_pnl_estrategia/<str:estrategia_clase>/',vb.bot_pnl_estrategia,name='bot_pnl_estrategia'),
     path('bot/<int:bot_id>/',vb.bot,name='bot'),
     path('bot/create/',vb.bot_create,name='bot_create'),
     path('bot/get_parametros_estrategia/<int:estrategia_id>/',vb.get_parametros_estrategia,name='get_parametros_estrategia'),

@@ -54,7 +54,14 @@
 {% endblock %}
 
 {% block content %}
-<h6 class="text-info text-center">PNL General</h6>
+<div class="container pb-3"> 
+    <select class="form-control" onchange="filterPNL(this.value)">
+        <option value="__general__" selected>PNL General</option>
+        {% for c in clases_estrategia %}
+        <option value="{{c}}" >PNL {{c}}()</option>
+        {% endfor %}
+    </select>
+</div>
 <div class="container" id="chart"></div>
 <h6 class="text-info text-center">Bots</h6>
 <div class="container">
@@ -98,6 +105,8 @@
 {% block script %}
 {{ pnl_diario|json_script:"pnl-diario" }}
 <script>
+var pnlSeries = null;
+var chart = null;
 
 $(document).ready(function () {
 
@@ -130,5 +139,24 @@ function ver(id)
 {
     window.location = '{% url "bot" 0 %}'.replace('0',id);
 }
+
+function filterPNL(estrategia_clase)
+{
+    url = '{% url "bot_pnl_estrategia" 0 %}'.replace('0',estrategia_clase);
+    data = null;
+    get_ajax(url,data).done( function (rsp) {
+        if (rsp.ok > 0)
+        {
+            const pnlData = rsp.pnl_diario.map(d => ({
+                    time: formatTime(d[0]),
+                    value: d[1],
+                }));
+            pnlSeries.setData(pnlData);
+            chart.timeScale().fitContent();
+        }
+    });
+}
+
 </script>
+
 {% endblock %}
