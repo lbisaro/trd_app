@@ -923,7 +923,7 @@ class BotPnl(models.Model):
         verbose_name = "Bot PNL"
         verbose_name_plural='Bot PNL'
 
-    def get_pnl_diario_general():
+    def get_pnl_diario_general_completo():
         """
         Genera un DataFrame de pandas con el PNL total diario de todos los bots,
         tomando el último valor registrado de cada bot por día.
@@ -954,6 +954,45 @@ class BotPnl(models.Model):
         else:
             return pd.DataFrame()
 
+    def get_pnl_diario_general():
+        """
+        Genera un DataFrame con el PNL total diario considerando 
+        SOLO bots activos y con estrategia activa.
+        """
+        # 1. Filtramos primero por las condiciones de relaciones (JOIN implícito)
+        # Esto reduce drásticamente el dataset antes de agrupar.
+        qs_filtered = BotPnl.objects.filter(
+            bot__activo=1, 
+            bot__estrategia__activo=1
+        )
+
+        # 2. Identificamos el último registro por día y por bot sobre el set filtrado
+        latest_entries_per_day = qs_filtered.annotate(
+            date=TruncDay('datetime')
+        ).values('date', 'bot_id').annotate(
+            latest_datetime=Max('datetime')
+        ).values('latest_datetime')
+
+        # 3. Obtenemos los valores de PNL usando los datetimes identificados
+        # Nota: Usamos filter sobre el queryset base (BotPnl) pero restringido por el IN
+        latest_pnl_data = BotPnl.objects.filter(
+            datetime__in=latest_entries_per_day
+        ).values('datetime', 'pnl')
+
+        # 4. Procesamiento en Pandas
+        # Usamos .exists() para evitar traer datos si está vacío (más eficiente que len())
+        if latest_pnl_data.exists():
+            df = pd.DataFrame(list(latest_pnl_data))
+            
+            # Normalizamos la fecha eliminando la hora para el agrupamiento final
+            df['date'] = df['datetime'].dt.date
+            
+            # Sumamos el PNL de todos los bots activos para esa fecha
+            pnl_diario = df.groupby('date')['pnl'].sum().reset_index()
+            
+            return pnl_diario
+        else:
+            return pd.DataFrame()
         
 class BotOrderLog(models.Model):
 
