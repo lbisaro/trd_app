@@ -17,7 +17,7 @@ class BotFibonacci(Bot_Core):
 
     indicadores = [
             #{'col': 'ZigZag', 'name': 'ZigZag', 'color': 'gray', 'row': 1,  'mode':'lines',},             
-            {'col': 'long_fbe_0', 'name': 'Fibonacci Signal', 'color': "#dbac5992", 'row': 1,  'mode':'lines',},             
+            #{'col': 'long_fbe_0', 'name': 'Fibonacci Signal', 'color': "#dbac5992", 'row': 1,  'mode':'lines',},             
             ]
     
     fb_levels = [0.0,        
@@ -233,7 +233,7 @@ class BotFibonacci(Bot_Core):
             #Ejecuta una venta parcial si la ganancia en QUOTE es mayor a 11 USD y mayor al % establecido para venta parcial?
             if pnl_quote > 11 and pnl_quote > buyed_quote*(self.vp/100):
                 usd_to_sell = pnl_quote
-                qty_to_sell = round(usd_to_sell/self.price,self.qd_qty)
+                qty_to_sell = round_down(usd_to_sell/self.price,self.qd_qty)
                 if self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT):
                     self.update_order_by_tag('STOP_LOSS',qty=round_down(self.wallet_base,self.qd_qty)) 
         
