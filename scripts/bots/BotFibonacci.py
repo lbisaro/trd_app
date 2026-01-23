@@ -35,7 +35,6 @@ class BotFibonacci(Bot_Core):
 
     def __init__(self):
         self.symbol = ''
-        self.stop_loss = 0.0
         self.take_profit = 0.0
         self.interes = 's'  
         self.rsmpl = 0
@@ -168,41 +167,43 @@ class BotFibonacci(Bot_Core):
                 if level >= 0:
                     level_price = fibonacci_extension(self.row['long_fbe_2'],self.row['long_fbe_1'],self.row['long_fbe_0'],level)
                     pre_level_price = fibonacci_extension(self.row['long_fbe_2'],self.row['long_fbe_1'],self.row['long_fbe_0'],pre_level)
-                    if level_price > self.price > pre_level_price:
+                    if pre_level_price and level_price > self.price > pre_level_price:
                         slprice = fibonacci_extension(self.row['long_fbe_2'],self.row['long_fbe_1'],self.row['long_fbe_0'],pre_level)
                         slperc = round(((self.price/slprice)-1)*100,2)
-                        if slperc > 1:
+                        if slprice and slperc > 1:
                             stop_loss_price = slprice
                 pre_level = level
             
             #PENDIENTE - Analisis del riesgo a tomar
-            stop_loss_price = round_down(stop_loss_price , self.qd_price)
-            self.stop_loss = round((1-(stop_loss_price/self.price))*100,2)
-                
-            if not self.position:
-                if self.interes == 's': #Interes Simple
-                    quote_qty = self.quote_qty if self.wallet_quote >= self.quote_qty else self.wallet_quote
-                    quote_to_sell = round_down(quote_qty , self.qd_quote )
-                elif self.interes == 'c': #Interes Compuesto
-                    quote_to_sell = round_down(self.wallet_quote, self.qd_quote ) 
-                
-                quote_to_sell = round_down(quote_to_sell , self.qd_quote ) 
-                base_to_buy = round_down((quote_to_sell/price) , self.qd_qty) 
             
-                orderid_buy = self.buy(base_to_buy,Order.FLAG_SIGNAL)
-                if orderid_buy > 0:
+            if stop_loss_price:
 
-                    buyed_qty = self._trades[orderid_buy].qty
+                stop_loss_price = round_down(stop_loss_price , self.qd_price)
+                            
+                if not self.position:
                     
-                    self.position = True
-                    self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price,tag="STOP_LOSS")
-               
-        
-            else:
-                sl_order = self.get_order_by_tag(tag='STOP_LOSS')
-                if sl_order and sl_order.limit_price < stop_loss_price:
-                    update_stop_loss = True
-                    self.update_order_by_tag('STOP_LOSS',limit_price=round_down(stop_loss_price,self.qd_price))      
+                    if self.interes == 's': #Interes Simple
+                        quote_qty = self.quote_qty if self.wallet_quote >= self.quote_qty else self.wallet_quote
+                        quote_to_sell = round_down(quote_qty , self.qd_quote )
+                    elif self.interes == 'c': #Interes Compuesto
+                        quote_to_sell = round_down(self.wallet_quote, self.qd_quote ) 
+                    
+                    quote_to_sell = round_down(quote_to_sell , self.qd_quote ) 
+                    base_to_buy = round_down((quote_to_sell/price) , self.qd_qty) 
+                
+                    orderid_buy = self.buy(base_to_buy,Order.FLAG_SIGNAL)
+                    if orderid_buy > 0:
+
+                        buyed_qty = self._trades[orderid_buy].qty
+                        
+                        self.position = True
+                        self.orderid_sl = self.sell_limit(buyed_qty,Order.FLAG_STOPLOSS,stop_loss_price,tag="STOP_LOSS")
+                
+                else:
+                    sl_order = self.get_order_by_tag(tag='STOP_LOSS')
+                    if sl_order and sl_order.limit_price < stop_loss_price:
+                        update_stop_loss = True
+                        self.update_order_by_tag('STOP_LOSS',limit_price=round_down(stop_loss_price,self.qd_price))      
 
         #Gestion del Trail Stop
         if self.position:
@@ -221,23 +222,25 @@ class BotFibonacci(Bot_Core):
         
         #Gestion de venta parcial
         if self.position and self.vp > 0 and update_stop_loss:
-            buyed_quote = 0
-            wallet = self.wallet_quote + self.wallet_base*self.price
-
+            
+            #Calculando precio limite para la proxima venta parcial
+            max_price = 0
             for i in self._trades:
                 order = self._trades[i]
                 if order.pos_order_id == 0:
-                    if order.side == Order.SIDE_BUY:
-                        buyed_quote = order.price * order.qty
-            pnl_quote = wallet-buyed_quote
-            #Ejecuta una venta parcial si la ganancia en QUOTE es mayor a 11 USD y mayor al % establecido para venta parcial?
-            if pnl_quote > 11 and pnl_quote > buyed_quote*(self.vp/100):
-                usd_to_sell = pnl_quote
-                qty_to_sell = round_down(usd_to_sell/self.price,self.qd_qty)
-                if self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT):
-                    self.update_order_by_tag('STOP_LOSS',qty=round_down(self.wallet_base,self.qd_qty)) 
+                    if order.price > max_price:
+                        max_price = order.price
+            
+            #Ejecuta una venta parcial del vp% y mayor al % establecido para venta parcial
+            if self.price > max_price*(1+(self.vp/100)):
+                quote_to_sell = self.quote_qty * (self.vp/10)
+                qty_to_sell = round_down(quote_to_sell/self.price,self.qd_qty)
+                self.sell(qty=qty_to_sell, flag=Order.FLAG_TAKEPROFIT, tag='TAKE_PROFIT_PARTIAL') 
         
 
     def on_order_execute(self, order):
         if order.side == Order.SIDE_SELL and order.tag == 'STOP_LOSS':
             self.cancel_orders()
+        if order.side == Order.SIDE_SELL and order.tag == 'TAKE_PROFIT_PARTIAL':
+            self.update_order_by_tag('STOP_LOSS',qty=self.wallet_base)
+            
