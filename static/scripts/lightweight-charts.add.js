@@ -313,7 +313,7 @@ class LWC {
         sData = this.filterNullData(sData);
         if (sData.length ==0)
             return null;
-        const bnhSeries = this.chart.addSeries(LightweightCharts.BaselineSeries, {
+        const bnhSeries = this.chart.addSeries(LightweightCharts.LineSeries, {
             priceFormat: {
                 type: 'custom',
                 formatter: (price) => `${price.toFixed(precision)}`,
