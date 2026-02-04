@@ -93,6 +93,7 @@ def run(request):
 
         bt = run_bot.backtest(klines_1m,from_date,'complete')
         json_rsp['bt'] = bt
+
         
         if bt['error']:
             json_rsp['error'] = bt['error']

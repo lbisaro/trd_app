@@ -116,7 +116,11 @@ $(document).ready(function () {
         time: formatTime(d[0]),
         value: d[1],
     }));
-
+    const bnhData = mainData.map(d => ({
+        time: formatTime(d[0]),
+        value: d[2],
+    }));
+    
     //Creando el chart
     if (mainData.length>0){
 
@@ -128,6 +132,7 @@ $(document).ready(function () {
         });
 
         pnlSeries = lwc.addPnlSeries(pnlData);
+        bnhSeries = lwc.addBnHSeries(bnhData);
         
         chart = lwc.getChart();
         lwc.fullView();
@@ -151,7 +156,12 @@ function filterPNL(estrategia_clase)
                     time: formatTime(d[0]),
                     value: d[1],
                 }));
+            const bnhData = rsp.pnl_diario.map(d => ({
+                    time: formatTime(d[0]),
+                    value: d[2],
+                }));
             pnlSeries.setData(pnlData);
+            bnhSeries.setData(bnhData);
             chart.timeScale().fitContent();
         }
     });

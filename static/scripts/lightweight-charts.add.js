@@ -307,6 +307,31 @@ class LWC {
     }
 
 
+    addBnHSeries(sData, pane = 0, height = 100, precision = 2, title = 'B&H', priceScaleId='right') {
+        if (priceScaleId!='right')
+            this.multipleScales = true;
+        sData = this.filterNullData(sData);
+        if (sData.length ==0)
+            return null;
+        const bnhSeries = this.chart.addSeries(LightweightCharts.BaselineSeries, {
+            priceFormat: {
+                type: 'custom',
+                formatter: (price) => `${price.toFixed(precision)}`,
+            },
+            priceScaleId: priceScaleId,
+            baseValue: { type: 'price', price: -0.1 },
+            color: '#888888',
+            title: title,
+            lineWidth: 1,
+            priceLineVisible: false,
+            crosshairMarkerVisible: false,
+        }, pane);
+        bnhSeries.setData(sData);
+        if (pane > 0)
+            this.chart.panes()[[pane]].setHeight(height);
+        return bnhSeries;
+    }
+
     addTop30Series(sData, title = '', color='', pane = 0 ) {
         sData = this.filterNullData(sData);
         if (sData.length ==0)

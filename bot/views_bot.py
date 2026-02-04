@@ -43,18 +43,16 @@ def bots(request):
                              'status': status,
                              })
 
-    pnl_diario = BotPnl.get_pnl_diario_general()
+    pnl_diario = BotPnl.get_pnl_diario_general(request.user)
     if len(pnl_diario)>0:
         pnl_diario['date'] = pd.to_datetime(pnl_diario['date'])
         pnl_diario['str_dt'] = pnl_diario['date'].dt.strftime('%Y-%m-%d')
-        pnl_diario = pnl_diario[['str_dt', 'pnl']].copy()
+        pnl_diario = pnl_diario[['str_dt', 'pnl','bnh_pnl']].copy()
         pnl_diario = pnl_diario.values.tolist()
     else:
         pnl_diario = []
 
     clases_estrategia = Estrategia.objects.values_list('clase', flat=True).distinct()
-    print('clases_estrategia')
-    print(clases_estrategia)
 
     if request.method == 'GET':
         return render(request, 'bots.html',{
@@ -66,13 +64,13 @@ def bots(request):
 @login_required
 def bot_pnl_estrategia(request, estrategia_clase):
     if estrategia_clase == '__general__':
-        pnl_diario = BotPnl.get_pnl_diario_general()
+        pnl_diario = BotPnl.get_pnl_diario_general(request.user)
     else:
-        pnl_diario = BotPnl.get_pnl_diario_estrategia(estrategia_clase)
+        pnl_diario = BotPnl.get_pnl_diario_estrategia(estrategia_clase,request.user)
     if len(pnl_diario)>0:
         pnl_diario['date'] = pd.to_datetime(pnl_diario['date'])
         pnl_diario['str_dt'] = pnl_diario['date'].dt.strftime('%Y-%m-%d')
-        pnl_diario = pnl_diario[['str_dt', 'pnl']].copy()
+        pnl_diario = pnl_diario[['str_dt', 'pnl','bnh_pnl']].copy()
         pnl_diario = pnl_diario.values.tolist()
     else:
         pnl_diario = []

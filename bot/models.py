@@ -3,8 +3,11 @@ from django.db import models, connection
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from django.db.models import Sum, F, Case, When, Value, FloatField, Max
+from django.db.models import Sum, F, Case, When, Value, FloatField, OuterRef, Subquery, F, Max
 from django.db.models.functions import TruncDay
+
+
+
 
 import scripts.functions as fn
 import os, fnmatch
@@ -923,75 +926,177 @@ class BotPnl(models.Model):
         verbose_name = "Bot PNL"
         verbose_name_plural='Bot PNL'
 
-    def get_pnl_diario_general():
+    @staticmethod
+    def get_pnl_diario_general(user):
         """
-        Genera un DataFrame de pandas con el PNL total diario de todos los bots,
-        tomando el último valor registrado de cada bot por día.
+        Genera un DataFrame con el PNL total diario y el cálculo comparativo de Buy & Hold.
+        Considera implícitamente la fecha de inicio de cada bot al unir con el historial de PNL existente.
         """
-        # Paso 1: Obtener la última entrada de PNL para cada bot en cada día
-        latest_entries_per_day = BotPnl.objects.annotate(
+        
+        # 1. Obtener datos estáticos: ID, Inversión Inicial y Precio Inicial (del primer registro PNL)
+        # Usamos Subquery para evitar iterar en Python (O(1) query vs O(N) loop)
+        first_pnl_sq = BotPnl.objects.filter(
+            bot_id=OuterRef('pk')
+        ).order_by('datetime')
+        
+        bots_data = Bot.objects.filter(usuario=user).annotate(
+            initial_price=Subquery(first_pnl_sq.values('price')[:1]),
+            start_date=Subquery(first_pnl_sq.values('datetime')[:1]) # Opcional, para debug
+        ).values('id', 'quote_qty', 'initial_price')
+
+        df_bots = pd.DataFrame(list(bots_data))
+        
+        if df_bots.empty:
+             return pd.DataFrame()
+
+        # Filtrar bots que nunca arrancaron (no tienen initial_price)
+        df_bots = df_bots.dropna(subset=['initial_price'])
+        
+        if df_bots.empty:
+             return pd.DataFrame()
+
+        # Cálculo de tenencia (Base Qty)
+        df_bots['bnh_base_qty'] = df_bots['quote_qty'] / df_bots['initial_price']
+        df_bots.rename(columns={'id': 'bot_id'}, inplace=True)
+
+        # 2. Obtener historial diario de PNL (Tu lógica original optimizada)
+        qs_user = BotPnl.objects.filter(bot__usuario=user)
+
+        latest_entries_per_day = qs_user.annotate(
             date=TruncDay('datetime')
         ).values('date', 'bot_id').annotate(
             latest_datetime=Max('datetime')
         ).values('latest_datetime')
 
-        # Paso 2: Obtener los datos de PNL correspondientes a esas últimas entradas
         latest_pnl_data = BotPnl.objects.filter(
+            bot__usuario=user,
             datetime__in=latest_entries_per_day
-        ).values('datetime', 'pnl')
-        if len(latest_pnl_data) > 0:
-            # Paso 3: Crear el DataFrame de pandas
-            df = pd.DataFrame(list(latest_pnl_data))
+        ).values('datetime', 'pnl', 'price', 'bot_id')
 
-            # Paso 4: Procesar el DataFrame para obtener el PNL total diario
-            # Convertir 'datetime' a formato de fecha para agrupar por día
-            df['date'] = df['datetime'].dt.date
-
-            # Agrupar por fecha y sumar el PNL
-            pnl_diario = df.groupby('date')['pnl'].sum().reset_index()
-
-            return pnl_diario
-        else:
+        if not latest_pnl_data.exists():
             return pd.DataFrame()
 
-    def get_pnl_diario_estrategia(estrategia_clase):
+        df_daily = pd.DataFrame(list(latest_pnl_data))
+        df_daily['date'] = df_daily['datetime'].dt.date
+
+        # 3. MERGE CRÍTICO
+        # Al hacer un LEFT JOIN desde df_daily hacia df_bots:
+        # - Solo las fechas donde el bot existió y reportó PNL tendrán datos.
+        # - Si el bot A empezó el 01/01 y el Bot B el 01/02, en los registros
+        #   de df_daily del 01/01 solo aparecerá el Bot A, por lo tanto
+        #   el cálculo de B&H del 01/01 solo sumará al Bot A.
+        df_merged = pd.merge(df_daily, 
+                             df_bots[['bot_id', 'bnh_base_qty', 'quote_qty']], 
+                             on='bot_id', 
+                             how='left')
+
+        # Si por alguna razón hay registros huérfanos (BotPnl sin Bot activo), limpiamos
+        df_merged.dropna(subset=['bnh_base_qty'], inplace=True)
+
+        # 4. Cálculos finales
+        # Valor Actual B&H = Precio de Cierre del Día * Cantidad Inicial
+        df_merged['bnh_value'] = df_merged['price'] * df_merged['bnh_base_qty']
+        
+        # PNL B&H = Valor Actual - Inversión Inicial
+        df_merged['bnh_pnl'] = df_merged['bnh_value'] - df_merged['quote_qty']
+
+        # 5. Agrupación
+        pnl_diario = df_merged.groupby('date')[['pnl', 'bnh_pnl']].sum().reset_index()
+        
+        return pnl_diario
+
+    @staticmethod
+    def get_pnl_diario_estrategia(estrategia_clase, user):
         """
-        Genera un DataFrame con el PNL total diario considerando 
-        SOLO bots activos y con estrategia activa.
+        Genera un DataFrame con el PNL diario y B&H, filtrado estrictamente por
+        la CLASE DE ESTRATEGIA y el USUARIO.
         """
-        # 1. Filtramos primero por las condiciones de relaciones (JOIN implícito)
-        # Esto reduce drásticamente el dataset antes de agrupar.
+        
+        # ---------------------------------------------------------
+        # 1. Obtener datos estáticos de los Bots de ESTA estrategia
+        # ---------------------------------------------------------
+        
+        # Subquery para el precio inicial (el join implícito aquí es eficiente porque es por PK)
+        first_pnl_sq = BotPnl.objects.filter(
+            bot_id=OuterRef('pk')
+        ).order_by('datetime')
+        
+        # FILTRO CRÍTICO 1: Solo bots del usuario Y de la estrategia solicitada
+        bots_data = Bot.objects.filter(
+            usuario=user, 
+            estrategia__clase=estrategia_clase
+        ).annotate(
+            initial_price=Subquery(first_pnl_sq.values('price')[:1])
+        ).values('id', 'quote_qty', 'initial_price')
+
+        df_bots = pd.DataFrame(list(bots_data))
+        
+        if df_bots.empty:
+             return pd.DataFrame()
+        
+        # Limpieza de bots sin datos iniciales
+        df_bots = df_bots.dropna(subset=['initial_price'])
+        
+        if df_bots.empty:
+             return pd.DataFrame()
+
+        # Cálculo de tenencia teórica para esta estrategia
+        df_bots['bnh_base_qty'] = df_bots['quote_qty'] / df_bots['initial_price']
+        df_bots.rename(columns={'id': 'bot_id'}, inplace=True)
+
+        # ---------------------------------------------------------
+        # 2. Obtener historial diario de PNL de ESTA estrategia
+        # ---------------------------------------------------------
+        
+        # FILTRO CRÍTICO 2: Filtrar BotPnl por la estrategia.
+        # Esto reduce el set de datos ANTES de agrupar por día.
         qs_filtered = BotPnl.objects.filter(
-            bot__estrategia__clase = estrategia_clase
+            bot__usuario=user,
+            bot__estrategia__clase=estrategia_clase
         )
 
-        # 2. Identificamos el último registro por día y por bot sobre el set filtrado
         latest_entries_per_day = qs_filtered.annotate(
             date=TruncDay('datetime')
         ).values('date', 'bot_id').annotate(
             latest_datetime=Max('datetime')
         ).values('latest_datetime')
 
-        # 3. Obtenemos los valores de PNL usando los datetimes identificados
-        # Nota: Usamos filter sobre el queryset base (BotPnl) pero restringido por el IN
+        # Recuperar datos completos. Redundamos en el filtro para seguridad.
         latest_pnl_data = BotPnl.objects.filter(
+            bot__usuario=user,
+            bot__estrategia__clase=estrategia_clase, 
             datetime__in=latest_entries_per_day
-        ).values('datetime', 'pnl')
+        ).values('datetime', 'pnl', 'price', 'bot_id')
 
-        # 4. Procesamiento en Pandas
-        # Usamos .exists() para evitar traer datos si está vacío (más eficiente que len())
-        if latest_pnl_data.exists():
-            df = pd.DataFrame(list(latest_pnl_data))
-            
-            # Normalizamos la fecha eliminando la hora para el agrupamiento final
-            df['date'] = df['datetime'].dt.date
-            
-            # Sumamos el PNL de todos los bots activos para esa fecha
-            pnl_diario = df.groupby('date')['pnl'].sum().reset_index()
-            
-            return pnl_diario
-        else:
+        if not latest_pnl_data.exists():
             return pd.DataFrame()
+
+        df_daily = pd.DataFrame(list(latest_pnl_data))
+        df_daily['date'] = df_daily['datetime'].dt.date
+
+        # ---------------------------------------------------------
+        # 3. Merge y Cálculos (Idéntico al general)
+        # ---------------------------------------------------------
+        
+        # Left join asegura que solo sumamos B&H en los días que la estrategia operó
+        df_merged = pd.merge(df_daily, 
+                             df_bots[['bot_id', 'bnh_base_qty', 'quote_qty']], 
+                             on='bot_id', 
+                             how='left')
+        
+        df_merged.dropna(subset=['bnh_base_qty'], inplace=True)
+
+        # Cálculo de valorización B&H vs Inversión inicial
+        df_merged['bnh_value'] = df_merged['price'] * df_merged['bnh_base_qty']
+        df_merged['bnh_pnl'] = df_merged['bnh_value'] - df_merged['quote_qty']
+
+        # ---------------------------------------------------------
+        # 4. Agrupación Final
+        # ---------------------------------------------------------
+        
+        pnl_diario = df_merged.groupby('date')[['pnl', 'bnh_pnl']].sum().reset_index()
+        
+        return pnl_diario
         
 class BotOrderLog(models.Model):
 
