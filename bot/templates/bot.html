@@ -275,6 +275,10 @@ $(document).ready( function () {
         time: formatTime(d[0]),
         value: (d[2]==''?null:d[2]),
     }));
+    const bnhData = mainData.map(d => ({
+        time: formatTime(d[0]),
+        value: (d[3]==''?null:d[3]),
+    }));
     const tradesDataJSON = JSON.parse(document.getElementById('trades-data').textContent);
     const tradesData = tradesDataJSON.map(d => ({
         time: formatTime(d[0]),
@@ -342,9 +346,10 @@ $(document).ready( function () {
     if (mainData.length>0){
 
         const lwc = new LWC('pnl_chart',400);
-        lwc.addPriceSeries(priceData,0 ,0 , qd_price, symbol, 'left');
+        //lwc.addPriceSeries(priceData,0 ,0 , qd_price, symbol, 'left');
 
         lwc.addPnlSeries(pnlData, 0, 100, 2, 'PNL', 'right');
+        lwc.addBnHSeries(bnhData, 0, 100, 2, 'B&H', 'right');
         chart = lwc.getChart();
         chart.applyOptions({
             leftPriceScale: {

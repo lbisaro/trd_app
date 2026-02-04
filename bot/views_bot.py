@@ -119,19 +119,21 @@ def bot(request, bot_id):
     if len(pnl_log) > 0:
         pnl_log['datetime'] = pnl_log['datetime'].dt.floor('T')
         pnl_log['str_dt'] = pnl_log['datetime'].dt.strftime('%Y-%m-%d %H:%M')
+        bnh_qty = botClass.quote_qty / pnl_log['price'][0]
+        pnl_log['bnh_pnl'] = (pnl_log['price'] * bnh_qty)
                 
         #Historico de PNL
         if len(pnl_log)>0:
             max_drawdown_reg = botClass.ind_maximo_drawdown(pnl_log,'pnl')
 
             #Resample
-            main_data = pnl_log[['datetime', 'str_dt', 'price', 'pnl']].copy()
+            main_data = pnl_log[['datetime', 'str_dt', 'price', 'pnl','bnh_pnl']].copy()
             main_data.set_index('datetime', inplace=True)
             main_data = main_data.resample('D').last()
             main_data = main_data.asfreq('D').fillna('')
             main_data.reset_index(inplace=True)
             
-            main_data = main_data[['str_dt', 'price', 'pnl']]
+            main_data = main_data[['str_dt', 'price', 'pnl','bnh_pnl']]
             main_data = main_data.values.tolist()
             
         #Historico de ordenes
