@@ -120,7 +120,7 @@ def bot(request, bot_id):
         pnl_log['datetime'] = pnl_log['datetime'].dt.floor('T')
         pnl_log['str_dt'] = pnl_log['datetime'].dt.strftime('%Y-%m-%d %H:%M')
         bnh_qty = botClass.quote_qty / pnl_log['price'][0]
-        pnl_log['bnh_pnl'] = (pnl_log['price'] * bnh_qty)
+        pnl_log['bnh_pnl'] = (pnl_log['price'] * bnh_qty)- botClass.quote_qty
                 
         #Historico de PNL
         if len(pnl_log)>0:
