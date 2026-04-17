@@ -50,7 +50,6 @@
                     <th>Asset</th>
                     <th class="text-end">Precio Actual</th>
                     <th class="text-end">Precio Break Even</th>
-                    <th class="text-end">Distancia Precio Break Even<br/>%</th>
                     <th class="text-end">Stock<br/>Asset</th>
                     <th class="text-end">Stock Asset<br/>{{quote_asset}}</th>
                     <th class="text-end">Ganancias Realizadas<br/>{{quote_asset}}</th>
@@ -65,9 +64,10 @@
                     <td class="text-end">
                         {{data.current_price}}</td>
                     <td class="text-end {% if data.break_even_price > data.current_price %} text-danger {% else %} text-success {% endif %}">
-                        {% if data.break_even_price %}{{data.break_even_price}}{% endif %}</td>
-                    <td class="text-end {% if data.price_distance_percent < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {% if data.price_distance_percent %}{{data.price_distance_percent}} %{% endif %}</td>
+                        {% if data.break_even_price %}{{data.break_even_price}}{% endif %}
+                    <i class="text-end {% if data.price_distance_percent < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {% if data.price_distance_percent %}{{data.price_distance_percent}} %{% endif %}</i>
+                        </td>
                     <td class="text-end">
                         {% if data.open_quantity %}{{data.open_quantity}}{% endif %}</td>
                     <td class="text-end">
