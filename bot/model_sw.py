@@ -217,7 +217,7 @@ class Sw(models.Model):
 
             # *** NUEVO: Calcular Distancia Porcentual ***
             # Solo si average_buy_price es válido (no cero)
-            if break_even_price is not None:
+            if break_even_price is not None and break_even_price > 0:
                  try:
                     price_distance_percent = (current_price / break_even_price - 1) * 100
                  except ZeroDivisionError:
