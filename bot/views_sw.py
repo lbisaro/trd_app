@@ -308,7 +308,7 @@ def view_orders(request, sw_id, symbol_id):
     #Ajustando valores del dataframe para charts
     #ffill
     df["open_quantity"] = df["open_quantity"].fillna(method="ffill")
-    df["average_buy_price"] = df["average_buy_price"].fillna(method="ffill")
+    df["break_even_price"] = df["break_even_price"].fillna(method="ffill")
     df["realized_pnl"] = df["realized_pnl"].fillna(method="ffill")
     
     df["unrealized_pnl"] = df["open_quantity"] * df["price"] - df["open_quantity"] * df["average_buy_price"]
