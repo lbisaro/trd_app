@@ -211,7 +211,7 @@ class Sw(models.Model):
 
             # Calcular Break-Even Price
             if unrealized_pnl < 0:
-                break_even_price = (open_cost_basis - total_pnl) / open_quantity
+                break_even_price = (open_cost_basis - unrealized_pnl) / open_quantity
             else:
                  break_even_price = None # Seguridad, aunque no debería pasar aquí
 
