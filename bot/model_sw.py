@@ -201,6 +201,8 @@ class Sw(models.Model):
         break_even_price = None
         price_distance_percent = None # Inicializar como None
 
+        total_pnl = realized_pnl + unrealized_pnl
+
         if open_quantity > float_tolerance:
             # Calcular métricas estándar de posición abierta
             average_buy_price = open_cost_basis / open_quantity
@@ -208,16 +210,16 @@ class Sw(models.Model):
             unrealized_pnl = current_market_value - open_cost_basis
 
             # Calcular Break-Even Price
-            try:
+            if total_pnl < 0:
                 break_even_price = (open_cost_basis - realized_pnl) / open_quantity
-            except ZeroDivisionError:
+            else:
                  break_even_price = None # Seguridad, aunque no debería pasar aquí
 
             # *** NUEVO: Calcular Distancia Porcentual ***
             # Solo si average_buy_price es válido (no cero)
-            if abs(average_buy_price) > float_tolerance:
+            if break_even_price is not None:
                  try:
-                    price_distance_percent = (current_price / average_buy_price - 1) * 100
+                    price_distance_percent = (current_price / break_even_price - 1) * 100
                  except ZeroDivisionError:
                     price_distance_percent = None # Seguridad adicional
             else:
@@ -227,8 +229,6 @@ class Sw(models.Model):
         else:
             # No hay posición abierta, los valores por defecto (0 o None) se mantienen
             pass
-
-        total_pnl = realized_pnl + unrealized_pnl
 
         # --- 4. Devolver Resultados ---
         # Usar los decimales definidos en el objeto symbol
