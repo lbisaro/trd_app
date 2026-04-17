@@ -66,7 +66,7 @@
                     <td class="text-end {% if data.break_even_price > data.current_price %} text-danger {% else %} text-success {% endif %}">
                         {% if data.break_even_price %}{{data.break_even_price}}{% endif %}
                     <i class="text-end {% if data.price_distance_percent < 0 %} text-danger {% else %} text-success {% endif %}">
-                        <br>({% if data.price_distance_percent %}{{data.price_distance_percent}} %{% endif %})</i>
+                        {% if data.price_distance_percent %}<br>{{data.price_distance_percent}} %{% endif %}</i>
                         </td>
                     <td class="text-end">
                         {% if data.open_quantity %}{{data.open_quantity}}{% endif %}</td>
