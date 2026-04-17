@@ -210,8 +210,8 @@ class Sw(models.Model):
             unrealized_pnl = current_market_value - open_cost_basis
 
             # Calcular Break-Even Price
-            if total_pnl < 0:
-                break_even_price = (open_cost_basis - realized_pnl) / open_quantity
+            if unrealized_pnl < 0:
+                break_even_price = (open_cost_basis - total_pnl) / open_quantity
             else:
                  break_even_price = None # Seguridad, aunque no debería pasar aquí
 
