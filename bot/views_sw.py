@@ -316,7 +316,7 @@ def view_orders(request, sw_id, symbol_id):
     df["total_pnl"] = df["realized_pnl"] + df["unrealized_pnl"]
 
     #ajustes
-    df['average_buy_price'] = np.where(df['average_buy_price']!=0,df['average_buy_price'],None)
+    df['average_buy_price'] = np.where(df['break_even_price']!=0,df['break_even_price'],None)
 
     #Calculos
     df["valor_stock"] = df["open_quantity"]*df['price'] 
