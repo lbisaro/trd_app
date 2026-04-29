@@ -200,8 +200,15 @@ $(document).ready(function () {
         
         pnlSeries = lwc.addPnlSeries(pnlData);
         
-        lwc.minView();
         chart = lwc.getChart();
+
+        // Hacer zoom a los últimos 90 días
+        if (pnlData.length > 90) {
+            const from = pnlData[pnlData.length - 90].time;
+            const to = pnlData[pnlData.length - 1].time;
+            chart.timeScale().setVisibleRange({ from, to });
+        }
+        // Si hay menos de 90 datos, se muestra todo
 
     }
 
