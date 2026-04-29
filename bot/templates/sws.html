@@ -196,6 +196,20 @@ $(document).ready(function () {
             timeScale: { 
                 timeVisible: false, 
             },
+            rightPriceScale: {
+                // Duplicar tamaño de fuente del eje Y
+                scaleMargins: { top: 0.1, bottom: 0.1 },
+                borderVisible: true,
+                alignLabels: true,
+                ticksVisible: true,
+                // fontSize solo es soportado en versiones recientes
+                // Si no funciona aquí, probar en layout
+                fontSize: 22
+            },
+            layout: {
+                // Por compatibilidad, también aquí
+                fontSize: 22
+            },
         });
         
         pnlSeries = lwc.addPnlSeries(pnlData);
