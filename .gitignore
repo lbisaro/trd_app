@@ -12,3 +12,4 @@ backtest/results/*.json
 backtest/test_tlgrm.py
 app.sock
 /.venv
+.vscode/settings.json
