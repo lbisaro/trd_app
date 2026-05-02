@@ -201,8 +201,6 @@ class Sw(models.Model):
         break_even_price = None
         price_distance_percent = None # Inicializar como None
 
-        total_pnl = realized_pnl + unrealized_pnl
-
         if open_quantity > float_tolerance:
             # Calcular métricas estándar de posición abierta
             average_buy_price = open_cost_basis / open_quantity
@@ -229,6 +227,8 @@ class Sw(models.Model):
         else:
             # No hay posición abierta, los valores por defecto (0 o None) se mantienen
             pass
+
+        total_pnl = realized_pnl + unrealized_pnl
 
         # --- 4. Devolver Resultados ---
         # Usar los decimales definidos en el objeto symbol
