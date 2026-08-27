@@ -203,8 +203,9 @@ class Sw(models.Model):
         current_market_value = 0.0
         unrealized_pnl = 0.0
         break_even_price = None
-        price_distance_percent = None # Inicializar como None
+        price_distance_percent = None 
         net_invested = 0.0
+        ref_price = None
         
         if open_quantity > float_tolerance:
             # Calcular métricas estándar de posición abierta
@@ -220,6 +221,11 @@ class Sw(models.Model):
                 break_even_price = net_invested / open_quantity
             else:
                 break_even_price = average_buy_price
+
+            if net_invested != 0:
+                ref_price = break_even_price if net_invested > 0 else average_buy_price
+            else:
+                ref_price = None
 
             # Calcular Distancia Porcentual respecto al precio Break-Even
             if break_even_price is not None and break_even_price > 0:
@@ -241,10 +247,7 @@ class Sw(models.Model):
         # Usar los decimales definidos en el objeto symbol
         qty_decs_qty = getattr(symbol, 'qty_decs_qty', 8) # Default 8 si no existe
         qty_decs_price = getattr(symbol, 'qty_decs_price', 5) # Default 5 si no existe
-        if net_invested != 0:
-            ref_price = break_even_price if net_invested > 0 else average_buy_price
-        else:
-            ref_price = None
+
 
         return {
             'symbol_id': symbol.id,

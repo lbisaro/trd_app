@@ -6,17 +6,17 @@
 {% load tz %}
 
 {% block action_bar %}
-    
-    {% if activo > 0 %}
-    <a class="btn btn-primary  btn-sm" href="{% url 'sw_add_trades_empty' sw_id %}">Agregar Trades</a>
-    <button class="btn btn-danger  btn-sm" onclick="desactivar()">Desactivar</button>
-    {% elif  can_activar %}
-    <button class="btn btn-success  btn-sm" onclick="activar()">Activar</button>
-    {% endif %}
 
-    {% if can_delete %}
-        <button class="btn btn-danger  btn-sm" onclick="eliminar()">Eliminar</button>
-    {% endif %}
+{% if activo > 0 %}
+<a class="btn btn-primary  btn-sm" href="{% url 'sw_add_trades_empty' sw_id %}">Agregar Trades</a>
+<button class="btn btn-danger  btn-sm" onclick="desactivar()">Desactivar</button>
+{% elif can_activar %}
+<button class="btn btn-success  btn-sm" onclick="activar()">Activar</button>
+{% endif %}
+
+{% if can_delete %}
+<button class="btn btn-danger  btn-sm" onclick="eliminar()">Eliminar</button>
+{% endif %}
 
 {% endblock %}
 
@@ -25,7 +25,6 @@
     table#assets tbody tr {
         cursor: pointer;
     }
-
 </style>
 {% endblock %}
 
@@ -33,7 +32,7 @@
 <div class="container">
     <div class="row pt-2">
         <div class="col-sm">
-            <span class="text-secondary">Stable Coin:</span>  
+            <span class="text-secondary">Stable Coin:</span>
             <span class="col ">{{quote_asset}}</span>
         </div>
         <div class="col-sm">
@@ -49,32 +48,36 @@
                 <tr>
                     <th>Asset</th>
                     <th class="text-end">Precio Actual</th>
-                    <th class="text-end">Precio Break Even</th>
-                    <th class="text-end">Stock<br/>Asset</th>
-                    <th class="text-end">Stock Asset<br/>{{quote_asset}}</th>
-                    <th class="text-end">Ganancias Realizadas<br/>{{quote_asset}}</th>
-                    <th class="text-end">Ganancias No Realizadas<br/>{{quote_asset}}</th>
-                    <th class="text-end">Ganancias Totales<br/>{{quote_asset}}</th>
+                    <th class="text-end">Precio Referencial</th>
+                    <th class="text-end">Stock<br />Asset</th>
+                    <th class="text-end">Stock Asset<br />{{quote_asset}}</th>
+                    <th class="text-end">Ganancias Realizadas<br />{{quote_asset}}</th>
+                    <th class="text-end">Ganancias No Realizadas<br />{{quote_asset}}</th>
+                    <th class="text-end">Ganancias Totales<br />{{quote_asset}}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for asset, data in assets_brief.items %}
-                <tr onclick="sw_view_orders('{{data.symbol_id}}')" >
+                <tr onclick="sw_view_orders('{{data.symbol_id}}')">
                     <td>{{asset}}</td>
                     <td class="text-end">
                         {{data.current_price}}</td>
-                    <td class="text-end {% if data.break_even_price > data.current_price %} text-danger {% else %} text-success {% endif %}">
-                        {% if data.break_even_price %}{{data.break_even_price}}{% endif %}
-                    <i class="text-end {% if data.price_distance_percent < 0 %} text-danger {% else %} text-success {% endif %}">
-                        {% if data.price_distance_percent %}<br>{{data.price_distance_percent}} %{% endif %}</i>
-                        </td>
+                    <td
+                        class="text-end {% if data.ref_price > data.current_price %} text-danger {% else %} text-success {% endif %}">
+                        {% if data.ref_price %}{{data.ref_price}}{% endif %}
+                        <i
+                            class="text-end {% if data.price_distance_percent < 0 %} text-danger {% else %} text-success {% endif %}">
+                            {% if data.price_distance_percent %}<br>{{data.price_distance_percent}} %{% endif %}</i>
+                    </td>
+
                     <td class="text-end">
                         {% if data.open_quantity %}{{data.open_quantity}}{% endif %}</td>
                     <td class="text-end">
                         {% if data.open_quantity_in_usd %}{{data.open_quantity_in_usd}}{% endif %}</td>
                     <td class="text-end {% if data.realized_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
                         {% if data.realized_pnl %}{{data.realized_pnl}}{% endif %}</td>
-                    <td class="text-end {% if data.unrealized_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
+                    <td
+                        class="text-end {% if data.unrealized_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
                         {% if data.unrealized_pnl %}{{data.unrealized_pnl}}{% endif %}</td>
                     <td class="text-end {% if data.total_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
                         {% if data.total_pnl %}{{data.total_pnl}}{% endif %}</td>
@@ -88,11 +91,17 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td class="fw-bold text-end {% if total_realized_pnl < 0 %} text-danger {% else %} text-success {% endif %}">{{total_realized_pnl}}</td>
-                    <td class="fw-bold text-end {% if total_unrealized_pnl < 0 %} text-danger {% else %} text-success {% endif %}">{{total_unrealized_pnl}}</td>
-                    <td class="fw-bold text-end {% if total_total_pnl < 0 %} text-danger {% else %} text-success {% endif %}">{{total_total_pnl}}</td>
+                    <td
+                        class="fw-bold text-end {% if total_realized_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{total_realized_pnl}}</td>
+                    <td
+                        class="fw-bold text-end {% if total_unrealized_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{total_unrealized_pnl}}</td>
+                    <td
+                        class="fw-bold text-end {% if total_total_pnl < 0 %} text-danger {% else %} text-success {% endif %}">
+                        {{total_total_pnl}}</td>
                     <td></td>
-                </tr>                
+                </tr>
             </tfoot>
         </table>
     </div>
@@ -100,80 +109,71 @@
 
     <div class="row pt-4">
         <div class="col-sm">
-            <span class="text-secondary">Creado:</span>  
+            <span class="text-secondary">Creado:</span>
             <span class="col text-secondary">{{creado}}</span>
         </div>
         {% if finalizado %}
         <div class="col-sm">
-            Finalizado:  
+            Finalizado:
             <span class="col text-secondary">{{finalizado}}</span>
         </div>
         {% endif %}
-    </div>    
+    </div>
 
 </div>
-    
+
 {% endblock %}
 
 {% block script %}
 <script>
 
-    function activar()
-    {
-        if (confirm('Confirma Activar la Smart Wallet {{name}}?'))
-        {
+    function activar() {
+        if (confirm('Confirma Activar la Smart Wallet {{name}}?')) {
             url = "{% url 'sw_activar' sw_id %}"
             data = null
-            get_ajax(url,data).done( function (rsp) {
+            get_ajax(url, data).done(function (rsp) {
                 if (rsp.error)
-                    html_alert('Errores detectados',rsp.error,'text-danger')
-                else if (rsp.ok)
-                {
+                    html_alert('Errores detectados', rsp.error, 'text-danger')
+                else if (rsp.ok) {
                     location.href = "{% url 'sw_view' sw_id %}";
                 }
-            });    
+            });
         }
     }
 
-    function desactivar()
-    {
-        if (confirm('Confirma Desactivar la Smart Wallet {{name}}?'))
-        {
+    function desactivar() {
+        if (confirm('Confirma Desactivar la Smart Wallet {{name}}?')) {
             url = "{% url 'sw_desactivar' sw_id 'check' %}"
             data = null
-            get_ajax(url,data).done( function (rsp) {
+            get_ajax(url, data).done(function (rsp) {
                 if (rsp.error)
-                    html_alert('Errores detectados',rsp.error,'text-danger')
-                else if (rsp.ok)
-                {
+                    html_alert('Errores detectados', rsp.error, 'text-danger')
+                else if (rsp.ok) {
                     location.href = "{% url 'sw_view' sw_id %}";
                 }
-            });    
+            });
         }
     }
 
-    function eliminar()
-    {
-        if (confirm('Confirma eliminar la Smart Wallet {{name}}?'))
-        {
+    function eliminar() {
+        if (confirm('Confirma eliminar la Smart Wallet {{name}}?')) {
             url = "{% url 'sw_delete' sw_id %}"
             data = null
-            get_ajax(url,data).done( function (rsp) {
+            get_ajax(url, data).done(function (rsp) {
                 if (rsp.error)
-                    html_alert('Errores detectados',rsp.error,'text-danger')
-                else if (rsp.ok)
-                {
+                    html_alert('Errores detectados', rsp.error, 'text-danger')
+                else if (rsp.ok) {
                     location.href = "{% url 'sw_list' %}";
                 }
-            });    
+            });
 
-            
+
         }
     }
 
     function sw_view_orders(symbol_id) {
         var sw_id = '{{sw_id}}';
-        let url = '/bot/sw/view_orders/'+sw_id+'/'+symbol_id+'/'; 
+        let url = '/bot/sw/view_orders/' + sw_id + '/' + symbol_id + '/';
         window.location.href = url;
     }
 </script>
