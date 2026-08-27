@@ -309,6 +309,7 @@ def view_orders(request, sw_id, symbol_id):
     #ffill
     df["open_quantity"] = df["open_quantity"].fillna(method="ffill")
     df["average_buy_price"] = df["average_buy_price"].fillna(method="ffill")
+    df["break_even_price"] = df["break_even_price"].fillna(method="ffill")
     df["realized_pnl"] = df["realized_pnl"].fillna(method="ffill")
     
     df["unrealized_pnl"] = df["open_quantity"] * df["price"] - df["open_quantity"] * df["average_buy_price"]
@@ -317,6 +318,7 @@ def view_orders(request, sw_id, symbol_id):
 
     #ajustes
     df['average_buy_price'] = np.where(df['average_buy_price']!=0,df['average_buy_price'],None)
+    df['break_even_price'] = np.where(df['break_even_price']!=0,df['break_even_price'],None)
 
     #Calculos
     df["valor_stock"] = df["open_quantity"]*df['price'] 
@@ -357,6 +359,17 @@ def view_orders(request, sw_id, symbol_id):
                 x=df["datetime"], y=df["average_buy_price"], name=f'Precio Promedio', mode="lines",  
                 line={'width': 1},  
                 marker=dict(color='#f8b935'),
+                legendgroup = '1',
+            ),
+            row=1,
+            col=1,
+        )  
+
+    fig.add_trace(
+            go.Scatter(
+                x=df["datetime"], y=df["break_even_price"], name=f'Precio BreakEven', mode="lines",  
+                line={'width': 1},  
+                marker=dict(color='#f835b9'),
                 legendgroup = '1',
             ),
             row=1,
