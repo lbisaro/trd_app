@@ -228,9 +228,9 @@ class Sw(models.Model):
                 ref_price = None
 
             # Calcular Distancia Porcentual respecto al precio Break-Even
-            if break_even_price is not None and break_even_price > 0:
+            if ref_price is not None and ref_price > 0:
                 try:
-                    price_distance_percent = ((current_price / break_even_price) - 1) * 100
+                    price_distance_percent = ((current_price / ref_price) - 1) * 100
                 except ZeroDivisionError:
                     price_distance_percent = None
             else:
