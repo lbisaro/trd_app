@@ -339,6 +339,10 @@ def view_orders(request, sw_id, symbol_id):
     
     df["total_pnl"] = df["realized_pnl"].fillna(0) + df["unrealized_pnl"]
 
+    df["price_distance_percent"] = df["price_distance_percent"].ffill()
+    df["ref_price_green"] = np.where(df["price"] >= df["ref_price"], df["ref_price"], None)
+    df["ref_price_red"] = np.where(df["price"] < df["ref_price"], df["ref_price"], None)
+
     #Calculos
     df["valor_stock"] = df["open_quantity"].fillna(0) * df['price'] 
     
@@ -376,9 +380,18 @@ def view_orders(request, sw_id, symbol_id):
 
     fig.add_trace(
             go.Scatter(
-                x=df["datetime"], y=df["ref_price"], name=f'Precio Referencial', mode="lines",  
-                line={'width': 1},  
-                marker=dict(color='#f8b935'),
+                x=df["datetime"], y=df["ref_price_green"], name=f'Precio Ref. (Ganancia)', mode="lines",  
+                line={'width': 1.2, 'color': '#0ecb81'},  
+                legendgroup = '1',
+            ),
+            row=1,
+            col=1,
+        )  
+
+    fig.add_trace(
+            go.Scatter(
+                x=df["datetime"], y=df["ref_price_red"], name=f'Precio Ref. (Pérdida)', mode="lines",  
+                line={'width': 1.2, 'color': '#f6465d'},  
                 legendgroup = '1',
             ),
             row=1,
