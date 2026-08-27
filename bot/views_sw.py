@@ -307,21 +307,40 @@ def view_orders(request, sw_id, symbol_id):
        
     #Ajustando valores del dataframe para charts
     #ffill
-    df["open_quantity"] = df["open_quantity"].fillna(method="ffill")
-    df["average_buy_price"] = df["average_buy_price"].fillna(method="ffill")
-    df["break_even_price"] = df["break_even_price"].fillna(method="ffill")
-    df["realized_pnl"] = df["realized_pnl"].fillna(method="ffill")
+    df["open_quantity"] = df["open_quantity"].ffill()
+    df["average_buy_price"] = df["average_buy_price"].ffill()
+    df["realized_pnl"] = df["realized_pnl"].ffill()
+    df["op_buy_quote"] = df["op_buy_quote"].ffill()
+    df["op_sell_quote"] = df["op_sell_quote"].ffill()
+    df["ref_price"] = df["ref_price"].ffill()
     
-    df["unrealized_pnl"] = df["open_quantity"] * df["price"] - df["open_quantity"] * df["average_buy_price"]
-    
-    df["total_pnl"] = df["realized_pnl"] + df["unrealized_pnl"]
+    net_invested = df["op_buy_quote"].fillna(0) - df["op_sell_quote"].fillna(0)
+    has_stock = df["open_quantity"].fillna(0) > 0
 
-    #ajustes
-    df['average_buy_price'] = np.where(df['average_buy_price']!=0,df['average_buy_price'],None)
-    df['break_even_price'] = np.where(df['break_even_price']!=0,df['break_even_price'],None)
+    # Si hay capital neto por recuperar (net_invested > 0), graficamos únicamente break_even_price
+    df["break_even_price"] = np.where(
+        has_stock & (net_invested > 0),
+        net_invested / df["open_quantity"],
+        None
+    )
+
+    # Si ya se recuperó el 100% del capital (net_invested <= 0), graficamos únicamente average_buy_price
+    df["average_buy_price"] = np.where(
+        has_stock & (net_invested <= 0),
+        df["average_buy_price"],
+        None
+    )
+
+    df["unrealized_pnl"] = np.where(
+        has_stock,
+        df["open_quantity"] * df["price"] - df["open_quantity"] * df["average_buy_price"].fillna(0),
+        0.0
+    )
+    
+    df["total_pnl"] = df["realized_pnl"].fillna(0) + df["unrealized_pnl"]
 
     #Calculos
-    df["valor_stock"] = df["open_quantity"]*df['price'] 
+    df["valor_stock"] = df["open_quantity"].fillna(0) * df['price'] 
     
     #Eventos
     df['buy']  = np.where((df['side']==0),df['price'],None)
@@ -354,6 +373,19 @@ def view_orders(request, sw_id, symbol_id):
             row=1,
             col=1,
         )  
+
+    fig.add_trace(
+            go.Scatter(
+                x=df["datetime"], y=df["ref_price"], name=f'Precio Referencial', mode="lines",  
+                line={'width': 1},  
+                marker=dict(color='#f8b935'),
+                legendgroup = '1',
+            ),
+            row=1,
+            col=1,
+        )  
+
+    """
     fig.add_trace(
             go.Scatter(
                 x=df["datetime"], y=df["average_buy_price"], name=f'Precio Promedio', mode="lines",  
@@ -375,7 +407,7 @@ def view_orders(request, sw_id, symbol_id):
             row=1,
             col=1,
         )  
-
+    """
     fig.add_trace(
             go.Scatter(x=df["datetime"], y=df['buy'], name='Compras', mode='markers', 
                     marker=dict(symbol='circle',size=6,color='#0ecb81',line=dict(width=0.75, color="black"),),

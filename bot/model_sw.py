@@ -152,11 +152,13 @@ class Sw(models.Model):
                 'price_distance_percent': None, # Nuevo campo
             }
 
-        # --- 2. Procesamiento FIFO ---
+        # --- 2. Procesamiento FIFO y Acumulados ---
         open_positions = deque()
         realized_pnl = 0.0
         open_quantity = 0.0
         open_cost_basis = 0.0
+        op_buy_quote = 0.0
+        op_sell_quote = 0.0
         float_tolerance = 1e-9 # Ajustar si se necesita más/menos precisión
 
         for order in orders:
@@ -170,10 +172,12 @@ class Sw(models.Model):
                 continue
 
             if side == 0:
+                op_buy_quote += qty * price
                 open_positions.append((qty, price))
                 open_quantity += qty
                 open_cost_basis += qty * price
             elif side == 1:
+                op_sell_quote += qty * price
                 qty_to_sell = qty
                 sell_price = price
                 while qty_to_sell > float_tolerance and open_positions:
@@ -200,28 +204,30 @@ class Sw(models.Model):
         unrealized_pnl = 0.0
         break_even_price = None
         price_distance_percent = None # Inicializar como None
-
+        net_invested = 0.0
+        
         if open_quantity > float_tolerance:
             # Calcular métricas estándar de posición abierta
             average_buy_price = open_cost_basis / open_quantity
             current_market_value = current_price * open_quantity
             unrealized_pnl = current_market_value - open_cost_basis
 
-            # Calcular Break-Even Price
-            if unrealized_pnl < 0:
-                break_even_price = (open_cost_basis - unrealized_pnl) / open_quantity
+            # Opción B: Si el capital invertido neto es positivo (falta recuperar capital),
+            # se usa el precio de empate global. Si ya se recuperó el 100% del capital (net_invested <= 0),
+            # se usa el precio promedio de compra (FIFO) de las unidades en stock.
+            net_invested = op_buy_quote - op_sell_quote
+            if net_invested > 0:
+                break_even_price = net_invested / open_quantity
             else:
-                 break_even_price = None # Seguridad, aunque no debería pasar aquí
+                break_even_price = average_buy_price
 
-            # *** NUEVO: Calcular Distancia Porcentual ***
-            # Solo si average_buy_price es válido (no cero)
+            # Calcular Distancia Porcentual respecto al precio Break-Even
             if break_even_price is not None and break_even_price > 0:
-                 try:
-                    price_distance_percent = (current_price / break_even_price - 1) * 100
-                 except ZeroDivisionError:
-                    price_distance_percent = None # Seguridad adicional
+                try:
+                    price_distance_percent = ((current_price / break_even_price) - 1) * 100
+                except ZeroDivisionError:
+                    price_distance_percent = None
             else:
-                # Si avg buy price es 0, la distancia % no es significativa
                 price_distance_percent = None
 
         else:
@@ -229,11 +235,16 @@ class Sw(models.Model):
             pass
 
         total_pnl = realized_pnl + unrealized_pnl
+        op_result_quote = op_sell_quote + current_market_value - op_buy_quote
 
         # --- 4. Devolver Resultados ---
         # Usar los decimales definidos en el objeto symbol
         qty_decs_qty = getattr(symbol, 'qty_decs_qty', 8) # Default 8 si no existe
         qty_decs_price = getattr(symbol, 'qty_decs_price', 5) # Default 5 si no existe
+        if net_invested != 0:
+            ref_price = break_even_price if net_invested > 0 else average_buy_price
+        else:
+            ref_price = None
 
         return {
             'symbol_id': symbol.id,
@@ -241,27 +252,17 @@ class Sw(models.Model):
             'open_quantity': round(open_quantity, qty_decs_qty),
             'open_quantity_in_usd': round(open_quantity*current_price, 2),
             'open_cost_basis': round(open_cost_basis, 2),
-            'average_buy_price': round(average_buy_price, qty_decs_price) if average_buy_price is not None else 0.0,
             'current_price': round(current_price, qty_decs_price),
             'current_market_value': round(current_market_value, 2),
             'unrealized_pnl': round(unrealized_pnl, 2),
             'total_pnl': round(total_pnl, 2),
+            'op_buy_quote': round(op_buy_quote, 2),
+            'op_sell_quote': round(op_sell_quote, 2),
+            'op_result_quote': round(op_result_quote, 2),
+            'average_buy_price': round(average_buy_price, qty_decs_price) if average_buy_price is not None else 0.0,
             'break_even_price': round(break_even_price, qty_decs_price) if break_even_price is not None else None,
+            'ref_price': round(ref_price, qty_decs_price) if ref_price is not None else None,
             'price_distance_percent': round(price_distance_percent, 2) if price_distance_percent is not None else None, # Redondeado a 2 decimales para %
-        }
-
-        return {
-            'stock_total': round(total_qty_open,symbol.qty_decs_qty),
-            'valor_stock': round(valor_stock,2),
-            'precio_promedio': round(average_buy_price,symbol.qty_decs_price),
-            'valor_compras': round(total_cost_open,2),
-            'stock_quote': round(total_qty_open,2),
-            'total_stock_en_usd': round(valor_stock,2),
-            'precio_actual': round(precio_actual,symbol.qty_decs_price),
-            'ganancias_realizadas':  round(realized_pnl,2),
-            'distancia_ppc': round(distancia_ppc,2),
-            'ganancias_y_stock': round(ganancias_y_stock,2),
-            'symbol_id': symbol.id,
         }
 
     def get_assets_brief(self):
